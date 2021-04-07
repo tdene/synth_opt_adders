@@ -1,29 +1,33 @@
-import modules
+from modules import modules
 
 # Defines a node in the adder graph
 class adder_node():
 
 # Nodes have an x position (bit), y position (level),
 # the module they are representing (black, grey, etc),
-# and a dictionary of edges
+# and two dictionary of edges
 
     # Pre-conditions:
     # x, y are integers
     # module is a valid module from modules
 
+    # Post-conditions:
+    # stores all these values into internal variables
+    # creates two dictionaries of input/output edges
+
     def __init__(self, x, y, module):
         if not (isinstance(x,int) and isinstance(y,int)):
             raise TypeError("adder_node x,y must both be integers")
-        if module not in dir(modules):
+        if module not in modules:
             raise ValueError("trying to create node with invalid module")
         self.x=x; self.y=y; self.m=module;
 
         # Create inputs and outputs dictionaries; initialize to None
-        self.ins={x:[None]*y for x,y in module['ins']}
-        self.outs={x:[None]*y for x,y in module['outs']}
+        self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
+        self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
     def __str__(self):
-        return "Adder node of module {3} at bit {0} and level {1}"\
+        return "Adder node of module {2} at bit {0} and level {1}"\
                .format(self.x,self.y,self.m)
 
     def __repr__(self):
@@ -32,17 +36,21 @@ class adder_node():
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
-# The graph can also be traversed via edges from the start nodes
+# The graph also includes a list of start nodes to make it easy to traverse
 class adder_graph():
+
+    # Note that self.nodes is accessed in the order self.nodes[y][x], not [x][y]
 
     # Pre-condition: width is an integer
     # Post-condition: creates a list of start nodes and a 2-D array of all nodes
+
     def __init__(self, width):
         if not isinstance(width,int):
             raise TypeError("adder_graph width must be an integer")
+        self.width=width
         # Initialize graph to contain `width number of 'input' nodes
         # Note that self.nodes is accessed in the order self.nodes[y][x], not [x][y]
-        self.start_nodes=[adder_node(width-x,0,modules.adder_input) for x in range(width)]
+        self.start_nodes=[adder_node(self.width-x,0,'adder_input') for x in range(self.width)]
         self.nodes=[self.start_nodes]
 
 
@@ -53,15 +61,17 @@ class adder_graph():
 
     # Post-condition: adds node to 2-D array of all nodes
     def add_node(self, x, y, module):
-        if not (x<width and x>=0):
+        if not (x<self.width and x>=0):
             raise ValueError("cannot add a node with x beyond the width")
         if y<0:
             raise ValueError("cannot add a node with negative level")
         if y>len(self.nodes):
             raise ValueError("cannot skip levels when adding nodes")
-        if module not in dir(modules):
+        if module not in modules:
             raise ValueError("trying to add node with invalid module")
-        self.nodes.append(node(x,y,module,edges))
+        if y==len(self.nodes):
+            self.nodes.append([None]*self.width)
+        self.nodes[y][x]=adder_node(x,y,module)
 
     # Pre-conditions:
     # n1, n2, are 2-element integer arrays, [x,y] describing valid nodes
@@ -96,18 +106,6 @@ class prefix():
         self.t=t; self.t_=1<<t;
 
         self.graph = adder_graph(self.w)
-
-    def _generate_pre(ling=False):
-        pass
-
-    def _generate_post(ling=False):
-        pass
-
-    def to_hdl(self):
-        pass
-
-    def to_graph(self):
-        pass
 
     def __str__(self):
         return "Prefix adder with {0} width, {1} logic levels, {2} fan-out, {3} wire tracks"\

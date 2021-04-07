@@ -3,6 +3,8 @@
 # for checkable errors, such as inputs/outputs
 # not matching the logical function
 
+modules={}
+
 ### Black cells
 black=dict()
 
@@ -32,6 +34,8 @@ black['logic'] = lambda gin,pin: [
                  pin[1]&pin[0]
                  ]
 
+modules['black']=black
+
 ### Grey cells
 grey=dict()
 
@@ -59,6 +63,8 @@ grey['outs']=[('gout',1)]
 grey['logic'] = lambda gin,pin: [
                 gin[1]|(pin&gin[0])
                 ]
+
+modules['grey']=grey
 
 ### Reduced Black cell
 rblk=dict()
@@ -89,6 +95,8 @@ rblk['logic'] = lambda gin,pin: [
                 pin[1]&pin[0]
                 ]
 
+modules['rblk']=rblk
+
 ### Reduced Grey cell
 rgry=dict()
 
@@ -116,20 +124,37 @@ rgry['logic'] = lambda gin: [
                 gin[1]|gin[0]
                 ]
 
+modules['rgry']=rgry
+
 ### 'input' nodes
 adder_input=dict()
 
 adder_input['fig']=''
 
+adder_input['ins']=[('x',1)]
+
+adder_input['outs']=[('y',1)]
+
 adder_input['logic'] = lambda x: [x]
 
+modules['adder_input']=adder_input
 
 ### Buffer nodes
 buffer_node=dict()
 
 buffer_node['fig']='V'
 
+buffer_node['ins']=[('x',1)]
+
+buffer_node['outs']=[('y',1)]
+
 buffer_node['logic'] = lambda x: [x]
 
+modules['buffer_node']=buffer_node
+
 if __name__=="__main__":
+
+# Note that nothing yet exists to check this file
+# for checkable errors, such as inputs/outputs
+# not matching the logical function
     raise RuntimeError("This file is importable, but not executable")
