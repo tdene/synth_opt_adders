@@ -1,3 +1,4 @@
+import networkx as nx
 from modules import modules
 
 # Defines a node in the adder graph
@@ -25,7 +26,7 @@ class adder_node():
         # Create inputs and outputs dictionaries; initialize to None
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
-
+    
     def __str__(self):
         return "Adder node of module {2} at bit {0} and level {1}"\
                .format(self.x,self.y,self.m)
@@ -37,60 +38,68 @@ class adder_node():
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
 # The graph also includes a list of start nodes to make it easy to traverse
-class adder_graph():
+class adder_graph(nx.DiGraph):
 
-    # Note that self.nodes is accessed in the order self.nodes[y][x], not [x][y]
+    # Note that self.node_list is accessed in the order self.node_list[y][x], not [x][y]
 
     # Pre-condition: width is an integer
-    # Post-condition: creates a list of start nodes and a 2-D array of all nodes
+    # Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
 
     def __init__(self, width):
         if not isinstance(width,int):
             raise TypeError("adder_graph width must be an integer")
         self.width=width
         # Initialize graph to contain `width number of 'input' nodes
-        # Note that self.nodes is accessed in the order self.nodes[y][x], not [x][y]
-        self.start_nodes=[adder_node(self.width-x,0,'adder_input') for x in range(self.width)]
-        self.nodes=[self.start_nodes]
+        # Note that self.node_list is accessed in the order self.node_list[y][x], not [x][y]
+        self.node_list=[[None]*self.width]
 
+        super().__init__(self)
 
     # Pre-condtions:
     # 0 <= x < width
-    # 0 <= y <= len(self.nodes) [no skipping levels!!!]
+    # 0 <= y <= len(self.node_list) [no skipping levels!!!]
     # module is a valid module from modules
 
     # Post-condition: adds node to 2-D array of all nodes
-    def add_node(self, x, y, module):
-        if not (x<self.width and x>=0):
+    def add_node(self, n):
+        if not isinstance(n,adder_node):
+            raise TypeError("can only add adder_nodes to adder_graph")
+        if not (n.x<self.width and n.x>=0):
             raise ValueError("cannot add a node with x beyond the width")
-        if y<0:
+        if n.y<0:
             raise ValueError("cannot add a node with negative level")
-        if y>len(self.nodes):
+        if n.y>len(self.node_list):
             raise ValueError("cannot skip levels when adding nodes")
-        if module not in modules:
+        if n.m not in modules:
             raise ValueError("trying to add node with invalid module")
-        if y==len(self.nodes):
-            self.nodes.append([None]*self.width)
-        self.nodes[y][x]=adder_node(x,y,module)
+        if n.y==len(self.node_list):
+            self.node_list.append([None]*self.width)
+        self.node_list[n.y][n.x]=n
+
+        super().add_node(n,shape=modules[n.m]['shape'],
+                         fillcolor=modules[n.m]['color'],style='filled',
+                         pos="{0},{1}!".format(-1*n.x,-1*n.y),label='')
 
     # Pre-conditions:
     # n1, n2, are 2-element integer arrays, [x,y] describing valid nodes
     # n1, n2 are on adjacent levels [use buffers otherwise]
-    # p1, p2 are valid, unassigned, ports of n1, n2, respectively
-    # only one of (p1, p2) is an input, the other being an output
-    # specifically, to keep code simple, p1 is output and p2 is input
+    # pin1, pin2 are valid, unassigned, ports of n1, n2, respectively
+    # only one of (pin1, pin2) is an input, the other being an output
+    # specifically, to keep code simple, pin1 is output and pin2 is input
 
     # Post-condition: adds edge between target nodes
-    def add_edge(self, n1, p1, n2, p2):
-        x1,y1=n1; x2,y2=n2;
-        if abs(y1-y2)!=1:
+    def add_edge(self, n1, pin1, n2, pin2):
+        p1,b1=pin1; p2,b2=pin2;
+        if abs(n1.y-n2.y)!=1:
             raise ValueError("cannot add an edge between non-adjacent levels")
         if p1 not in n1.outs or p2 not in n2.ins:
             raise ValueError("cannot add an edge between invalid ports")
-        if n1.outs[p1]!=None or n2.ins[p2]!=None:
+        if n1.outs[p1][b1]!=None or n2.ins[p2][b2]!=None:
             raise ValueError("cannot overload node ports with extra edges")
 
-        n1.outs[p1]=n2; n2.ins[p2]=n1;
+        n1.outs[p1][b1]=n2; n2.ins[p2][b2]=n1;
+
+        super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
 
 class prefix():
 

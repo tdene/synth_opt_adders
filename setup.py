@@ -11,6 +11,7 @@ setup(
     description='Prefix tree adders with module boundaries drawn to optimize their implementation through synthesis and PnR tools',
     long_description=open('README.md').read(),
     install_requires=[
-        "pint",
+        "networkx",
+        "pydot",
     ],
 )

@@ -20,7 +20,8 @@ module black(gin, pin, gout, pout);
 endmodule
 """
 
-black['fig']='O'
+black['shape']='square'
+black['color']='black'
 
 # List of inputs represented by (name, bits) tuple
 black['ins']=[('gin',2),('pin',2)]
@@ -51,7 +52,8 @@ module grey(gout, gin, pin);
 endmodule
 """
 
-grey['fig']='X'
+grey['shape']='square'
+grey['color']='grey'
 
 # List of inputs represented by (name, bits) tuple
 grey['ins']=[('gin',2),('pin',1)]
@@ -81,7 +83,8 @@ module rblk(hout, iout, gin, pin);
 endmodule
 """
 
-rblk['fig']='O'
+rblk['shape']='square'
+rblk['color']='black'
 
 # List of inputs represented by (name, bits) tuple
 rblk['ins']=[('gin',2),('pin',2)]
@@ -111,7 +114,8 @@ module rgry(hout, gin);
 endmodule
 """
 
-rgry['fig']='X'
+rgry['shape']='square'
+rgry['color']='grey'
 
 # List of inputs represented by (name, bits) tuple
 rgry['ins']=[('gin',2)]
@@ -126,26 +130,13 @@ rgry['logic'] = lambda gin: [
 
 modules['rgry']=rgry
 
-### 'input' nodes
-adder_input=dict()
-
-adder_input['fig']=''
-
-adder_input['ins']=[('x',1)]
-
-adder_input['outs']=[('y',1)]
-
-adder_input['logic'] = lambda x: [x]
-
-modules['adder_input']=adder_input
-
 ### Buffer nodes
 buffer_node=dict()
 
-buffer_node['fig']='V'
+buffer_node['shape']='invtriangle'
+buffer_node['color']='white'
 
 buffer_node['ins']=[('x',1)]
-
 buffer_node['outs']=[('y',1)]
 
 buffer_node['logic'] = lambda x: [x]
