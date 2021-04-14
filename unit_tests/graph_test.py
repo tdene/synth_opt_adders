@@ -3,8 +3,8 @@
 import sys
 sys.path.append(".")
 
-from prefix import adder_graph
-from prefix import adder_node as node
+from adder_graph import adder_graph
+from adder_graph import adder_node as node
 import networkx as nx
 import pydot
 

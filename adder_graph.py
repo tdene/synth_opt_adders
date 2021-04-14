@@ -110,7 +110,7 @@ class adder_graph(nx.MultiDiGraph):
         return self.node_list[n[1]][n[0]]
 
 
-class prefix(adder_graph):
+class prefix_graph(adder_graph):
 
     def __init__(self,w,l,f,t):
         if(self.w!=2**(w.bit_length())):

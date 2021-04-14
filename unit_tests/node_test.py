@@ -3,7 +3,7 @@
 import sys
 sys.path.append(".")
 
-from prefix import adder_node
+from adder_graph import adder_node
 
 n = adder_node(0,1,'grey')
 
