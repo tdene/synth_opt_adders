@@ -27,23 +27,16 @@ class adder_node():
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
-#    def _format_edge_name(x,y,s):
-#        return "n_{2}_from_{0}_{1}".format(x,y,s)
-    
     def __str__(self):
         ret="node {0}_{1}_{2} (".format(self.m,self.x,self.y)
         tmp=self.ins.copy()
         tmp.update(self.outs)
         for a in tmp:
             ret+=" ."+a+"( {"
-            for b in tmp[a]:
-#                ret+=adder_node._format_edge_name(self.x,self.y,b)+','
-                ret+='n'+str(b)+','
-            ret=ret[:-1]+'} ),'
+            ret+='n'+',n'.join([str(x) for x in tmp[a]])
+            ret+='} ),'
         ret=ret[:-1]+' );'
         return ret
-#        return "Adder node of module {2} at bit {0} and level {1}"\
-#               .format(self.x,self.y,self.m)
 
     def __repr__(self):
         return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
@@ -51,10 +44,7 @@ class adder_node():
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
-# The graph also includes a list of start nodes to make it easy to traverse
 class adder_graph(nx.MultiDiGraph):
-
-    # Note that self.node_list is accessed in the order self.node_list[y][x], not [x][y]
 
     # Pre-condition: width is an integer
     # Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
@@ -63,8 +53,7 @@ class adder_graph(nx.MultiDiGraph):
         if not isinstance(width,int):
             raise TypeError("adder_graph width must be an integer")
         self.width=width
-        # Initialize graph to contain `width number of 'input' nodes
-        # Note that self.node_list is accessed in the order self.node_list[y][x], not [x][y]
+        # Initialize graph to "width" of width
         self.node_list=[[None]*self.width]
 
         super().__init__(self)
@@ -74,8 +63,8 @@ class adder_graph(nx.MultiDiGraph):
     # 0 <= y <= len(self.node_list) [no skipping levels!!!]
     # module is a valid module from modules
 
-    # Post-condition: adds node to 2-D array of all nodes
-    def add_node(self, n):
+    # Post-condition: adds node to graph and 2-D array of all nodes
+    def add_node(self, n, style='filled'):
         if not isinstance(n,adder_node):
             raise TypeError("can only add adder_nodes to adder_graph")
         if not (n.x<self.width and n.x>=0):
@@ -89,9 +78,9 @@ class adder_graph(nx.MultiDiGraph):
         if n.y==len(self.node_list):
             self.node_list.append([None]*self.width)
         self.node_list[n.y][n.x]=n
-
+        
         super().add_node(n,shape=modules[n.m]['shape'],
-                         fillcolor=modules[n.m]['color'],style='filled',
+                         fillcolor=modules[n.m]['color'],style=style,
                          pos="{0},{1}!".format(-1*n.x,-1*n.y),label='')
 
     # Pre-conditions:
@@ -108,14 +97,8 @@ class adder_graph(nx.MultiDiGraph):
             raise ValueError("cannot add an edge between non-adjacent levels")
         if p1 not in n1.outs or p2 not in n2.ins:
             raise ValueError("cannot add an edge between invalid ports")
-#        if n1.outs[p1][b1]!=None or n2.ins[p2][b2]!=None:
-#            raise ValueError("cannot overload node ports with extra edges")
 
-        #n1.outs[p1][b1]=n2; n2.ins[p2][b2]=n1;
-        num_edges=len(self.edges)
-        #num_edges=len([1 for x in self.edges() if x[0]==self.node_list[1][0]])
-
-        n1.outs[p1][b1]=num_edges; n2.ins[p2][b2]=num_edges;
+        n1.outs[p1][b1]=n2.ins[p2][b2]=len(self.edges)
 
         super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
 

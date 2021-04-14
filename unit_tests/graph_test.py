@@ -27,8 +27,6 @@ g.add_edge(g.node_list[1][0],('gout',0),g.node_list[2][1],('gin',0))
 g.add_edge(g[1,1],('gout',0),g[1,2],('gin',0))
 g.add_edge(g[1,1],('pout',0),g[1,2],('gin',1))
 
-#g.add_edge(g.node_list[1][0],('pout',0),g.node_list[2][1],('gin',1))
-
 adj_list=g.adj[g[0,1]]
 assert(g.node_list[2][0])
 assert(g.node_list[2][1])
@@ -40,5 +38,4 @@ assert(adj_list[g[0,2]][0]['ins']==('pout',0))
 assert(adj_list[g[1,2]][0]['outs']==('gin',0))
 
 #pg=nx.drawing.nx_pydot.to_pydot(g)
-#print(pg)
 #pg.write_png('output.png',prog='neato')
