@@ -26,10 +26,28 @@ class adder_node():
         # Create inputs and outputs dictionaries; initialize to None
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
+
+#    def _format_edge_name(x,y,s):
+#        return "n_{2}_from_{0}_{1}".format(x,y,s)
     
     def __str__(self):
-        return "Adder node of module {2} at bit {0} and level {1}"\
-               .format(self.x,self.y,self.m)
+        ret="node {0}_{1}_{2} (".format(self.m,self.x,self.y)
+        for a in self.ins:
+            ret+=" ."+a+"( {"
+            for b in self.ins[a]:
+#                ret+=adder_node._format_edge_name(self.x,self.y,b)+','
+                ret+=str(b)+','
+            ret=ret[:-1]+'} ),'
+        for a in self.outs:
+            ret+=" ."+a+"( {"
+            for b in self.outs[a]:
+#                ret+=adder_node._format_edge_name(self.x,self.y,b)+','
+                ret+=str(b)+','
+            ret=ret[:-1]+'} ),'
+        ret=ret[:-1]+' );'
+        return ret
+#        return "Adder node of module {2} at bit {0} and level {1}"\
+#               .format(self.x,self.y,self.m)
 
     def __repr__(self):
         return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
@@ -38,7 +56,7 @@ class adder_node():
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
 # The graph also includes a list of start nodes to make it easy to traverse
-class adder_graph(nx.DiGraph):
+class adder_graph(nx.MultiDiGraph):
 
     # Note that self.node_list is accessed in the order self.node_list[y][x], not [x][y]
 
@@ -94,14 +112,26 @@ class adder_graph(nx.DiGraph):
             raise ValueError("cannot add an edge between non-adjacent levels")
         if p1 not in n1.outs or p2 not in n2.ins:
             raise ValueError("cannot add an edge between invalid ports")
-        if n1.outs[p1][b1]!=None or n2.ins[p2][b2]!=None:
-            raise ValueError("cannot overload node ports with extra edges")
+#        if n1.outs[p1][b1]!=None or n2.ins[p2][b2]!=None:
+#            raise ValueError("cannot overload node ports with extra edges")
 
-        n1.outs[p1][b1]=n2; n2.ins[p2][b2]=n1;
+        #n1.outs[p1][b1]=n2; n2.ins[p2][b2]=n1;
+        num_edges=len(self.edges)
+        #num_edges=len([1 for x in self.edges() if x[0]==self.node_list[1][0]])
+
+        n1.outs[p1][b1]=num_edges; n2.ins[p2][b2]=num_edges;
 
         super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
 
-class prefix():
+    # Simplify self.node_list[y][x] to self[x,y]
+    def __getitem__(self,n):
+        # Auto-raise error if n is not iterable with the len call
+        if len(n)!=2:
+            raise ValueError("must input two numbers to access node in graph")
+        return self.node_list[n[1]][n[0]]
+
+
+class prefix(adder_graph):
 
     def __init__(self,w,l,f,t):
         if(self.w!=2**(w.bit_length())):
@@ -114,14 +144,14 @@ class prefix():
         self.f=f; self.f_=1+1<<f;
         self.t=t; self.t_=1<<t;
 
-        self.graph = adder_graph(self.w)
+        super().__init__(self.w)
 
     def __str__(self):
         return "Prefix adder with {0} width, {1} logic levels, {2} fan-out, {3} wire tracks"\
                 .format(self.w,self.l_,self.f_,self.t_)
 
     def __repr__(self):
-        return "adder({0},{1},{2},{3})".format(self.w,self.l,self.f,self.t)
+        return "prefix({0},{1},{2},{3})".format(self.w,self.l,self.f,self.t)
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")
