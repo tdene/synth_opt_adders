@@ -1,7 +1,7 @@
 #!/bin/python3
 
 import sys
-sys.path.append("..")
+sys.path.append(".")
 
 from prefix import adder_node
 

@@ -32,17 +32,13 @@ class adder_node():
     
     def __str__(self):
         ret="node {0}_{1}_{2} (".format(self.m,self.x,self.y)
-        for a in self.ins:
+        tmp=self.ins.copy()
+        tmp.update(self.outs)
+        for a in tmp:
             ret+=" ."+a+"( {"
-            for b in self.ins[a]:
+            for b in tmp[a]:
 #                ret+=adder_node._format_edge_name(self.x,self.y,b)+','
-                ret+=str(b)+','
-            ret=ret[:-1]+'} ),'
-        for a in self.outs:
-            ret+=" ."+a+"( {"
-            for b in self.outs[a]:
-#                ret+=adder_node._format_edge_name(self.x,self.y,b)+','
-                ret+=str(b)+','
+                ret+='n'+str(b)+','
             ret=ret[:-1]+'} ),'
         ret=ret[:-1]+' );'
         return ret
