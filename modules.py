@@ -133,6 +133,17 @@ modules['rgry']=rgry
 ### Buffer nodes
 buffer_node=dict()
 
+buffer_node['verilog']="""
+module buf(x, y);
+
+  input x;
+  output y;
+
+  assign y=x;
+
+endmodule
+"""
+
 buffer_node['shape']='invtriangle'
 buffer_node['color']='white'
 
@@ -142,6 +153,37 @@ buffer_node['outs']=[('y',1)]
 buffer_node['logic'] = lambda x: [x]
 
 modules['buffer_node']=buffer_node
+
+### P/G generation node
+
+pg_node=dict()
+
+pg_node['verilog']="""
+module pg_node(a, b, p, g);
+
+    input a, b;
+    output p, g;
+
+    assign p=a^b;
+    assign g=a&b;
+
+endmodule
+"""
+
+pg_node['shape']='square'
+pg_node['color']='white'
+pg_node['label']='P/G'
+pg_node['style']='dashed'
+
+pg_node['ins']=[('a',1),('b',1)]
+pg_node['outs']=[('p',1),('g',1)]
+
+pg_node['logic'] = lambda a,b: [
+                   a^b,
+                   a&b
+                   ]
+
+modules['pg_node']=pg_node
 
 if __name__=="__main__":
 
