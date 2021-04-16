@@ -55,5 +55,5 @@ assert(adj_list[g[0,1]][0]['ins']==adj_list[g[1,1]][0]['ins'])
 
 assert(g[1,1]._flat()==" assign n6=1'b0&1'b0;\n assign n5=n2|(1'b0&n1);\n")
 
-pg=nx.drawing.nx_pydot.to_pydot(g)
-pg.write_png('output.png',prog='neato')
+#pg=nx.drawing.nx_pydot.to_pydot(g)
+#pg.write_png('output.png',prog='neato')
