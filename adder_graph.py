@@ -46,7 +46,7 @@ class adder_node():
     # Return single line of verilog consisting of module instantiation
 
     def _verilog(self):
-        ret="node {0}_{1}_{2} (".format(self.m,self.x,self.y)
+        ret="{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
         tmp=self.ins.copy()
         tmp.update(self.outs)
         for a in tmp:
@@ -68,11 +68,11 @@ class adder_node():
         for a in tmp:
             if len(tmp[a])==1:
                 net_name=adder_node._parse_net(tmp[a][0])
-                ret.replace(a,net_name)
+                ret=ret.replace(a,net_name)
             else:
                 for b in range(len(tmp[a])):
                     net_name=adder_node._parse_net(tmp[a][b])
-                    ret.replace("{0}[{1}]".format(a,tmp[a][b]),net_name)
+                    ret=ret.replace("{0}[{1}]".format(a,b),net_name)
         return ret
 
     # Determine which verilog representation str() will use
