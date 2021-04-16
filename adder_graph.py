@@ -11,16 +11,27 @@ class adder_node():
     # Pre-conditions:
     # x, y are integers
     # module is a valid module from modules
+    # flat is a flag that determine how HDL is output
+    # custom_module is an optional alternative for providing
+        # a module definition not included in modules
 
     # Post-conditions:
     # stores all these values into internal variables
     # creates two dictionaries of input/output edges
 
-    def __init__(self, x, y, module, flat=False):
+    def __init__(self, x, y, module, flat=False, custom_module=None):
         if not (isinstance(x,int) and isinstance(y,int)):
             raise TypeError("adder_node x,y must both be integers")
-        if module not in modules:
+
+        if module not in modules and not isinstance(custom_module,dict):
             raise ValueError("trying to create node with invalid module")
+        if isinstance(custom_module,dict):
+            if 'verilog' not in custom_module:
+                raise ValueError("custom modules must have valid HDL")
+            if 'logic' not in custom_module:
+                raise ValueError("custom modules must have valid logic")
+            modules[module]=custom_module
+
         self.x=x; self.y=y; self.m=module; self.flat=flat;
 
         # Create inputs and outputs dictionaries; initialize to None
@@ -160,31 +171,6 @@ class adder_graph(nx.MultiDiGraph):
         if len(n)!=2:
             raise ValueError("must input two numbers to access node in graph")
         return self.node_list[n[1]][n[0]]
-
-
-class prefix_graph(adder_graph):
-
-    def __init__(self,w,l,f,t):
-        if(self.w!=2**(w.bit_length())):
-            raise ValueError("Program currently only support widths that are powers of two")
-        self.w=w;
-        tmp=w.bit_length();
-        if not(all([(x>=0 and x<tmp) for x in [l,f,t]])):
-            raise ValueError("l, f, and t parameters must all be within the range [0,L-1]")
-        if l+f+t<tmp-1:
-            raise ValueError("For a viable graph, l+f+t must be greater than or equal to L-1")
-        self.l=l; self.l_=l+tmp;
-        self.f=f; self.f_=1+1<<f;
-        self.t=t; self.t_=1<<t;
-
-        super().__init__(self.w)
-
-    def __str__(self):
-        return "Prefix adder with {0} width, {1} logic levels, {2} fan-out, {3} wire tracks"\
-                .format(self.w,self.l_,self.f_,self.t_)
-
-    def __repr__(self):
-        return "prefix({0},{1},{2},{3})".format(self.w,self.l,self.f,self.t)
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")
