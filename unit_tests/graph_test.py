@@ -17,9 +17,9 @@ g.add_node(node(1,1,'black'))
 g.add_node(node(0,2,'grey'))
 g.add_node(node(1,2,'grey'))
 
-g.add_edge(g[0,0],('y',0),g[0,1],('gin',0))
-g.add_edge(g[0,0],('y',0),g[1,1],('gin',0))
-g.add_edge(g[1,0],('y',0),g[1,1],('gin',1))
+g.add_edge(g[0,0],('gout',0),g[0,1],('gin',0))
+g.add_edge(g[0,0],('gout',0),g[1,1],('gin',0))
+g.add_edge(g[1,0],('gout',0),g[1,1],('gin',1))
 
 g.add_edge(g[0,1],('pout',0),g[0,2],('gin',1))
 g.add_edge(g[0,1],('gout',0),g[1,2],('gin',0))
@@ -41,7 +41,7 @@ assert(adj_list[g[1,2]][0]['outs']==('gin',0))
 # Node connecting to child via multiple ports
 adj_list=g.adj[g[1,1]]
 assert(g[1,2] in adj_list)
-assert(len(adj_list.keys())==1)
+assert(len(adj_list.keys())==3)
 
 assert(adj_list[g[1,2]][0]['outs']!=adj_list[g[1,2]][1]['outs'])
 assert(adj_list[g[1,2]][0]['ins']!=adj_list[g[1,2]][1]['ins'])
