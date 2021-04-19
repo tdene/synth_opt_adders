@@ -100,7 +100,7 @@ class adder_node():
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
-class adder_graph(nx.MultiDiGraph):
+class adder_graph(nx.MultiGraph):
 
     # Pre-condition: width is an integer
     # Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
