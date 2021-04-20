@@ -107,9 +107,9 @@ class adder_tree(graph):
         # We can take this opportunity to shift the wire
         # If pre is a buffer and we're going down
         # Or regardless if we're going up
-        if pre is not None and wire_remap and \
-           (not node._exists(pre) and fun in [self.top,self.r_top]) or \
-           (fun in [self.bot,self.r_bot]):
+        if wire_remap and (pre is not None) and \
+           ((not node._exists(pre) and fun in [self.top,self.r_top]) or \
+           fun in [self.bot,self.r_bot]):
             pre = fun(pre)
 
         # Run pre/post error checks
@@ -649,7 +649,8 @@ class adder_tree(graph):
         y=len(self.node_list)
         for a in range(self.w):
             self.add_node(node(a,y,'buffer_node'))
-        [self.shift_node(x,self.bot) for x in self.node_list[-2]]
+        for x in self.node_list[-2]:
+            self.shift_node(x,self.bot,wire_remap=False)
 
     # Prints a png
 
