@@ -277,29 +277,43 @@ class adder_tree(graph):
         a = self[x,y]
 
         ### Ugly condition
-        # ∃ b s.t pre(a) is below pre(b), r_bot(b).y>=a.y
-        # (second part means that we can only pick the b right above a, no buried b's)
-        b = None; tmp = self.pre(a)
-        if tmp is None:
+        # ∃ b s.t pre^n(top(b))=top^n(pre(a)),
+        pre = self.pre(a)
+        if pre is None or self.top(pre) is None:
             return (None,None)
-        while tmp.y>0:
-            tmp = self.top(tmp)
-            for x in self.post(tmp):
-                if self.r_bot(x).y >= a.y:
-                    b=x; break;
-        if b is None:
-            return (None,None)
-        # ∄ r_bot(b) s.t r_bot(b).y==a.y or top^n(pre(r_bot(b)))=pre^n(pre(a)):
-        # (that is to say, either the node to the left of a should not exist
-        # or things get complicated)
-        srb=self.r_bot(b)
-        if srb.y==a.y:
-            b=None
-            tmp1,tmp2=(self.pre(srb),self.pre(a))
+        b = None
+        for x in self.node_list[a.y][::-1]:
+            if (not node._exists(x)) or \
+                x.y != a.y or \
+                x.x >= a.x or \
+                self.top(x) is None or \
+                self.bot(x) is None or \
+                self.pre(self.top(x)) is None:
+                continue
+            srb=self.r_bot(x)
+            tmp1,tmp2=(self.top(x),pre)
             while (tmp1 is not None) and (tmp2 is not None):
-                tmp1=self.top(tmp1); tmp2=self.pre(tmp2);
+                tmp1=self.pre(tmp1); tmp2=self.top(tmp2);
                 if tmp1 is tmp2:
-                    b=x; break;
+                    b=self[srb.x,a.y]; break;
+            if b is None:
+                return (None,None)
+            b=None
+        # ∄ b or pre^n(r_top(b))=top^n(pre(b))
+            if not node._exists(self[srb.x,a.y]):
+                b=self[srb.x,a.y]; break;
+            tmp1,tmp2,tmp3=(self.pre(x),pre,pre)
+            while (tmp1 is not None):
+                tmp1=self.top(tmp1)
+                swap=tmp2
+                if tmp3 is not None:
+                    tmp2=self.pre(tmp3)
+                if tmp2 is not None:
+                    tmp3=self.top(swap)
+                if tmp1 is tmp2 or tmp1 is tmp3:
+                    b=self[srb.x,a.y]; break
+            if b is not None:
+                break
         if b is None:
             return (None,None)
 
@@ -475,24 +489,14 @@ class adder_tree(graph):
         if b is None:
             return None
 
-#        #del c = bot(b)
-#        c = self.bot(b)
-#        self.remove_node(c)
-#
-#        c=node(c.x,c.y,'buffer_node')
-#        self.add_node(c)
-
-        srb = self.r_bot(b)
-
-        #b -> bot(b)
-        if srb.y!=a.y:
-            self.shift_node(b, self.bot, wire_remap=False)
+        #pre(b) = pre(a)
+        if node._exists(b):
+            pre=self.pre(b)
+            self.remove_all_edges(b,pre)
+            self._add_pre(b,self.pre(a))
         else:
-            b=srb
-        #pre(b) = bot(pre(b))
-        pre=self.pre(b)
-        self.remove_all_edges(b,pre)
-        self._add_pre(b,self.pre(a))
+            c=node(b.x,b.y,'black')
+            self.add_node(c,pre=self.pre(a))
 
         if clean:
             self.reduce_idem()
