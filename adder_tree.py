@@ -246,9 +246,12 @@ class adder_tree(graph):
         for x in self.post(self.pre(a)):
             if x is a:
                 continue
-        # b is below pre(top(a))
-            if self._is_below(self.pre(self.r_top(a)),x):
-                b=x; break;
+        # ∃ c s.t a is below c and b is below pre(c)
+            c=a
+            while c.y>0:
+                c = self.top(c)
+                if self._is_below(self.pre(c),x):
+                    b=x; break;
         if b is None:
             return (None,None)
         # ∄ bot(a) or (∄ top(b) and pre(b).y>top(b))
@@ -298,27 +301,32 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=self._checkFT(x,a)
+                a,b,z=self._checkFT(x,a)
                 if b is not None:
-                    return a,b
-            return (None,None)
+                    return (a,b,z)
+            return (None,None,None)
 
         # Main clause of the function
         a = self[x,y]
         # ∃ b s.t pre(a)=pre(b),
         if self.pre(a) is None:
-            return (None,None)
+            return (None,None,None)
         b = None
         for x in self.post(self.pre(a)):
             if x is a:
                 continue
-        # ∄ top(b)
+        # ∄ top(b) or pre^n(top(b))=top^n(pre(b))
             if not node._exists(self.top(x)):
-                b=x; break;
+                b=x; z=self.top(self.pre(x)); break;
+            tmp1,tmp2=(self.top(x),self.pre(x))
+            while (tmp1 is not None) and (tmp2 is not None):
+                tmp1=self.pre(tmp1); tmp2=self.top(tmp2);
+                if tmp1 is tmp2:
+                    b=x; z=tmp1; break;
         if b is None:
-            return (None,None)
+            return (None,None,None)
 
-        return (a,b)
+        return (a,b,z)
 
     def _checkLT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -384,7 +392,7 @@ class adder_tree(graph):
 
         return (a,b)
 
-    def LF(self,x,y=None):
+    def LF(self,x,y=None,clean=False):
         a,b = self._checkLF(x,y)
         if b is None:
             return None
@@ -402,15 +410,19 @@ class adder_tree(graph):
         # pre(a) = pre(b)
         self.remove_all_edges(a,self.pre(a))
 
-        print(repr(self.pre(b)))
         self._add_pre(a,self.pre(b))
 
         # a -> top(a)
         self.shift_node(a, self.top, wire_remap=False)
 
+        if clean:
+            self.reduce_idem()
+            self.compress()
+            self.trim_layer()
+
         return a,b
 
-    def FL(self,x,y=None):
+    def FL(self,x,y=None,clean=False):
 # Need to implement ∄ bot(a) by shifting in-place if ∄ top(b) and pre(b).y>top(b)
         a,b = self._checkFL(x,y)
         if b is None:
@@ -427,11 +439,16 @@ class adder_tree(graph):
 #
 #        c=node(c.x,c.y,'buffer_node')
 #        self.add_node(c)
-#
+
         #pre(a) = b
         self.remove_all_edges(a,self.pre(a))
 
         self._add_pre(a,b)
+
+        if clean:
+            self.reduce_idem()
+            self.compress()
+            self.trim_layer()
 
         return a,b
 
@@ -455,32 +472,46 @@ class adder_tree(graph):
         self.remove_all_edges(b,pre)
         self._add_pre(b,self.bot(pre))
 
+        if clean:
+            self.reduce_idem()
+            self.compress()
+            self.trim_layer()
+
         return a,b
 
-    def FT(self,x,y=None):
-        a,b = self._checkFT(x,y)
+    def FT(self,x,y=None,clean=False):
+        a,b,z = self._checkFT(x,y)
         if b is None:
             return None
 
-        #pre(b) = top(pre(b))
-        pre = self.pre(b)
         # note: pre = self.pre(b) = self.pre(a)
+        pre = self.pre(b)
+
+        #pre(b) = top(pre(b))
         self.remove_all_edges(b,pre)
 
         self._add_pre(b,self.top(pre))
 
         #b -> top(b)
         post=self.post(b)
-        self.shift_node(b, self.top, wire_remap=False)
+        c=node(b.x,b.y,'black')
+
+        # This is the only transformation where the node/net
+        # being created might already exist, even optimized
+        if node._exists(self.top(b)):
+            self.remove_node(b)
+        else:
+            self.shift_node(b, self.top, wire_remap=False)
 
         #if pre(pre(a)) exists
         #create c = bot(b); pre(c)=bot(pre(pre(a)))
-        if self.pre(pre) is not None:
-            c=self.bot(b)
-            self.remove_node(c)
-
-            c=node(c.x,c.y,'black')
-            self.add_node(c,pre=self.bot(self.pre(pre)))
+        if self.pre(pre) is not None or z is not self.top(pre):
+            if self[c.x,c.y] is not None:
+                self.remove_node(self[c.x,c.y])
+            tmp=self.pre(self.bot(z))
+            while tmp.y<pre.y:
+                tmp=self.bot(tmp)
+            self.add_node(c,pre=tmp)
 
         # Note to self:
         # post(b) has to attach to the original b spot
@@ -492,24 +523,29 @@ class adder_tree(graph):
                 self.remove_all_edges(x,b)
                 self._add_pre(x,c)
 
+        if clean:
+            self.reduce_idem()
+            self.compress()
+            self.trim_layer()
+
         return a,b
 
-    def LT(self,x,y=None):
+    def LT(self,x,y=None,clean=False):
         a,b = self._checkLT(x,y=y)
         if b is None:
             return None
 
-        a,b = self.LF(a.x,a.y)
-        return self.FT(a.x,a.y)
+        a,b = self.LF(a.x,a.y,clean)
+        return self.FT(a.x,a.y,clean)
         #LF, followed by FT
 
-    def TL(self,x,y=None):
+    def TL(self,x,y=None,clean=True):
         a,b = self._checkTL(x,y)
         if b is None:
             return None
 
-        a,b = self.TF(a.x,a.y)
-        return self.FL(a.x,a.y)
+        a,b = self.TF(a.x,a.y,clean)
+        return self.FL(a.x,a.y,clean)
         #TF, followed by FL
 
     # Shifts all possible nodes up
