@@ -132,3 +132,5 @@ def demo():
     g.png('38.png')
     g.png('39.png')
     g.png('40.png')
+
+done()
