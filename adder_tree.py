@@ -446,5 +446,10 @@ class adder_tree(graph):
         [self.remove_node(x) for x in self.node_list[-1]]
         del self.node_list[-1]
 
+    # Adds an extra layer at the bottom of the tree
+
     def add_layer(self):
-        pass
+        y=len(self.node_list)
+        for a in range(self.w):
+            self.add_node(node(a,y,'buffer_node'))
+        [self.shift_node(x,self.bot) for x in self.node_list[-2]]
