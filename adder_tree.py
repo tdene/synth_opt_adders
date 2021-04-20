@@ -278,6 +278,7 @@ class adder_tree(graph):
 
         ### Ugly condition
         # ∃ b s.t pre(a) is below pre(b), r_bot(b).y>=a.y
+        # (second part means that we can only pick the b right above a, no buried b's)
         b = None; tmp = self.pre(a)
         if tmp is None:
             return (None,None)
@@ -288,8 +289,18 @@ class adder_tree(graph):
                     b=x; break;
         if b is None:
             return (None,None)
-        # if r_bot(b).y==a.y, pre(r_bot(a)) is below pre(pre(a)):
-        if self.r_bot(b).y==a.y and not self._is_below(self.pre(self.pre(a)),self.pre(r_bot(a))):
+        # ∄ r_bot(b) s.t r_bot(b).y==a.y or top^n(pre(r_bot(b)))=pre^n(pre(a)):
+        # (that is to say, either the node to the left of a should not exist
+        # or things get complicated)
+        srb=self.r_bot(b)
+        if srb.y==a.y:
+            b=None
+            tmp1,tmp2=(self.pre(srb),self.pre(a))
+            while (tmp1 is not None) and (tmp2 is not None):
+                tmp1=self.top(tmp1); tmp2=self.pre(tmp2);
+                if tmp1 is tmp2:
+                    b=x; break;
+        if b is None:
             return (None,None)
 
         return (a,b)
@@ -452,25 +463,29 @@ class adder_tree(graph):
 
         return a,b
 
-    def TF(self,x,y=None):
+    def TF(self,x,y=None,clean=False):
         a,b = self._checkTF(x,y)
         if b is None:
             return None
 
-        #del c = bot(b)
-        c = self.bot(b)
-        self.remove_node(c)
+#        #del c = bot(b)
+#        c = self.bot(b)
+#        self.remove_node(c)
+#
+#        c=node(c.x,c.y,'buffer_node')
+#        self.add_node(c)
 
-        c=node(c.x,c.y,'buffer_node')
-        self.add_node(c)
+        srb = self.r_bot(b)
 
         #b -> bot(b)
-        self.shift_node(b, self.bot, wire_remap=False)
-
+        if srb.y!=a.y:
+            self.shift_node(b, self.bot, wire_remap=False)
+        else:
+            b=srb
         #pre(b) = bot(pre(b))
         pre=self.pre(b)
         self.remove_all_edges(b,pre)
-        self._add_pre(b,self.bot(pre))
+        self._add_pre(b,self.pre(a))
 
         if clean:
             self.reduce_idem()
