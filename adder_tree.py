@@ -184,7 +184,7 @@ class adder_tree(graph):
     # Same column, higher row, or second node straight-up does not exist
 
     def _is_below(self,n1,n2):
-        return (n2 is None) or (n1 is not None and n2.y==n1.y and n2.x>n1.x)
+        return (n2 is None) or (n1 is not None and n2.x==n1.x and n2.y>n1.y)
 
     # Pre-condition: x,y are valid co-ordinates
     # (if y is not provided, searches entire column from bottom-up)
@@ -233,11 +233,13 @@ class adder_tree(graph):
         # Main clause of the function
         a = self[x,y]
         # ∃ b s.t pre(a)=pre(b),
-        b = next(iter([x for x in self.post(a) if x is not a]),None)
+        if self.pre(a) is None:
+            return (None,None)
+        b = next(iter([x for x in self.post(self.pre(a)) if x is not a]),None)
         if b is None:
             return (None,None)
         # b is below pre(top(a))
-        if not self._is_below(pre(top(a)),b):
+        if not self._is_below(self.pre(self.top(a)),b):
             return (None,None)
         # ∄ bot(a) or ∄ pre(a)
         if node._exists(self.bot(a)) and node._exists(self.pre(a)):
@@ -379,8 +381,7 @@ class adder_tree(graph):
         self.add_node(c,pre=self.top(self.top(b)))
 
         # pre(a) = pre(b)
-        self.remove_edge(a,self.pre(a))
-        self.remove_edge(a,self.pre(a))
+        self.remove_all_edges(a,self.pre(a))
 
         self._add_pre(a,self.pre(b))
 
@@ -390,27 +391,73 @@ class adder_tree(graph):
         return a,b
 
     def FL(self,x,y=None):
+        a,b = self._checkFL(x,y)
+        if b is None:
+            return None
+
         #a -> bot(a)
+        self.shift_node(a, self.bot)
+
         #del c = top(top(a))
+        c=self.top(self.top(a))
+        self.remove_node(c)
+
+        c=node(c.x,c.y,'buffer_node')
+        self.add_node(c)
+
         #pre(a) = b
-        pass
+        self.remove_all_edges(a,self.pre(a))
+
+        self._add_pre(a,b)
+
+        return a,b
 
     def TF(self,x,y=None):
+        a,b = self._checkTF(x,y)
+        if b is None:
+            return None
+
         #del c = bot(b)
         #b -> bot(b)
         #pre(b) = bot(pre(b))
-        pass
 
     def FT(self,x,y=None):
-        pass
+        a,b = self._checkFT(x,y)
+        if b is None:
+            return None
+
+        #pre(b) = top(pre(b))
+        pre = self.pre(b)
+        # note: pre = self.pre(b) = self.pre(a)
+        self.remove_all_edges(b,pre)
+
+        self._add_pre(b,self.top(pre))
+
+        #b -> top(b)
+        self.shift_node(b, self.top)
+
+        #if pre(a) has a predecessor
+        #create c = bot(b); pre(c)=bot(pre(pre(a)))
+        if self.pre(pre) is not None:
+            c=self.bot(b)
+            self.remove_node(c)
+
+            c=node(c.x,c.y,'black')
+            self.add_node(c,pre=self.bot(self.pre(pre)))
 
     def LT(self,x,y=None):
+        a,b = self._checkLT(x,y)
+        if b is None:
+            return None
+
         #LF, followed by FT
-        pass
 
     def TL(self,x,y=None):
+        a,b = self._checkTL(x,y)
+        if b is None:
+            return None
+
         #TF, followed by FL
-        pass
 
     # Shifts all possible nodes up
 
@@ -446,8 +493,7 @@ class adder_tree(graph):
 
                 # Remove the lower pair's edge
                     c = a if a.y>b.y else b
-                    self.remove_edge(c,self.pre(c))
-                    self.remove_edge(c,self.pre(c))
+                    self.remove_all_edges(c,self.pre(c))
                     modified.append(c)
                     modified.append(self.pre(c))
 
