@@ -19,3 +19,4 @@ jobs:
         pip install -r requirements.txt
         python3 unit_tests/node_test.py
         python3 unit_tests/graph_test.py
+        python3 unit_tests/tree_test.py

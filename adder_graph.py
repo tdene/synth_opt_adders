@@ -38,6 +38,11 @@ class adder_node():
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
+    # Static helper function that checks whether a node is not a grey/black cell
+
+    def _exists(n):
+        return n is None or n.m not in ['buffer_node','pg_node']
+
     # The node object has dictionaries of input/output edges
     # These come in 3 possible flavors:
     # - None (unassigned net) -> parsed to 1'b0
