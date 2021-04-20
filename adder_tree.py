@@ -243,7 +243,7 @@ class adder_tree(graph):
                 continue
         # b is below pre(top(a))
             if self._is_below(self.pre(self.r_top(a)),x):
-                b=x
+                b=x; break;
         if b is None:
             return (None,None)
         # ∄ bot(a) or (∄ top(b) and pre(b).y>top(b))
@@ -301,11 +301,16 @@ class adder_tree(graph):
         # Main clause of the function
         a = self[x,y]
         # ∃ b s.t pre(a)=pre(b),
-        b = next(iter([x for x in self.post(a) if x is not a]),None)
-        if b is None:
+        if self.pre(a) is None:
             return (None,None)
+        b = None
+        for x in self.post(self.pre(a)):
+            if x is a:
+                continue
         # ∄ top(b)
-        if node._exists(self.top(b)):
+            if not node._exists(self.top(x)):
+                b=x; break;
+        if b is None:
             return (None,None)
 
         return (a,b)
