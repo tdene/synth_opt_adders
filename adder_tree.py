@@ -605,14 +605,19 @@ class adder_tree(graph):
                    self.pre(b) is not None and \
                    a is not b and \
                    self.pre(a) is not self.pre(b) and \
+                   self.pre(a).x==self.pre(b).x and \
                    a.x==b.x and \
-                   self.pre(a).x==self.pre(b).x:
+                   a.y>0 and b.y>0:
 
-                # Remove the higher pair's edge
-                    c = a if a.y<b.y else b
-                    self.remove_all_edges(c,self.pre(c))
-                    modified.append(c)
-                    modified.append(self.pre(c))
+                    if (self.r_top(a)==b or self.r_top(b)==a) and \
+                       (not node._exists(self.pre(a))) and \
+                       (not node._exists(self.pre(b))):
+
+                    # Remove the lower pair's edge
+                        c = a if a.y>b.y else b
+                        self.remove_all_edges(c,self.pre(c))
+                        modified.append(c)
+                        modified.append(self.pre(c))
 
         # Filter out any modified buffers
         modified = [x for x in modified if node._exists(x)]
