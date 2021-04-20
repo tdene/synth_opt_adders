@@ -61,10 +61,10 @@ class adder_tree(graph):
 
     def _add_top(self,n,pre=None):
 
-        if 'pin' in n.ins:
+        if 'pin' in n.ins and 'pout' in self.top(n).outs:
             pos=len(n.ins['pin'])-1
             self.add_edge(self.top(n),('pout',0),n,('pin',pos))
-        if 'gin' in n.ins:
+        if 'gin' in n.ins and 'gout' in self.top(n).outs:
             pos=len(n.ins['gin'])-1
             self.add_edge(self.top(n),('gout',0),n,('gin',pos))
 
@@ -102,7 +102,7 @@ class adder_tree(graph):
         post = self.post(n)
 
         # If pre is a buffer, we can take this opportunity to shift the wire
-        if not node._exists(pre):
+        if pre is not None and not node._exists(pre):
             pre = fun(pre)
 
         # Run pre/post error checks
@@ -422,9 +422,10 @@ class adder_tree(graph):
             # that do not have a top,
             if node._exists(self.top(a)):
                 continue
-            # and whose pre is a buffer
+            # and whose pre is either a buffer
+            # or not immediately above
             pre = self.pre(a)
-            if pre is None or node._exists(pre):
+            if pre is None or (node._exists(pre) and pre.y==a.y-1):
                 continue
             self.shift_node(a)
             changed=True
@@ -434,5 +435,16 @@ class adder_tree(graph):
     def reduce(self):
         pass
 
-    def trim(self):
+    # If the last row of the tree is just buffers
+    # Shortens the tree by one layer
+
+    def trim_layer(self):
+        # Check if last row is just buffers
+        if any([node._exists(self.top(x)) for x in self.node_list[-1]]):
+            return
+        [self.shift_node(x) for x in self.node_list[-1]]
+        [self.remove_node(x) for x in self.node_list[-1]]
+        del self.node_list[-1]
+
+    def add_layer(self):
         pass
