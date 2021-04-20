@@ -403,13 +403,15 @@ class adder_tree(graph):
         #a -> bot(a)
         self.shift_node(a, self.bot)
 
-        #del c = top(top(a))
-        c=self.top(self.top(a))
-        self.remove_node(c)
-
-        c=node(c.x,c.y,'buffer_node')
-        self.add_node(c)
-
+## All del statements from transforms have been commented out
+## To be performed by reduce_idem instead
+#        #del c = top(top(a))
+#        c=self.top(self.top(a))
+#        self.remove_node(c)
+#
+#        c=node(c.x,c.y,'buffer_node')
+#        self.add_node(c)
+#
         #pre(a) = b
         self.remove_all_edges(a,self.pre(a))
 
@@ -486,18 +488,22 @@ class adder_tree(graph):
 
     # Cancels out logically-equivalent nodes/edges
 
-    def reduce(self):
+    def reduce_idem(self):
         modified=[]
         for a in self:
             for b in self:
                 # If two nodes and their predecessors are parallel
                 if self.pre(a) is not None and \
                    self.pre(b) is not None and \
-                   a.x==b.y and \
+                   a is not b and \
+                   self.pre(a) is not self.pre(b) and \
+                   a.x==b.x and \
                    self.pre(a).x==self.pre(b).x:
 
-                # Remove the lower pair's edge
-                    c = a if a.y>b.y else b
+                    print(repr(a),repr(b))
+                    print(repr(self.pre(a)),repr(self.pre(b)))
+                # Remove the higher pair's edge
+                    c = a if a.y<b.y else b
                     self.remove_all_edges(c,self.pre(c))
                     modified.append(c)
                     modified.append(self.pre(c))
