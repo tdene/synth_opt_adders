@@ -86,7 +86,7 @@ class adder_tree(graph):
     # Post-condition: n shifts to its intended destination with its full connections
     # n's original location now contains a buffer
 
-    def shift_node(self,n,fun=None,wire_compress=True):
+    def shift_node(self,n,fun=None,wire_remap=True):
 
         if fun==None:
             fun=self.top
@@ -102,9 +102,14 @@ class adder_tree(graph):
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
+        post.extend(self.post(buf))
 
-        # If pre is a buffer, we can take this opportunity to shift the wire
-        if pre is not None and not node._exists(pre) and wire_compress:
+        # We can take this opportunity to shift the wire
+        # If pre is a buffer and we're going down
+        # Or regardless if we're going up
+        if pre is not None and wire_remap and \
+           (not node._exists(pre) and fun in [self.top,self.r_top]) or \
+           (fun in [self.bot,self.r_bot]):
             pre = fun(pre)
 
         # Run pre/post error checks
@@ -401,7 +406,7 @@ class adder_tree(graph):
         self._add_pre(a,self.pre(b))
 
         # a -> top(a)
-        self.shift_node(a, self.top, wire_compress=False)
+        self.shift_node(a, self.top, wire_remap=False)
 
         return a,b
 
@@ -412,7 +417,7 @@ class adder_tree(graph):
             return None
 
         #a -> bot(a)
-        self.shift_node(a, self.bot, wire_compress=False)
+        self.shift_node(a, self.bot, wire_remap=False)
 
 ## Unnecessary del statements from transforms have been commented out
 ## To be performed by reduce_idem instead
@@ -443,7 +448,7 @@ class adder_tree(graph):
         self.add_node(c)
 
         #b -> bot(b)
-        self.shift_node(b, self.bot, wire_compress=False)
+        self.shift_node(b, self.bot, wire_remap=False)
 
         #pre(b) = bot(pre(b))
         pre=self.pre(b)
@@ -465,9 +470,10 @@ class adder_tree(graph):
         self._add_pre(b,self.top(pre))
 
         #b -> top(b)
-        self.shift_node(b, self.top, wire_compress=False)
+        post=self.post(b)
+        self.shift_node(b, self.top, wire_remap=False)
 
-        #if pre(a) has a predecessor
+        #if pre(pre(a)) exists
         #create c = bot(b); pre(c)=bot(pre(pre(a)))
         if self.pre(pre) is not None:
             c=self.bot(b)
@@ -475,6 +481,16 @@ class adder_tree(graph):
 
             c=node(c.x,c.y,'black')
             self.add_node(c,pre=self.bot(self.pre(pre)))
+
+        # Note to self:
+        # post(b) has to attach to the original b spot
+        # I think this is, like the rest of the complication,
+        # only when pre(pre(a)) exists
+        # Will need to revisit this and draw it out
+
+            for x in post:
+                self.remove_all_edges(x,b)
+                self._add_pre(x,c)
 
         return a,b
 
