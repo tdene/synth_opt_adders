@@ -86,7 +86,7 @@ class adder_tree(graph):
     # Post-condition: n shifts to its intended destination with its full connections
     # n's original location now contains a buffer
 
-    def shift_node(self,n,fun=None):
+    def shift_node(self,n,fun=None,wire_compress=True):
 
         if fun==None:
             fun=self.top
@@ -104,7 +104,7 @@ class adder_tree(graph):
         post = self.post(n)
 
         # If pre is a buffer, we can take this opportunity to shift the wire
-        if pre is not None and not node._exists(pre):
+        if pre is not None and not node._exists(pre) and wire_compress:
             pre = fun(pre)
 
         # Run pre/post error checks
@@ -397,10 +397,11 @@ class adder_tree(graph):
         # pre(a) = pre(b)
         self.remove_all_edges(a,self.pre(a))
 
+        print(repr(self.pre(b)))
         self._add_pre(a,self.pre(b))
 
         # a -> top(a)
-        self.shift_node(a, self.top)
+        self.shift_node(a, self.top, wire_compress=False)
 
         return a,b
 
@@ -411,7 +412,7 @@ class adder_tree(graph):
             return None
 
         #a -> bot(a)
-        self.shift_node(a, self.bot)
+        self.shift_node(a, self.bot, wire_compress=False)
 
 ## Unnecessary del statements from transforms have been commented out
 ## To be performed by reduce_idem instead
@@ -442,7 +443,7 @@ class adder_tree(graph):
         self.add_node(c)
 
         #b -> bot(b)
-        self.shift_node(b,self.bot)
+        self.shift_node(b, self.bot, wire_compress=False)
 
         #pre(b) = bot(pre(b))
         pre=self.pre(b)
@@ -464,7 +465,7 @@ class adder_tree(graph):
         self._add_pre(b,self.top(pre))
 
         #b -> top(b)
-        self.shift_node(b, self.top)
+        self.shift_node(b, self.top, wire_compress=False)
 
         #if pre(a) has a predecessor
         #create c = bot(b); pre(c)=bot(pre(pre(a)))
@@ -478,10 +479,12 @@ class adder_tree(graph):
         return a,b
 
     def LT(self,x,y=None):
-        a,b = self._checkLT(x,y)
+        a,b = self._checkLT(x,y=y)
         if b is None:
             return None
 
+        a,b = self.LF(a.x,a.y)
+        return self.FT(a.x,a.y)
         #LF, followed by FT
 
     def TL(self,x,y=None):
