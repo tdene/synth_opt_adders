@@ -182,7 +182,8 @@ class adder_graph(nx.MultiGraph):
 
         n1.outs[p1][b1]=n2.ins[p2][b2]=len(self.edges)
 
-        super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
+        if p1!='pout':
+            super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
 
     # NetworkX has no way to remove all edges between 2 nodes in a MultiGraph?
     # Keep removing until an Exception is thrown?
