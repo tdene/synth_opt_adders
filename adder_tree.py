@@ -101,12 +101,13 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkLF(self,x,a)
+                a,b=self._checkLF(x,a)
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
         # ∃ b = pre(a)
         b = self.pre(a)
         if not node._exists(b):
@@ -127,12 +128,13 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkFL(self,x,a)
+                a,b=self._checkFL(x,a)
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
         # ∃ b s.t pre(a)=pre(b),
         b = next(iter([x for x in self.post(a) if x is not a]),None)
         if b is None:
@@ -153,16 +155,19 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkTF(self,x,a)
+                a,b=self._checkTF(x,a)
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
 
         ### Ugly condition
         # ∃ b s.t pre(a) is below pre(b), r_bot(b).y>=a.y
         b = None; tmp = self.pre(a)
+        if tmp is None:
+            return (None,None)
         while tmp.y>0:
             tmp = self.top(tmp)
             for x in self.post(tmp):
@@ -183,12 +188,13 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkFT(self,x,a)
+                a,b=self._checkFT(x,a)
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
         # ∃ b s.t pre(a)=pre(b),
         b = next(iter([x for x in self.post(a) if x is not a]),None)
         if b is None:
@@ -206,12 +212,13 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkLT(self,x,a)
+                a,b=self._checkLT(x,a)
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
         # ∃ b = pre(a)
         b = self.pre(a)
         if not node._exists(b):
@@ -232,17 +239,20 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=_checkTL(self,x,a)
+                a,b=self._checkTL(x,a)
 
                 if b is not None:
                     return a,b
+            return (None,None)
 
         # Main clause of the function
-        a = self[x][y]
+        a = self[x,y]
 
         ### Ugly condition
         # ∃ b s.t pre(a) is below pre(b), r_bot(b).y>=a.y
         b = None; tmp = self.pre(a)
+        if tmp is None:
+            return (None,None)
         while tmp.y>0:
             tmp = self.top(tmp)
             for x in self.post(tmp):
