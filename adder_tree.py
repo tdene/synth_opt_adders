@@ -96,15 +96,21 @@ class adder_tree(graph):
             raise ValueError("trying to shift a node not in the graph")
         if node._exists(buf):
             raise ValueError("can only shift node into buffers")
-        if self.pre(n) is not None and self.pre(n).y>=buf.y:
-            raise ValueError("cannot shift node past predecessor")
-        for x in self.post(n):
-            if x.y<=buf.y:
-                raise ValueError("cannot shift node past successor")
 
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
+
+        # If pre is a buffer, we can take this opportunity to shift the wire
+        if not node._exists(pre):
+            pre = fun(pre)
+
+        # Run pre/post error checks
+        if pre is not None and pre.y>=buf.y:
+            raise ValueError("cannot shift node past predecessor")
+        for x in post:
+            if x.y<=buf.y:
+                raise ValueError("cannot shift node past successor")
 
         # Remove nodes from graph
         self.remove_node(n)
@@ -406,8 +412,27 @@ class adder_tree(graph):
         #TF, followed by FL
         pass
 
-    def compress():
+    # Shifts all possible nodes up
+
+    def compress(self,changed=False):
+        for a in self:
+            # Only pick non-buffer nodes,
+            if not node._exists(a):
+                continue
+            # that do not have a top,
+            if node._exists(self.top(a)):
+                continue
+            # and whose pre is a buffer
+            pre = self.pre(a)
+            if pre is None or node._exists(pre):
+                continue
+            self.shift_node(a)
+            changed=True
+        if changed:
+            return self.compress()
+
+    def reduce(self):
         pass
 
-    def reduce():
+    def trim(self):
         pass

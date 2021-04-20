@@ -24,6 +24,7 @@ assert(g._checkTL(7)==(None,None))
 g.LF(7)
 g.LF(5)
 g.LF(3)
+g.compress()
 
 #pg=nx.drawing.nx_pydot.to_pydot(g)
 #pg.write_png('output.png',prog='neato')
