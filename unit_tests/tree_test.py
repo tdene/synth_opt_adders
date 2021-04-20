@@ -21,5 +21,9 @@ assert(g._checkTF(7)==(None,None))
 assert(g._checkFL(7)==(None,None))
 assert(g._checkTL(7)==(None,None))
 
+g.LF(7)
+g.LF(5)
+g.LF(3)
+
 #pg=nx.drawing.nx_pydot.to_pydot(g)
 #pg.write_png('output.png',prog='neato')

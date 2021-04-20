@@ -6,7 +6,11 @@ from adder_graph import adder_node as node
 
 # Trees are initialized to a serial structures (ripple-carry-like)
 # Trees can morph via any of three, reversible, transforms:
-# L->F, F->L (R. Zimmermann, Binary Adder Architectures for Cell-Based VLSI and their Synthesis, PhD thesis, Swiss Federal Institute of Technology (ETH) Zurich, Hartung-Gorre Verlag, 1998), L->T, T->L, F->T, T->F
+# L->F, F->L, L->T, T->L, F->T, T->F
+
+# L <-> F was discussed in
+# R. Zimmermann, Binary Adder Architectures for Cell-Based VLSI and their Synthesis, PhD thesis, Swiss Federal Institute of Technology (ETH) Zurich, Hartung-Gorre Verlag, 1998
+#  J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
 
 class adder_tree(graph):
 
@@ -46,6 +50,16 @@ class adder_tree(graph):
             raise TypeError("provided predecessor node must be a node")
 
         super().add_node(n)
+        self._add_top(n)
+        self._add_pre(n,pre=pre)
+
+        if self.bot(n) is not None:
+            self._add_top(self.bot(n))
+
+    # Internal helper function to prevent re-writing of code
+    # Connects node to its upper neighbor
+
+    def _add_top(self,n,pre=None):
 
         if 'pin' in n.ins:
             pos=len(n.ins['pin'])-1
@@ -54,6 +68,10 @@ class adder_tree(graph):
             pos=len(n.ins['gin'])-1
             self.add_edge(self.top(n),('gout',0),n,('gin',pos))
 
+    # Internal helper function to prevent re-writing of code
+    # Connects node to a predecessor
+
+    def _add_pre(self,n,pre=None):
         if pre is None:
             return
 
@@ -62,10 +80,66 @@ class adder_tree(graph):
         if 'gin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('gout',0),n,('gin',0))
 
+    # Pre-condition: n is a node in the graph; its intended destination is a buffer
+    # Post-condition: n shifts to its intended destination with its full connections
+    # n's original location now contains a buffer
+
+    def shift_node(self,n,fun=None):
+
+        if fun==None:
+            fun=self.top
+
+        # Grab the buffer we're swapping with
+        buf=fun(n)
+
+        if n not in self:
+            raise ValueError("trying to shift a node not in the graph")
+        if node._exists(buf):
+            raise ValueError("can only shift node into buffers")
+        if self.pre(n) is not None and self.pre(n).y>=buf.y:
+            raise ValueError("cannot shift node past predecessor")
+        for x in self.post(n):
+            if x.y<=buf.y:
+                raise ValueError("cannot shift node past successor")
+
+        # Save pre/post
+        pre = self.pre(n)
+        post = self.post(n)
+
+        # Remove nodes from graph
+        self.remove_node(n)
+        self.remove_node(buf)
+
+        # Re-label x/y of nodes
+        tmp = n.x; n.x = buf.x; buf.x = tmp; del tmp;
+        tmp = n.y; n.y = buf.y; buf.y = tmp; del tmp;
+
+        # Clean edge info (should be re-written to use remove_edge)
+        buf.ins={x:[None]*len(buf.ins[x]) for x in buf.ins}
+        buf.outs={x:[None]*len(buf.outs[x]) for x in buf.outs}
+        n.ins={x:[None]*len(n.ins[x]) for x in n.ins}
+        n.outs={x:[None]*len(n.outs[x]) for x in n.outs}
+
+        # Re-add nodes into graph
+        if buf.y>n.y:
+            self.add_node(n,pre=pre)
+            self.add_node(buf)
+        else:
+            self.add_node(buf)
+            self.add_node(n,pre=pre)
+
+        # Re-draw connectons to node
+        for x in post:
+            self._add_pre(x,pre=n)
+
+        return n
+
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
 
     def top(self,n):
+        if n.y==0:
+            return None
         return self[n.x,n.y-1]
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
@@ -78,6 +152,8 @@ class adder_tree(graph):
     # Post-condition: returns the y+1 neighbor (post-processing logic if already at the bot)
 
     def bot(self,n):
+        if n.y+1==len(self.node_list):
+            return None
         return self[n.x,n.y+1]
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
@@ -287,8 +363,51 @@ class adder_tree(graph):
     def LF(self,x,y=None):
         a,b = self._checkLF(x,y)
         if b is None:
-            return check
+            return None
 
-        
+        # create c=top(top(a)); pre(c) = top(top(b))
+        c=self.top(self.top(a))
+        self.remove_node(c)
 
-        return check
+        c=node(c.x,c.y,'black')
+        self.add_node(c,pre=self.top(self.top(b)))
+
+        # pre(a) = pre(b)
+        self.remove_edge(a,self.pre(a))
+        self.remove_edge(a,self.pre(a))
+
+        self._add_pre(a,self.pre(b))
+
+        # a -> top(a)
+        self.shift_node(a, self.top)
+
+        return a,b
+
+    def FL(self,x,y=None):
+        #a -> bot(a)
+        #del c = top(top(a))
+        #pre(a) = b
+        pass
+
+    def TF(self,x,y=None):
+        #del c = bot(b)
+        #b -> bot(b)
+        #pre(b) = bot(pre(b))
+        pass
+
+    def FT(self,x,y=None):
+        pass
+
+    def LT(self,x,y=None):
+        #LF, followed by FT
+        pass
+
+    def TL(self,x,y=None):
+        #TF, followed by FL
+        pass
+
+    def compress():
+        pass
+
+    def reduce():
+        pass

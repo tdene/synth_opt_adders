@@ -171,8 +171,10 @@ class adder_graph(nx.MultiGraph):
     # Post-condition: adds edge between target nodes
     def add_edge(self, n1, pin1, n2, pin2):
         p1,b1=pin1; p2,b2=pin2;
-        if abs(n1.y-n2.y)!=1:
-            raise ValueError("cannot add an edge between non-adjacent levels")
+        if not isinstance(n1,adder_node) or not isinstance(n2,adder_node):
+            raise TypeError("can only add edge between nodes")
+        if n2.y<=n1.y:
+            raise ValueError("cannot add an edge in the wrong direction")
         if p1 not in n1.outs or p2 not in n2.ins:
             raise ValueError("cannot add an edge between invalid ports")
 
