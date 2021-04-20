@@ -1,6 +1,8 @@
 from modules import modules
 from adder_graph import adder_graph as graph
 from adder_graph import adder_node as node
+import networkx as nx
+import pydot
 
 # Class that generates parallel prefix adder trees
 
@@ -379,10 +381,13 @@ class adder_tree(graph):
 
         # create c=top(top(a)); pre(c) = top(top(b))
         c=self.top(self.top(a))
+        post=self.post(c)
         self.remove_node(c)
 
         c=node(c.x,c.y,'black')
         self.add_node(c,pre=self.top(self.top(b)))
+        for x in post:
+            self._add_pre(x,pre=c)
 
         # pre(a) = pre(b)
         self.remove_all_edges(a,self.pre(a))
@@ -403,7 +408,7 @@ class adder_tree(graph):
         #a -> bot(a)
         self.shift_node(a, self.bot)
 
-## All del statements from transforms have been commented out
+## Unnecessary del statements from transforms have been commented out
 ## To be performed by reduce_idem instead
 #        #del c = top(top(a))
 #        c=self.top(self.top(a))
@@ -425,8 +430,21 @@ class adder_tree(graph):
             return None
 
         #del c = bot(b)
+        c = self.bot(b)
+        self.remove_node(c)
+
+        c=node(c.x,c.y,'buffer_node')
+        self.add_node(c)
+
         #b -> bot(b)
+        self.shift_node(b,self.bot)
+
         #pre(b) = bot(pre(b))
+        pre=self.pre(b)
+        self.remove_all_edges(b,pre)
+        self._add_pre(b,self.bot(pre))
+
+        return a,b
 
     def FT(self,x,y=None):
         a,b = self._checkFT(x,y)
@@ -452,6 +470,8 @@ class adder_tree(graph):
             c=node(c.x,c.y,'black')
             self.add_node(c,pre=self.bot(self.pre(pre)))
 
+        return a,b
+
     def LT(self,x,y=None):
         a,b = self._checkLT(x,y)
         if b is None:
@@ -464,6 +484,8 @@ class adder_tree(graph):
         if b is None:
             return None
 
+        a,b = self.TF(a.x,a.y)
+        return self.FL(a.x,a.y)
         #TF, followed by FL
 
     # Shifts all possible nodes up
@@ -500,8 +522,6 @@ class adder_tree(graph):
                    a.x==b.x and \
                    self.pre(a).x==self.pre(b).x:
 
-                    print(repr(a),repr(b))
-                    print(repr(self.pre(a)),repr(self.pre(b)))
                 # Remove the higher pair's edge
                     c = a if a.y<b.y else b
                     self.remove_all_edges(c,self.pre(c))
@@ -539,3 +559,8 @@ class adder_tree(graph):
         for a in range(self.w):
             self.add_node(node(a,y,'buffer_node'))
         [self.shift_node(x,self.bot) for x in self.node_list[-2]]
+
+    # Prints a png
+
+    def png(self,fname='out.png'):
+        nx.drawing.nx_pydot.to_pydot(self).write_png(fname,prog='neato')
