@@ -15,10 +15,9 @@ class adder_tree(graph):
 
     def __init__(self,width):
         if not isinstance(width,int):
-            raise ValueError("provided width must be an integer")
-        self.w=width;
+            raise TypeError("provided width must be an integer")
 
-        super().__init__(self.w)
+        super().__init__(width)
 
         # Initialize P/G nodes:
         for a in range(self.w):
@@ -30,22 +29,38 @@ class adder_tree(graph):
             for b in range(self.w):
                 if b!=a:
                     self.add_node(node(b,a,'buffer_node'))
-                    self.add_edge(self[b,a-1],('pout',0),self[b,a],('pin',0))
-                    self.add_edge(self[b,a-1],('gout',0),self[b,a],('gin',0))
                 else:
-                    self.add_node(node(b,a,'black'))
-                    self.add_edge(self[b-1,a-1],('pout',0),self[b,a],('pin',0))
-                    self.add_edge(self[b,a-1],('pout',0),self[b,a],('pin',1))
-                    self.add_edge(self[b-1,a-1],('gout',0),self[b,a],('gin',0))
-                    self.add_edge(self[b,a-1],('gout',0),self[b,a],('gin',1))
+                    self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
 
         # Post-processing (in progress)
 
         for a in range(self.w):
             self.add_node(node(a,self.w,'xor_node'))
-            self.add_edge(self[a,self.w-1],('pout',0),self[a,self.w],('pin',0))
-            self.add_edge(self[a,self.w-1],('gout',0),self[a,self.w],('gin',0))
 
+    # Pre-condition: n is a valid new node; pre is either None or a node in the graph
+    # Post-condition: adds node into graph and connects it correctly
+
+    def add_node(self,n,pre=None):
+
+        if pre is not None and not isinstance(pre,node):
+            raise TypeError("provided predecessor node must be a node")
+
+        super().add_node(n)
+
+        if 'pin' in n.ins:
+            pos=len(n.ins['pin'])-1
+            self.add_edge(self.top(n),('pout',0),n,('pin',pos))
+        if 'gin' in n.ins:
+            pos=len(n.ins['gin'])-1
+            self.add_edge(self.top(n),('gout',0),n,('gin',pos))
+
+        if pre is None:
+            return
+
+        if 'pin' in n.ins and len(n.ins['pin'])>1:
+            self.add_edge(pre,('pout',0),n,('pin',0))
+        if 'gin' in n.ins and len(n.ins['pin'])>1:
+            self.add_edge(pre,('gout',0),n,('gin',0))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
@@ -96,7 +111,7 @@ class adder_tree(graph):
 
     def _checkLF(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -123,7 +138,7 @@ class adder_tree(graph):
 
     def _checkFL(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -150,7 +165,7 @@ class adder_tree(graph):
 
     def _checkTF(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -183,7 +198,7 @@ class adder_tree(graph):
 
     def _checkFT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -207,7 +222,7 @@ class adder_tree(graph):
 
     def _checkLT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -234,7 +249,7 @@ class adder_tree(graph):
 
     def _checkTL(self,x,y=None): 
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
-            raise ValueError("x,y values provided to the internal-use-only check function are invalid!")
+            raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
         # If no y is provided, check whole column from bottom up
         if y is None:
@@ -268,3 +283,12 @@ class adder_tree(graph):
             return (None,None)
 
         return (a,b)
+
+    def LF(self,x,y=None):
+        a,b = self._checkLF(x,y)
+        if b is None:
+            return check
+
+        
+
+        return check

@@ -13,7 +13,7 @@ class adder_node():
     # module is a valid module from modules
     # flat is a flag that determine how HDL is output
     # custom_module is an optional alternative for providing
-        # a module definition not included in modules
+    # a module definition not included in modules
 
     # Post-conditions:
     # stores all these values into internal variables
@@ -113,9 +113,9 @@ class adder_graph(nx.MultiGraph):
     def __init__(self, width):
         if not isinstance(width,int):
             raise TypeError("adder_graph width must be an integer")
-        self.width=width
+        self.w=width
         # Initialize graph to "width" of width
-        self.node_list=[[None]*self.width]
+        self.node_list=[[None]*self.w]
 
         super().__init__(self)
 
@@ -128,7 +128,7 @@ class adder_graph(nx.MultiGraph):
     def add_node(self, n, style=None, label=None):
         if not isinstance(n,adder_node):
             raise TypeError("can only add adder_nodes to adder_graph")
-        if not (n.x<self.width and n.x>=0):
+        if not (n.x<self.w and n.x>=0):
             raise ValueError("cannot add a node with x beyond the width")
         if n.y<0:
             raise ValueError("cannot add a node with negative level")
@@ -136,8 +136,12 @@ class adder_graph(nx.MultiGraph):
             raise ValueError("cannot skip levels when adding nodes")
         if n.m not in modules:
             raise ValueError("trying to add node with invalid module")
+        if n in self:
+            raise ValueError("trying to double-add a node to the graph")
+        if n.y<len(self.node_list) and self[n.x,n.y]!=None:
+            raise ValueError("trying to add node to populated grid square")
         if n.y==len(self.node_list):
-            self.node_list.append([None]*self.width)
+            self.node_list.append([None]*self.w)
         self.node_list[n.y][n.x]=n
         
         shape = modules[n.m].get('shape','square')
@@ -150,6 +154,12 @@ class adder_graph(nx.MultiGraph):
 
         super().add_node(n,shape=shape,label=label,pos=pos,
                          fillcolor=fillcolor,style=style)
+
+    # Removes node from nodelist array as well as graph
+
+    def remove_node(self, n):
+        self.node_list[n.y][n.x]=None
+        super().remove_node(n)
 
     # Pre-conditions:
     # n1, n2, are 2-element integer arrays, [x,y] describing valid nodes
