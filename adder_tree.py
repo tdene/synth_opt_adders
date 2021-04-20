@@ -432,8 +432,37 @@ class adder_tree(graph):
         if changed:
             return self.compress()
 
+    # Cancels out logically-equivalent nodes/edges
+
     def reduce(self):
-        pass
+        modified=[]
+        for a in self:
+            for b in self:
+                # If two nodes and their predecessors are parallel
+                if self.pre(a) is not None and \
+                   self.pre(b) is not None and \
+                   a.x==b.y and \
+                   self.pre(a).x==self.pre(b).x:
+
+                # Remove the lower pair's edge
+                    c = a if a.y>b.y else b
+                    self.remove_edge(c,self.pre(c))
+                    self.remove_edge(c,self.pre(c))
+                    modified.append(c)
+                    modified.append(self.pre(c))
+
+        # Filter out any modified buffers
+        modified = [x for x in modified if node._exists(x)]
+        # Delete any nodes that no longer have predecessors
+        for a in modified:
+            if self.pre(a) is not None:
+                continue
+            post = self.post(a)
+            self.remove_node(a)
+            n=node(a.x,a.y,'buffer_node')
+            self.add_node(n)
+            for b in post:
+                self._add_pre(b,pre=n)
 
     # If the last row of the tree is just buffers
     # Shortens the tree by one layer
