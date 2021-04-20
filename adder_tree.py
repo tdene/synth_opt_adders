@@ -374,7 +374,6 @@ class adder_tree(graph):
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
                 a,b=self._checkTL(x,a)
-
                 if b is not None:
                     return a,b
             return (None,None)
@@ -384,6 +383,7 @@ class adder_tree(graph):
 
         ### Ugly condition
         # ∃ b s.t pre(a) is below pre(b), r_bot(b).y>=a.y
+        # (second part means that we can only pick the b right above a, no buried b's)
         b = None; tmp = self.pre(a)
         if tmp is None:
             return (None,None)
@@ -394,11 +394,18 @@ class adder_tree(graph):
                     b=x; break;
         if b is None:
             return (None,None)
-        # if r_bot(b).y==a.y, pre(r_bot(a)) is below pre(pre(a)):
-        if self.r_bot(b).y==a.y and not self._is_below(self.pre(self.pre(a)),self.pre(r_bot(a))):
-            return (None,None)
-        # ∄ bot(a) or ∄ pre(a)
-        if node._exists(self.bot(a)) and node._exists(self.pre(a)):
+        # ∄ r_bot(b) s.t r_bot(b).y==a.y or top^n(pre(r_bot(b)))=pre^n(pre(a)):
+        # (that is to say, either the node to the left of a should not exist
+        # or things get complicated)
+        srb=self.r_bot(b)
+        if srb.y==a.y:
+            b=None
+            tmp1,tmp2=(self.pre(srb),self.pre(a))
+            while (tmp1 is not None) and (tmp2 is not None):
+                tmp1=self.top(tmp1); tmp2=self.pre(tmp2);
+                if tmp1 is tmp2:
+                    b=x; break;
+        if b is None:
             return (None,None)
 
         return (a,b)
