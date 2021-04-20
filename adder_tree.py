@@ -235,14 +235,18 @@ class adder_tree(graph):
         # ∃ b s.t pre(a)=pre(b),
         if self.pre(a) is None:
             return (None,None)
-        b = next(iter([x for x in self.post(self.pre(a)) if x is not a]),None)
+        b = None
+        for x in self.post(self.pre(a)):
+            if x is a:
+                continue
+        # b is below pre(top(a))
+            if self._is_below(self.pre(self.r_top(a)),x):
+                b=x
         if b is None:
             return (None,None)
-        # b is below pre(top(a))
-        if not self._is_below(self.pre(self.top(a)),b):
-            return (None,None)
-        # ∄ bot(a) or ∄ pre(a)
-        if node._exists(self.bot(a)) and node._exists(self.pre(a)):
+        # ∄ bot(a) or (∄ top(b) and pre(b).y>top(b))
+        if node._exists(self.bot(a)) and \
+          (node._exists(self.top(b)) or not self.pre(b).y>self.top(b).y):
             return (None,None)
 
         return (a,b)
@@ -391,6 +395,7 @@ class adder_tree(graph):
         return a,b
 
     def FL(self,x,y=None):
+# Need to implement ∄ bot(a) by shifting in-place if ∄ top(b) and pre(b).y>top(b)
         a,b = self._checkFL(x,y)
         if b is None:
             return None
