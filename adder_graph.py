@@ -96,8 +96,11 @@ class adder_node():
     def flatten(self,flag=True):
         self.flat=flag
 
-    def __str__(self):
+    def hdl(self):
         return self._flat() if self.flat else self._verilog()
+
+    def __str__(self):
+        return self.__repr__()
 
     def __repr__(self):
         return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
@@ -158,6 +161,8 @@ class adder_graph(nx.MultiGraph):
     # Removes node from nodelist array as well as graph
 
     def remove_node(self, n):
+        if n==None:
+            return
         self.node_list[n.y][n.x]=None
         super().remove_node(n)
 

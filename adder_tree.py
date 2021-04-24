@@ -577,6 +577,7 @@ class adder_tree(graph):
     # Shifts all possible nodes up
 
     def compress(self,changed=False):
+        # Note: don't change data structure while iterating over it
         for a in self:
             # Only pick non-buffer nodes,
             if not node._exists(a):
@@ -655,4 +656,35 @@ class adder_tree(graph):
     # Prints a png
 
     def png(self,fname='out.png'):
-        nx.drawing.nx_pydot.to_pydot(self).write_png(fname,prog='neato')
+
+        def wrap(s):
+            return('"'+str(s)+'"')
+
+        pg=nx.drawing.nx_pydot.to_pydot(self)
+        pg.set_splines("polylines")
+        for n in self:
+            if n.x==0:
+                continue
+            pre = self.pre(n)
+            if pre is not None and self.pre(self[n.x-1,n.y])==pre:
+
+                pos1="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
+                py_n1=pydot.Node(pos1,style='invis',pos=pos1,label="")
+                if len(pg.get_node(wrap(pos1)))==0:
+                    pg.add_node(py_n1)
+
+                pos2="{0},{1}!".format(-1*(n.x-1.5),-1*(n.y-0.5))
+                py_n2=pydot.Node(pos2,style='invis',pos=pos2,label="")
+                if len(pg.get_node(wrap(pos2)))==0:
+                    pg.add_node(py_n2)
+
+                if self.pre(self[n.x-2,n.y])!=pre:
+                    pg.add_edge(pydot.Edge(str(pre),pos2,headclip="false",tailclip="false"))
+                pg.add_edge(pydot.Edge(pos2,pos1,headclip="false",tailclip="false"))
+                pg.add_edge(pydot.Edge(pos1,str(n),headclip="false",tailclip="false"))
+
+                print(n)
+                print(pg.del_edge(wrap(pre),wrap(n)))
+
+
+        pg.write_png(fname,prog='neato')
