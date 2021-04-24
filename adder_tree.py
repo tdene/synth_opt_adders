@@ -661,26 +661,35 @@ class adder_tree(graph):
             return('"'+str(s)+'"')
 
         pg=nx.drawing.nx_pydot.to_pydot(self)
-        pg.set_splines("polylines")
-        for n in self:
-            if n.x==0:
-                continue
-            pre = self.pre(n)
-            if pre is not None and self.pre(self[n.x-1,n.y])==pre:
+        pg.set_splines("true")
+        for row in self.node_list:
+            for n in row:
+                if n.x==0 or n.y in [0,len(self.node_list)-1] or not node._exists(n):
+                    continue
+                pre = self.pre(n)
+                rights = iter([x for x in row if self.pre(x)==pre and x.x<n.x])
+                r1 = next(rights,None)
+                r2 = next(rights,None)
 
-                pos1="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
-                py_n1=pydot.Node(pos1,style='invis',pos=pos1,label="")
-                if len(pg.get_node(wrap(pos1)))==0:
-                    pg.add_node(py_n1)
+                if pre is not None and r1 is not None:
 
-                pos2="{0},{1}!".format(-1*(n.x-1.5),-1*(n.y-0.5))
-                py_n2=pydot.Node(pos2,style='invis',pos=pos2,label="")
-                if len(pg.get_node(wrap(pos2)))==0:
-                    pg.add_node(py_n2)
+                    pos_n="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
+                    py_n1=pydot.Node(pos_n,style='invis',pos=pos_n,label="")
+                    if len(pg.get_node(wrap(pos_n)))==0:
+                        pg.add_node(py_n1)
 
-                if self.pre(self[n.x-2,n.y])!=pre:
-                    pg.add_edge(pydot.Edge(str(pre),pos2,headclip="false",tailclip="false"))
-                pg.add_edge(pydot.Edge(pos2,pos1,headclip="false",tailclip="false"))
-                pg.add_edge(pydot.Edge(pos1,str(n),headclip="false",tailclip="false"))
+                    pos_r1="{0},{1}!".format(-1*(r1.x-0.5),-1*(r1.y-0.5))
+                    py_n2=pydot.Node(pos_r1,style='invis',pos=pos_r1,label="")
+                    if len(pg.get_node(wrap(pos_r1)))==0:
+                        pg.add_node(py_n2)
+
+                    if r2 is None:
+                        pg.add_edge(pydot.Edge(str(pre),pos_r1,headclip="false"))
+                        pg.add_edge(pydot.Edge(pos_r1,str(r1),headclip="false",tailclip="false"))
+                    pg.add_edge(pydot.Edge(pos_r1,pos_n,headclip="false",tailclip="false"))
+                    pg.add_edge(pydot.Edge(pos_n,str(n),headclip="false",tailclip="false"))
+
+                    pg.del_edge(wrap(pre),wrap(n))
+                    pg.del_edge(wrap(pre),wrap(r1))
 
         pg.write_png(fname,prog='neato')
