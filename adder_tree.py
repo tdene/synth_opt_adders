@@ -683,8 +683,4 @@ class adder_tree(graph):
                 pg.add_edge(pydot.Edge(pos2,pos1,headclip="false",tailclip="false"))
                 pg.add_edge(pydot.Edge(pos1,str(n),headclip="false",tailclip="false"))
 
-                print(n)
-                print(pg.del_edge(wrap(pre),wrap(n)))
-
-
         pg.write_png(fname,prog='neato')
