@@ -661,7 +661,7 @@ class adder_tree(graph):
             return('"'+str(s)+'"')
 
         pg=nx.drawing.nx_pydot.to_pydot(self)
-        pg.set_splines("true")
+        pg.set_splines("false")
         for row in self.node_list:
             for n in row:
                 if n.x==0 or n.y in [0,len(self.node_list)-1] or not node._exists(n):
