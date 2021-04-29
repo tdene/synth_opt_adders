@@ -1,24 +1,24 @@
 # Prefix tree adder generation scripts
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/adder_transforms.gif?raw=true" width="400" height="400" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/adder_transforms.gif?raw=true" width="400"/>
 
 In general, prefix tree adders are currently generated from scratch. Either previously-named families of adders are used, or hybrid adders are created by combining / concatenating previously-named families of adders.
 
 In addition, current taxonomies of adders, such as that of David Harris, cannot properly describe the entire space of all valid prefix tree adder structures. Below are images of two valid adders that would be classified as the same structure under the Harris taxonomy, despite significant differences. [2]
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles1.png?raw=true" width="200" height="200" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles1.png?raw=true" width="250"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles2.png?raw=true" width="200" height="200" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles2.png?raw=true" width="250"/>
 
 What if there was a way to navigate the entire space of valid adder trees, incrementally, bit-targeted, using a minimal transform group?
 
 This repository seeks to implement this using transforms between the following three states \[L, T, F\]:
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/L.png?raw=true" width="200" height="200" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/L.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/T.png?raw=true" width="200" height="200" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/T.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/F.png?raw=true" width="200" height="200" />
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/F.png?raw=true" width="150"/>
 
 The L\<-\>F transform was previously discussed by Fishburn [1]. The L\<-\>T transform and F\<-\>T transforms have not been found in published works by the author.
 
