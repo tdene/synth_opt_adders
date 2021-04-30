@@ -27,3 +27,5 @@ The L\<-\>F transform was previously discussed by Fishburn [1]. The L\<-\>T tran
 [1]  J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
 
 [2] D. Harris, "A taxonomy of parallel prefix networks," The Thirty-Seventh Asilomar Conference on Signals, Systems & Computers, 2003, 2003, pp. 2213-2217 Vol.2
+
+[3] R. Zimmermann, "Non-Heuristic Optimization and Synthesis of Parallel-Prefix Adders", in Proc. Int. Workshop on Logic and Architecture Synthesis (IWLAS'96), Grenoble, France, Dec. 1996, pp. 123-132.
