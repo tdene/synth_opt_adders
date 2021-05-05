@@ -61,6 +61,7 @@ def brentkung():
     g.png('brentkung.png')
 
 def demo():
+    g=tree(8)
     g.png('00.png')
     g.png('01.png')
     g.png('02.png')
@@ -123,14 +124,35 @@ def demo():
     g.TF(5,3)
     g.png('33.png')
     g.TF(7,2)
+    g.remove_node(g[6,1])
+    g.add_node(node(6,1,'buffer_node'))
     g.png('34.png')
     g.TF(5,2)
+    g.remove_node(g[4,1])
+    g.add_node(node(4,1,'buffer_node'))
     g.png('35.png')
     g.TF(3,2)
+    g.remove_node(g[2,1])
+    g.add_node(node(2,1,'buffer_node'))
     g.png('36.png')
     g.png('37.png')
     g.png('38.png')
     g.png('39.png')
     g.png('40.png')
 
-demo()
+def LFT():
+    g=tree(4)
+    g.png('L.png')
+    g.LF(3)
+    g.png('F.png')
+    g.FT(3)
+    g.png('T.png')
+
+def test():
+    g.LF(7)
+    g.LF(5)
+    g.LF(3)
+    g.LF(7)
+    g.png('output.png')
+
+test()

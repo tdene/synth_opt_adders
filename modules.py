@@ -155,8 +155,14 @@ buffer_node['logic'] = lambda x: [x]
 
 modules['buffer_node']=buffer_node
 
-### P/G generation node
+### Invis nodes
+invis_node=dict(buffer_node)
 
+invis_node['style']='invis'
+
+modules['invis_node']=invis_node
+
+### P/G generation node
 pg_node=dict()
 
 pg_node['verilog']="""

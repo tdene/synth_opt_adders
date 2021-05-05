@@ -34,7 +34,7 @@ class adder_tree(graph):
         for a in range(1,self.w):
             for b in range(self.w):
                 if b!=a:
-                    self.add_node(node(b,a,'buffer_node'))
+                    self.add_node(node(b,a,'invis_node'))
                 else:
                     self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
 
@@ -86,7 +86,7 @@ class adder_tree(graph):
     # Post-condition: n shifts to its intended destination with its full connections
     # n's original location now contains a buffer
 
-    def shift_node(self,n,fun=None,wire_remap=True):
+    def shift_node(self,n,fun=None,wire_remap=False):
 
         if fun==None:
             fun=self.top
@@ -156,10 +156,10 @@ class adder_tree(graph):
         return self[n.x,n.y-1]
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the next-highest non-buffer neighbor
+    # Post-condition: returns the next-highest non-invis neighbor
 
     def r_top(self,n):
-        return (self.top(n) if self.top(n).m!="buffer_node" else self.r_top(self.top(n)))
+        return (self.top(n) if self.top(n).m!="invis_node" else self.r_top(self.top(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y+1 neighbor (post-processing logic if already at the bot)
@@ -170,10 +170,10 @@ class adder_tree(graph):
         return self[n.x,n.y+1]
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the next-lowest non-buffer neighbor
+    # Post-condition: returns the next-lowest non-invis neighbor
 
     def r_bot(self,n):
-        return (self.bot(n) if self.bot(n).m!="buffer_node" else self.r_bot(self.bot(n)))
+        return (self.bot(n) if self.bot(n).m!="invis_node" else self.r_bot(self.bot(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (None if this node is a buffer)
@@ -628,7 +628,7 @@ class adder_tree(graph):
                 continue
             post = self.post(a)
             self.remove_node(a)
-            n=node(a.x,a.y,'buffer_node')
+            n=node(a.x,a.y,'invis_node')
             self.add_node(n)
             for b in post:
                 self._add_pre(b,pre=n)
@@ -649,7 +649,7 @@ class adder_tree(graph):
     def add_layer(self):
         y=len(self.node_list)
         for a in range(self.w):
-            self.add_node(node(a,y,'buffer_node'))
+            self.add_node(node(a,y,'invis_node'))
         for x in self.node_list[-2]:
             self.shift_node(x,self.bot,wire_remap=False)
 

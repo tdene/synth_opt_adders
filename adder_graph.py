@@ -38,10 +38,10 @@ class adder_node():
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
-    # Static helper function that checks whether a node is not a buffer
+    # Static helper function that checks whether a node is not invis
 
     def _exists(n):
-        return n is not None and n.m not in ['buffer_node']
+        return n is not None and n.m not in ['invis_node']
 
     # The node object has dictionaries of input/output edges
     # These come in 3 possible flavors:
@@ -178,8 +178,8 @@ class adder_graph(nx.MultiGraph):
         p1,b1=pin1; p2,b2=pin2;
         if not isinstance(n1,adder_node) or not isinstance(n2,adder_node):
             raise TypeError("can only add edge between nodes")
-#        if abs(n1.y-n2.y)!=1:
-#            raise ValueError("cannot add an edge between non-adjacent levels")
+        if abs(n1.y-n2.y)!=1:
+            raise ValueError("cannot add an edge between non-adjacent levels")
         if n2.y<=n1.y:
             raise ValueError("cannot add an edge in the wrong direction")
         if p1 not in n1.outs or p2 not in n2.ins:
