@@ -99,29 +99,26 @@ class adder_tree(graph):
         if n not in self:
             raise ValueError("trying to shift a node not in the graph")
         if node._exists(inv):
-            raise ValueError("can only shift node into buffers")
+            raise ValueError("can only shift node into invis")
 
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
         post.extend(self.post(inv))
 
-# As of the invis/buffer overhaul of commit c0363d063, wire_remaps are automatic
-        wire_remap=True
-
-        # We can take this opportunity to shift the wire
-        # If pre is a buffer and we're going down
+        # We need to take this opportunity to shift the wire
+        # If pre is inv and we're going down
         # Or regardless if we're going up
-        if wire_remap and (pre is not None) and \
+        if (pre is not None) and \
            ((not node._exists(pre) and fun in [self.top,self.r_top]) or \
            fun in [self.bot,self.r_bot]):
             pre = fun(pre)
 
         # Run pre/post error checks
-        if pre is not None and pre.y>=buf.y:
+        if pre is not None and pre.y>=inv.y:
             raise ValueError("cannot shift node past predecessor")
         for x in post:
-            if x.y<=buf.y:
+            if x.y<=inv.y:
                 raise ValueError("cannot shift node past successor")
 
         # Remove nodes from graph
@@ -139,7 +136,7 @@ class adder_tree(graph):
         n.outs={x:[None]*len(n.outs[x]) for x in n.outs}
 
         # If new_pre is provided, use that, not what we calculate
-        pre = new_pre
+        pre = new_pre if new_pre is not None else pre
 
         # Re-add nodes into graph
         if inv.y>n.y:
@@ -159,7 +156,7 @@ class adder_tree(graph):
     # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
 
     def top(self,n):
-        if n.y==0:
+        if n is None or n.y==0:
             return None
         return self[n.x,n.y-1]
 
@@ -173,7 +170,7 @@ class adder_tree(graph):
     # Post-condition: returns the y+1 neighbor (post-processing logic if already at the bot)
 
     def bot(self,n):
-        if n.y+1==len(self.node_list):
+        if n is None or n.y+1==len(self.node_list):
             return None
         return self[n.x,n.y+1]
 
@@ -432,7 +429,7 @@ class adder_tree(graph):
 
         return (a,b)
 
-    def LF(self,x,y=None,clean=False):
+    def LF(self,x,y=None,clean=True):
         a,b = self._checkLF(x,y)
         if b is None:
             return None
@@ -582,6 +579,15 @@ class adder_tree(graph):
         return self.FL(a.x,a.y,clean)
         #TF, followed by FL
 
+
+    # Compresses, eliminates nodes using idempotence, and trims
+    # extraneous layers
+
+    def clean(self):
+        self.compress()
+        self.reduce_idem()
+        self.trim_layers()
+
     # Shifts all possible nodes up
 
     def compress(self,changed=False):
@@ -647,10 +653,11 @@ class adder_tree(graph):
     def trim_layer(self):
         # Check if last row is just buffers
         if any([node._exists(self.top(x)) for x in self.node_list[-1]]):
-            return
+            return False
         [self.shift_node(x) for x in self.node_list[-1]]
         [self.remove_node(x) for x in self.node_list[-1]]
         del self.node_list[-1]
+        return True
 
     # Adds an extra layer at the bottom of the tree
 
@@ -660,6 +667,11 @@ class adder_tree(graph):
             self.add_node(node(a,y,'invis_node'))
         for x in self.node_list[-2]:
             self.shift_node(x,self.bot)
+
+    # Shortens the tree by as many layers as it can
+
+    def trim_layers(self):
+        while(self.trim_layer()): pass
 
     # Prints a png
 
