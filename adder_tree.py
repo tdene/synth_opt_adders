@@ -82,27 +82,32 @@ class adder_tree(graph):
         if 'gin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('gout',0),n,('gin',0))
 
-    # Pre-condition: n is a node in the graph; its intended destination is a buffer
+    # Pre-condition: n is a node in the graph; its intended destination is invis
     # Post-condition: n shifts to its intended destination with its full connections
-    # n's original location now contains a buffer
+    # n's original location now contains an invis
 
-    def shift_node(self,n,fun=None,wire_remap=False):
+# As of the invis/buffer overhaul of commit c0363d063, wire_remaps are automatic
+#    def shift_node(self, n, fun=None, new_pre=None, wire_remap=False):
+    def shift_node(self, n, fun=None, new_pre=None):
 
         if fun==None:
             fun=self.top
 
-        # Grab the buffer we're swapping with
-        buf=fun(n)
+        # Grab the invis we're swapping with
+        inv=fun(n)
 
         if n not in self:
             raise ValueError("trying to shift a node not in the graph")
-        if node._exists(buf):
+        if node._exists(inv):
             raise ValueError("can only shift node into buffers")
 
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
-        post.extend(self.post(buf))
+        post.extend(self.post(inv))
+
+# As of the invis/buffer overhaul of commit c0363d063, wire_remaps are automatic
+        wire_remap=True
 
         # We can take this opportunity to shift the wire
         # If pre is a buffer and we're going down
@@ -121,24 +126,27 @@ class adder_tree(graph):
 
         # Remove nodes from graph
         self.remove_node(n)
-        self.remove_node(buf)
+        self.remove_node(inv)
 
         # Re-label x/y of nodes
-        tmp = n.x; n.x = buf.x; buf.x = tmp; del tmp;
-        tmp = n.y; n.y = buf.y; buf.y = tmp; del tmp;
+        tmp = n.x; n.x = inv.x; inv.x = tmp; del tmp;
+        tmp = n.y; n.y = inv.y; inv.y = tmp; del tmp;
 
         # Clean edge info (should be re-written to use remove_edge)
-        buf.ins={x:[None]*len(buf.ins[x]) for x in buf.ins}
-        buf.outs={x:[None]*len(buf.outs[x]) for x in buf.outs}
+        inv.ins={x:[None]*len(inv.ins[x]) for x in inv.ins}
+        inv.outs={x:[None]*len(inv.outs[x]) for x in inv.outs}
         n.ins={x:[None]*len(n.ins[x]) for x in n.ins}
         n.outs={x:[None]*len(n.outs[x]) for x in n.outs}
 
+        # If new_pre is provided, use that, not what we calculate
+        pre = new_pre
+
         # Re-add nodes into graph
-        if buf.y>n.y:
+        if inv.y>n.y:
             self.add_node(n,pre=pre)
-            self.add_node(buf)
+            self.add_node(inv)
         else:
-            self.add_node(buf)
+            self.add_node(inv)
             self.add_node(n,pre=pre)
 
         # Re-draw connectons to node
@@ -439,13 +447,12 @@ class adder_tree(graph):
         for x in post:
             self._add_pre(x,pre=c)
 
-        # pre(a) = pre(b)
+        # pre(a) = pre(b); a -> top(a)
+        # This is done at the same time, to avoid add_edge exception
         self.remove_all_edges(a,self.pre(a))
 
-        self._add_pre(a,self.pre(b))
-
         # a -> top(a)
-        self.shift_node(a, self.top, wire_remap=False)
+        self.shift_node(a, self.top, new_pre=self.pre(b))
 
         if clean:
             self.reduce_idem()
@@ -455,13 +462,14 @@ class adder_tree(graph):
         return a,b
 
     def FL(self,x,y=None,clean=False):
+# As of the invis/buffer overhaul of commit c0363d063, below comment is false
 # Need to implement ∄ bot(a) by shifting in-place if ∄ top(b) and pre(b).y>top(b)
         a,b = self._checkFL(x,y)
         if b is None:
             return None
 
         #a -> bot(a)
-        self.shift_node(a, self.bot, wire_remap=False)
+        self.shift_node(a, self.bot)
 
 ## Unnecessary del statements from transforms have been commented out
 ## To be performed by reduce_idem instead
@@ -527,7 +535,7 @@ class adder_tree(graph):
         if node._exists(self.top(b)):
             self.remove_node(b)
         else:
-            self.shift_node(b, self.top, wire_remap=False)
+            self.shift_node(b, self.top)
 
         #if pre(pre(a)) exists
         #create c = bot(b); pre(c)=bot(pre(pre(a)))
@@ -651,7 +659,7 @@ class adder_tree(graph):
         for a in range(self.w):
             self.add_node(node(a,y,'invis_node'))
         for x in self.node_list[-2]:
-            self.shift_node(x,self.bot,wire_remap=False)
+            self.shift_node(x,self.bot)
 
     # Prints a png
 
