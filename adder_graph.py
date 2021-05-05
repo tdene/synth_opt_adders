@@ -147,16 +147,14 @@ class adder_graph(nx.MultiGraph):
             self.node_list.append([None]*self.w)
         self.node_list[n.y][n.x]=n
         
-        shape = modules[n.m].get('shape','square')
-        fillcolor = modules[n.m].get('color','white')
+        n_kwargs = modules[n.m]
+        n_kwargs['shape'] = n_kwargs.get('shape','square')
+        n_kwargs['fillcolor'] = n_kwargs.get('fillcolor','white')
+        n_kwargs['label'] = n_kwargs.get('label','') if label is None else label
+        n_kwargs['style'] = n_kwargs.get('style','filled') if style is None else style
+        n_kwargs['pos'] = "{0},{1}!".format(-1*n.x,-1*n.y)
 
-        label=modules[n.m].get('label','') if label is None else label
-        style=modules[n.m].get('style','filled') if style is None else style
-
-        pos="{0},{1}!".format(-1*n.x,-1*n.y)
-
-        super().add_node(n,shape=shape,label=label,pos=pos,
-                         fillcolor=fillcolor,style=style)
+        super().add_node(n,**n_kwargs)
 
     # Removes node from nodelist array as well as graph
 
@@ -185,10 +183,34 @@ class adder_graph(nx.MultiGraph):
         if p1 not in n1.outs or p2 not in n2.ins:
             raise ValueError("cannot add an edge between invalid ports")
 
+        # Assigns name to edge, based on order in which it was added
         n1.outs[p1][b1]=n2.ins[p2][b2]=len(self.edges)
 
-        if p1!='pout':
-            super().add_edge(n1,n2,arrowhead='none',ins=pin1,outs=pin2)
+        # Styles the edge
+        edge_kwargs={'arrowhead':'none','ins':pin1,'outs':pin2}
+
+#        # Draw lines to the center of invis nodes
+#        if n1.m=='invis_node':
+#            edge_kwargs['tailclip']='false'
+#        if n2.m=='invis_node':
+#            edge_kwargs['headclip']='false'
+
+        super().add_edge(n1,n2,**edge_kwargs)
+
+#        if (n2,n1) in self.edges():
+#            for x in self.adj[n2][n1].values():
+#                if 'headclip' in x:
+#                    x['tailclip']=x['headclip']
+#                    del x['tailclip']
+#                if 'tailclip' in x:
+#                    x['headclip']=x['tailclip']
+#                    del x['headclip']
+
+#        if n2.x==7 and n2.y==8:
+#            print(n1,n2)
+#            print(n1 in self._adj, n2 in self._adj, n2 in self._adj[n1])
+#            [print(x) for x in self.edges if x==(n2,n1)]
+#            print(self.adj[n2][n1])
 
     # NetworkX has no way to remove all edges between 2 nodes in a MultiGraph?
     # Keep removing until an Exception is thrown?

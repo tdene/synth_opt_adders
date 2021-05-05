@@ -21,7 +21,7 @@ endmodule
 """
 
 black['shape']='square'
-black['color']='black'
+black['fillcolor']='black'
 
 # List of inputs represented by (name, bits) tuple
 black['ins']=[('gin',2),('pin',2)]
@@ -53,7 +53,7 @@ endmodule
 """
 
 grey['shape']='square'
-grey['color']='grey'
+grey['fillcolor']='grey'
 
 # List of inputs represented by (name, bits) tuple
 grey['ins']=[('gin',2),('pin',1)]
@@ -84,7 +84,7 @@ endmodule
 """
 
 rblk['shape']='square'
-rblk['color']='black'
+rblk['fillcolor']='black'
 
 # List of inputs represented by (name, bits) tuple
 rblk['ins']=[('gin',2),('pin',2)]
@@ -115,7 +115,7 @@ endmodule
 """
 
 rgry['shape']='square'
-rgry['color']='grey'
+rgry['fillcolor']='grey'
 
 # List of inputs represented by (name, bits) tuple
 rgry['ins']=[('gin',2)]
@@ -146,7 +146,7 @@ endmodule
 """
 
 buffer_node['shape']='invtriangle'
-buffer_node['color']='white'
+buffer_node['fillcolor']='white'
 
 buffer_node['ins']=[('gin',1),('pin',1)]
 buffer_node['outs']=[('gout',1),('pout',1)]
@@ -158,7 +158,12 @@ modules['buffer_node']=buffer_node
 ### Invis nodes
 invis_node=dict(buffer_node)
 
-invis_node['style']='invis'
+#invis_node['style']='invis'
+invis_node['shape']='point'
+invis_node['fixedsize']='shape'
+invis_node['width']=0
+invis_node['height']=0
+invis_node['fillcolor']='black'
 
 modules['invis_node']=invis_node
 
@@ -178,7 +183,7 @@ endmodule
 """
 
 pg_node['shape']='square'
-pg_node['color']='white'
+pg_node['fillcolor']='white'
 pg_node['label']='P/G'
 pg_node['style']='dashed'
 
@@ -201,7 +206,7 @@ xor_node['verilog']="""
 """
 
 xor_node['shape']='invtrapezium'
-xor_node['color']='white'
+xor_node['fillcolor']='white'
 xor_node['style']='dashed'
 
 xor_node['ins']=[('pin',1),('gin',1)]
