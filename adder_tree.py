@@ -452,9 +452,7 @@ class adder_tree(graph):
         self.shift_node(a, self.top, new_pre=self.pre(b))
 
         if clean:
-            self.reduce_idem()
-            self.compress()
-            self.trim_layer()
+            self.clean()
 
         return a,b
 
@@ -483,9 +481,7 @@ class adder_tree(graph):
         self._add_pre(a,b)
 
         if clean:
-            self.reduce_idem()
-            self.compress()
-            self.trim_layer()
+            self.clean()
 
         return a,b
 
@@ -504,9 +500,7 @@ class adder_tree(graph):
             self.add_node(c,pre=self.pre(a))
 
         if clean:
-            self.reduce_idem()
-            self.compress()
-            self.trim_layer()
+            self.clean()
 
         return a,b
 
@@ -555,9 +549,7 @@ class adder_tree(graph):
                 self._add_pre(x,c)
 
         if clean:
-            self.reduce_idem()
-            self.compress()
-            self.trim_layer()
+            self.clean()
 
         return a,b
 
@@ -606,6 +598,7 @@ class adder_tree(graph):
                 continue
             self.shift_node(a)
             changed=True
+            break
         if changed:
             return self.compress()
 
