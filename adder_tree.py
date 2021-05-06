@@ -138,6 +138,12 @@ class adder_tree(graph):
         # If new_pre is provided, use that, not what we calculate
         pre = new_pre if new_pre is not None else pre
 
+        # if ∃ post(n):
+        # add buffer instead of inv; pre(post(n))=buf
+        if len(post)>0:
+            inv = node(inv.x,inv.y,'buffer_node')
+            prepost = inv
+
         # Re-add nodes into graph
         if inv.y>n.y:
             self.add_node(n,pre=pre)
@@ -148,7 +154,7 @@ class adder_tree(graph):
 
         # Re-draw connectons to node
         for x in post:
-            self._add_pre(x,pre=n)
+            self._add_pre(x,pre=prepost)
 
         return n
 
@@ -447,8 +453,6 @@ class adder_tree(graph):
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
         self.remove_all_edges(a,self.pre(a))
-
-        # a -> top(a)
         self.shift_node(a, self.top, new_pre=self.pre(b))
 
         if clean:
@@ -710,6 +714,8 @@ class adder_tree(graph):
                     pg.add_edge(pydot.Edge(pos_n,str(n),headclip="false",tailclip="false"))
 
                     pg.del_edge(wrap(pre),wrap(n))
+                    pg.del_edge(wrap(n),wrap(pre))
                     pg.del_edge(wrap(pre),wrap(r1))
+                    pg.del_edge(wrap(r1),wrap(pre))
 
         pg.write_png(fname,prog='neato')
