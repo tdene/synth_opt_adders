@@ -43,6 +43,11 @@ class adder_node():
     def _exists(n):
         return n is not None and n.m not in ['invis_node']
 
+    # Static helper function that checks whether a node is a buffer
+
+    def _isbuf(n):
+        return n is not None and n.m in ['buffer_node']
+
     # The node object has dictionaries of input/output edges
     # These come in 3 possible flavors:
     # - None (unassigned net) -> parsed to 1'b0

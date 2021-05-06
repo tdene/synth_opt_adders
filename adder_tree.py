@@ -170,7 +170,7 @@ class adder_tree(graph):
     # Post-condition: returns the next-highest non-invis neighbor
 
     def r_top(self,n):
-        return (self.top(n) if self.top(n).m!="invis_node" else self.r_top(self.top(n)))
+        return (self.top(n) if node._exists(self.top(n)) else self.r_top(self.top(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y+1 neighbor (post-processing logic if already at the bot)
@@ -184,19 +184,19 @@ class adder_tree(graph):
     # Post-condition: returns the next-lowest non-invis neighbor
 
     def r_bot(self,n):
-        return (self.bot(n) if self.bot(n).m!="invis_node" else self.r_bot(self.bot(n)))
+        return (self.bot(n) if node._exists(self.bot(n)) else self.r_bot(self.bot(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (None if this node is a buffer)
 
     def pre(self,n):
-        return next(iter([a for a in self.adj[n] if a.x<n.x and a.y<n.y]),None)
+        return next(iter([a for a in self.adj[n] if a.y<n.y and (a.x<n.x or node._isbuf(n))]),None)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
 
     def post(self,n):
-        return [a for a in self.adj[n] if a.x>n.x and a.y>n.y]
+        return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
 
     # Helper function that checks whether a node is "below" a second node
     # Same column, higher row, or second node straight-up does not exist
@@ -216,6 +216,8 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
+                if not node._exists(self[x,a]):
+                    continue
                 a,b=self._checkLF(x,a)
                 if b is not None:
                     return a,b
@@ -230,10 +232,9 @@ class adder_tree(graph):
         # ∄ top(a), top(top(a))
         if node._exists(self.top(a)) or node._exists(self.top(self.top(a))):
             return (None,None)
-        # ∄ top(b)
-        if node._exists(self.top(b)):
-            return (None,None)
-
+#        # ∄ top(b)
+#        if node._exists(self.top(b)):
+#            return (None,None)
         return (a,b)
 
     def _checkFL(self,x,y=None):
@@ -695,7 +696,7 @@ class adder_tree(graph):
                 r1 = next(rights,None)
                 r2 = next(rights,None)
 
-                if pre is not None and r1 is not None:
+                if pre is not None and r1 is not None and not node._isbuf(r1):
 
                     pos_n="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
                     py_n1=pydot.Node(pos_n,style='invis',pos=pos_n,label="")

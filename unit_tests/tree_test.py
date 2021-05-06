@@ -152,7 +152,9 @@ def test():
     g.LF(7)
     g.LF(5)
     g.LF(3)
-    g.LF(3)
+    g.LF(7)
+    g.LF(7)
+    g.LF(6)
     g.png('output.png')
 
 test()
