@@ -208,10 +208,12 @@ class adder_tree(graph):
         new_inv = self._morph_node(n,new_m,no_pre=True)
         if new_inv.y<new_n.y and new_pre is None:
             self._add_pre(new_inv,pre)
+            self._recalc_pg(new_n)
             self._recalc_pg(new_inv)
         else:
             self._add_pre(new_n,pre)
             self._recalc_pg(new_n)
+            self._recalc_pg(new_inv)
 
         return n
 
@@ -251,7 +253,7 @@ class adder_tree(graph):
     def post(self,n):
         return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
 
-    # Helper function that checks whether a node is "below" a second node
+    # Helper function that checks whether n2 is below n1
     # Same column, higher row, or second node straight-up does not exist
     def _is_below(self,n1,n2):
         return (n2 is None) or (n1 is not None and n2.x==n1.x and n2.y>n1.y)
@@ -307,21 +309,21 @@ class adder_tree(graph):
         if self.pre(a) is None:
             return (None,None)
         b = None
-        for x in self.post(self.pre(a)):
-            if x is a:
-                continue
+        for x in self.node_list[y]:
+            if x.x<a.x and self.pre(x)==self.pre(a):
         # ∃ c s.t a is below c and b is below pre(c)
-            c=a
-            while c.y>0:
-                c = self.top(c)
-                if self._is_below(self.pre(c),x):
-                    b=x; break;
+                c=a
+                while c.y>0:
+                    c = self.top(c)
+                    if self._is_below(self.pre(c),x): b=x; break;
         if b is None:
             return (None,None)
-        # ∄ bot(a) or (∄ top(b) and pre(b).y>top(b))
-        if node._exists(self.bot(a)) and \
-          (node._exists(self.top(b)) or not self.pre(b).y>self.top(b).y):
-            return (None,None)
+        # ∄ bot(a) or bot(a) = post-processing
+        if node._exists(self.bot(a)) and not node._isbuf(self.bot(a)):
+            if self.bot(a).m in ['xor_node']:
+                self.add_layer()
+            else:
+                return (None,None)
 
         return (a,b)
 
@@ -520,22 +522,19 @@ class adder_tree(graph):
         if b is None:
             return None
 
-        #a -> bot(a)
-        self.shift_node(a, self.bot)
+        # pre(post(a)) = b
+        post = self.post(a)
+        for x in post:
+            self.remove_all_edges(x,a)
+            self._add_pre(x,b)
 
-## Unnecessary del statements from transforms have been commented out
-## To be performed by reduce_idem instead
-#        #del c = top(top(a))
-#        c=self.top(self.top(a))
-#        self.remove_node(c)
-#
-#        c=node(c.x,c.y,'buffer_node')
-#        self.add_node(c)
-
-        #pre(a) = b
+        #a -> bot(a); pre(a) = b
+        # This is done at the same time, to avoid add_edge exception
         self.remove_all_edges(a,self.pre(a))
+        self.shift_node(a, self.bot, new_pre=b)
 
-        self._add_pre(a,b)
+        #del c = top(top(a))
+        # Gets performed by clean
 
         if clean:
             self.clean()
