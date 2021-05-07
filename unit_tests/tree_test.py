@@ -149,14 +149,17 @@ def LFT():
     g.png('T.png')
 
 def test():
-    g.png('1.png')
     g.LF(7)
-    g.png('2.png')
     g.LF(6)
     g.LF(7)
     g.LF(6)
     g.LF(5)
     g.LF(7)
+    g.LF(3)
+    g.png('1.png')
+    g.shift_node(g[3,2],g.bot,g[2,2])
+    g.png('2.png')
+    g.clean()
     g.png('3.png')
 
 test()
@@ -165,3 +168,4 @@ test()
 post_processing = g.node_list[-1]
 for i in range(len(post_processing)):
     assert all(post_processing[i].group[:i+1])
+    assert post_processing[i].m in ['xor_node']

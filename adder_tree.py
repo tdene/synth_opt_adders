@@ -18,7 +18,6 @@ class adder_tree(graph):
 
     # Pre-condition: width is an integer
     # Post-condition: initializes serial structure
-
     def __init__(self,width):
         if not isinstance(width,int):
             raise TypeError("provided width must be an integer")
@@ -45,7 +44,6 @@ class adder_tree(graph):
 
     # Pre-condition: n is a valid new node; pre is either None or a node in the graph
     # Post-condition: adds node into graph and connects it correctly
-
     def add_node(self,n,pre=None):
 
         if pre is not None and not isinstance(pre,node):
@@ -59,19 +57,39 @@ class adder_tree(graph):
     # Initialize if node is P/G node
         if n.m in ['pg_node']:
             n.group[n.x]=1
-
+    #
     # Connects up
         self._add_top(n)
     # Connects diagonally
         self._add_pre(n,pre)
-
+    #
     # Connects down
         if self.bot(n) is not None:
             self._add_top(self.bot(n))
 
+    # Recalculate the group P/G for a node
+    def _recalc_group(self,n):
+        top = self.top(n)
+        pre = self.pre(n)
+
+        top_g = top.group if top is not None else [0]*self.w
+        pre_g = pre.group if pre is not None else [0]*self.w
+
+        n.group = [x|y for x,y in \
+                   zip(top_g,pre_g)]
+
+    # Traverse the graph downstream of a node
+    # applying fun to every node you meet
+    def walk_downstream(self,n,fun=lambda x: x):
+        bot = self.bot(n)
+        post = self.post(n)
+
+        fun(n)
+        if bot is not None: walk_downstream(bot)
+        for x in post: walk_downstream(x)
+
     # Internal helper function to prevent re-writing of code
     # Connects node to its upper neighbor
-
     def _add_top(self,n,pre=None):
 
         top = self.top(n)
@@ -88,7 +106,6 @@ class adder_tree(graph):
 
     # Internal helper function to prevent re-writing of code
     # Connects node to a predecessor
-
     def _add_pre(self,n,pre):
 
         if pre is None: return
@@ -100,25 +117,50 @@ class adder_tree(graph):
 
         n.group = [x|y for x,y in zip(n.group,pre.group)]
 
-    # Internal function to morph a buffer node to invis
-
-    def _buf_to_invis(self,n):
+    # Internal function to morph a node to another type
+    # no_warn and no_pre should NOT be set to True unless
+    # EXTREME care is taken
+    def _morph_node(self,n,m,no_warn=False,no_pre=False):
+        # Query current posts and pres
         post = self.post(n)
-        if not node._isbuf(n):
-            return
+        pre = self.pre(n)
+
+        # Swap nodes
         self.remove_node(n)
-        inv = node(n.x,n.y,'invis_node')
-        self.add_node(inv)
+        new_n = node(n.x,n.y,m)
+        self.add_node(new_n)
+
+        update_flag = no_pre
+
+        # Re-apply pre
+        if (pre is not None and not no_pre):
+            # Raise error if you're morphing
+            # from a node with pre to one without
+            if (node._exists(n) and not node._isbuf(n)) and \
+               (not node._exists(new_n) or node._isbuf(new_n)):
+                if no_warn:
+                    update_flag = True
+                else:
+                    raise TypeError("cannot morph node with pre to node without")
+            else:
+                self._add_pre(new_n,pre)
+
+        # Re-apply post
         for x in post:
-            self._add_pre(x,inv)
-        return inv
+            self._add_pre(x,new_n)
 
-    # Pre-condition: n is a node in the graph; its intended destination is invis
-    # Post-condition: n shifts to its intended destination with its full connections
-    # n's original location now contains an invis
+        # If no_warn/no_pre was for some reason set to True,
+        # first: please re-consider doing so
+        # then: update all the groups down-stream
+        # Currently commented-out, as you should NOT do this
 
-# As of the invis/buffer overhaul of commit c0363d063, wire_remaps are automatic
-#    def shift_node(self, n, fun=None, new_pre=None, wire_remap=False):
+        #if update_flag:
+        #    self.walk_downstream(new_n,fun=self._recalc_group)
+
+        return new_n
+
+    # Shifts a node in a direction given by fun
+    # Can only shift nodes if there is nothing in the way
     def shift_node(self, n, fun=None, new_pre=None):
 
         if fun==None:
@@ -129,13 +171,12 @@ class adder_tree(graph):
 
         if n not in self:
             raise ValueError("trying to shift a node not in the graph")
-        if node._exists(inv):
-            raise ValueError("can only shift node into invis")
+        if node._exists(inv) and not node._isbuf(inv):
+            raise ValueError("can only shift node into invis or buffer")
 
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
-        invpost = self.post(inv)
 
         # We need to take this opportunity to shift the wire
         # Note that this requires fun(pre).y = inv.y-1
@@ -147,51 +188,35 @@ class adder_tree(graph):
         # Run pre/post error checks
         if pre is not None and pre.y>=inv.y:
             raise ValueError("cannot shift node past predecessor")
-        for x in post:
-            if x.y<=inv.y:
+        if inv.y > n.y:
+            if len(post)>0:
                 raise ValueError("cannot shift node past successor")
-
-        # Remove nodes from graph
-        self.remove_node(n)
-        self.remove_node(inv)
-
-        # Re-label x/y of nodes
-        tmp = n.x; n.x = inv.x; inv.x = tmp; del tmp;
-        tmp = n.y; n.y = inv.y; inv.y = tmp; del tmp;
-
-        # Clean edge info (should be re-written to use remove_edge)
-        inv.ins={x:[None]*len(inv.ins[x]) for x in inv.ins}
-        inv.outs={x:[None]*len(inv.outs[x]) for x in inv.outs}
-        n.ins={x:[None]*len(n.ins[x]) for x in n.ins}
-        n.outs={x:[None]*len(n.outs[x]) for x in n.outs}
 
         # If new_pre is provided, use that, not what we calculate
         pre = new_pre if new_pre is not None else pre
 
         # if ∃ post(n):
-        # add buffer instead of inv; pre(post(n))=buf
+        # add buffer instead of inv
         if len(post)>0:
-            inv = node(inv.x,inv.y,'buffer_node')
-
-        # Re-add nodes into graph
-        if inv.y>n.y:
-            self.add_node(n,pre=pre)
-            self.add_node(inv)
+            new_m='buffer_node'
         else:
-            self.add_node(inv)
-            self.add_node(n,pre=pre)
+            new_m='invis_node'
 
-        # Re-draw connections to node
-        for x in post:
-            self._add_pre(x,inv)
-        for x in invpost:
-            self._add_pre(x,n)
+        # Morph nodes
+        # Note that this sets no_pre, which is not advised
+        new_n = self._morph_node(inv,n.m,no_pre=True)
+        new_inv = self._morph_node(n,new_m,no_pre=True)
+        if new_inv.y<new_n.y and new_pre is None:
+            self._add_pre(new_inv,pre)
+            self._recalc_group(new_inv)
+        else:
+            self._add_pre(new_n,pre)
+            self._recalc_group(new_n)
 
         return n
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
-
     def top(self,n):
         if n is None or n.y==0:
             return None
@@ -199,39 +224,33 @@ class adder_tree(graph):
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the next-highest non-invis neighbor
-
     def r_top(self,n):
         return (self.top(n) if node._exists(self.top(n)) else self.r_top(self.top(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the y+1 neighbor (post-processing logic if already at the bot)
-
+    # Post-condition: returns the y+1 neighbor (stops before post-processing logic)
     def bot(self,n):
-        if n is None or n.y+1==len(self.node_list):
+        if n is None or n.y>len(self.node_list)-2:
             return None
         return self[n.x,n.y+1]
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the next-lowest non-invis neighbor
-
     def r_bot(self,n):
         return (self.bot(n) if node._exists(self.bot(n)) else self.r_bot(self.bot(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
-
     def pre(self,n):
         return next(iter([a for a in self.adj[n] if a.y<n.y and (a.x<n.x or node._isbuf(n))]),None)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
-
     def post(self,n):
         return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
 
     # Helper function that checks whether a node is "below" a second node
     # Same column, higher row, or second node straight-up does not exist
-
     def _is_below(self,n1,n2):
         return (n2 is None) or (n1 is not None and n2.x==n1.x and n2.y>n1.y)
 
@@ -610,15 +629,13 @@ class adder_tree(graph):
 
     # Compresses, eliminates nodes using idempotence, and trims
     # extraneous layers
-
     def clean(self):
         self.reduce_idem()
-        self.compress()
+        self.compact()
         self.trim_layers()
 
     # Shifts all possible nodes up
-
-    def compress(self,changed=False):
+    def compact(self,changed=False):
         # Note: don't change data structure while iterating over it
         for a in self:
             # Only pick non-invis nodes,
@@ -638,11 +655,12 @@ class adder_tree(graph):
             changed=True
             break
         if changed:
-            return self.compress()
+            return 1+self.compact()
+        else:
+            return 0
 
     # Cancels out logically-equivalent nodes/edges
     # As of commit 194923b83, this relies on node.group
-
     def reduce_idem(self):
         modified=[]
         for a in self:
@@ -655,32 +673,33 @@ class adder_tree(graph):
             if top is None: continue
             if a.group==top.group: modified.append(a)
 
-        # Delete any nodes that are flagged
+        # Reduce any nodes that are flagged
         for a in modified:
-            post = self.post(a)
-            self.remove_node(a)
-            n=node(a.x,a.y,'invis_node')
-            self.add_node(n)
-            for b in post:
-                self._add_pre(b,n)
+            # If node has post, it can only reduce down to buffer
+            # Otherwise it can reduce down to invis
+            if len(self.post(a))==0:
+                m = 'invis_node'
+            else:
+                m = 'buffer_node'
+            self._morph_node(a,m,True)
+
+        if len(modified)>0:
+            return len(modified)+self.reduce_idem()
 
     # If the last row of the tree is just buffers
     # Shortens the tree by one layer
-
     def trim_layer(self):
         # Check if last row is just buffers
         if any([ \
                (node._exists(self.top(x)) and not node._isbuf(self.top(x))) \
                for x in self.node_list[-1] \
                ]): return False
-        [self._buf_to_invis(self.top(x)) for x in self.node_list[-1]]
         [self.shift_node(x) for x in self.node_list[-1]]
         [self.remove_node(x) for x in self.node_list[-1]]
         del self.node_list[-1]
         return True
 
     # Adds an extra layer at the bottom of the tree
-
     def add_layer(self):
         y=len(self.node_list)
         for a in range(self.w):
@@ -689,12 +708,10 @@ class adder_tree(graph):
             self.shift_node(x,self.bot)
 
     # Shortens the tree by as many layers as it can
-
     def trim_layers(self):
         while(self.trim_layer()): pass
 
     # Prints a png
-
     def png(self,fname='out.png'):
 
         def wrap(s):
