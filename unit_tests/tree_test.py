@@ -150,11 +150,14 @@ def LFT():
 
 def test():
     g.LF(7)
-    g.LF(5)
-    g.LF(3)
-    g.LF(7)
+    g.LF(6)
     g.LF(7)
     g.LF(6)
-    g.png('output.png')
+    g.LF(5,clean=False)
+    g.png('1.png')
+    g.clean()
+    g.png('2.png')
+    g.LF(7)
+    g.png('3.png')
 
 test()

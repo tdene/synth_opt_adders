@@ -53,7 +53,7 @@ class adder_tree(graph):
 
         super().add_node(n)
         self._add_top(n)
-        self._add_pre(n,pre=pre)
+        self._add_pre(n,pre)
 
         if self.bot(n) is not None:
             self._add_top(self.bot(n))
@@ -73,7 +73,7 @@ class adder_tree(graph):
     # Internal helper function to prevent re-writing of code
     # Connects node to a predecessor
 
-    def _add_pre(self,n,pre=None):
+    def _add_pre(self,n,pre):
         if pre is None:
             return
 
@@ -81,6 +81,19 @@ class adder_tree(graph):
             self.add_edge(pre,('pout',0),n,('pin',0))
         if 'gin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('gout',0),n,('gin',0))
+
+    # Internal function to morph a buffer node to invis
+
+    def _buf_to_invis(self,n):
+        post = self.post(n)
+        if not node._isbuf(n):
+            return
+        self.remove_node(n)
+        inv = node(n.x,n.y,'invis_node')
+        self.add_node(inv)
+        for x in post:
+            self._add_pre(x,inv)
+        return inv
 
     # Pre-condition: n is a node in the graph; its intended destination is invis
     # Post-condition: n shifts to its intended destination with its full connections
@@ -104,14 +117,13 @@ class adder_tree(graph):
         # Save pre/post
         pre = self.pre(n)
         post = self.post(n)
-        post.extend(self.post(inv))
+        invpost = self.post(inv)
 
         # We need to take this opportunity to shift the wire
-        # If pre is inv and we're going down
-        # Or regardless if we're going up
-        if (pre is not None) and \
-           ((not node._exists(pre) and fun in [self.top,self.r_top]) or \
-           fun in [self.bot,self.r_bot]):
+        # Note that this requires fun(pre).y = inv.y-1
+        # This second condition will never matter if we are only shifting by 1
+        # But for future support, it is still stated
+        if (pre is not None):
             pre = fun(pre)
 
         # Run pre/post error checks
@@ -142,7 +154,6 @@ class adder_tree(graph):
         # add buffer instead of inv; pre(post(n))=buf
         if len(post)>0:
             inv = node(inv.x,inv.y,'buffer_node')
-            prepost = inv
 
         # Re-add nodes into graph
         if inv.y>n.y:
@@ -152,9 +163,11 @@ class adder_tree(graph):
             self.add_node(inv)
             self.add_node(n,pre=pre)
 
-        # Re-draw connectons to node
+        # Re-draw connections to node
         for x in post:
-            self._add_pre(x,pre=prepost)
+            self._add_pre(x,inv)
+        for x in invpost:
+            self._add_pre(x,n)
 
         return n
 
@@ -187,7 +200,7 @@ class adder_tree(graph):
         return (self.bot(n) if node._exists(self.bot(n)) else self.r_bot(self.bot(n)))
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the diagonal predecessor (None if this node is a buffer)
+    # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
 
     def pre(self,n):
         return next(iter([a for a in self.adj[n] if a.y<n.y and (a.x<n.x or node._isbuf(n))]),None)
@@ -449,7 +462,7 @@ class adder_tree(graph):
         c=node(c.x,c.y,'black')
         self.add_node(c,pre=self.top(self.top(b)))
         for x in post:
-            self._add_pre(x,pre=c)
+            self._add_pre(x,c)
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
@@ -590,16 +603,18 @@ class adder_tree(graph):
     def compress(self,changed=False):
         # Note: don't change data structure while iterating over it
         for a in self:
-            # Only pick non-buffer nodes,
+            # Only pick non-invis nodes,
             if not node._exists(a):
                 continue
             # that do not have a top,
             if node._exists(self.top(a)):
                 continue
-            # and whose pre is either a buffer
-            # or not immediately above
+            # whose pre does not exist
             pre = self.pre(a)
-            if pre is None or (node._exists(pre) and pre.y==a.y-1):
+            if pre is None or node._exists(pre):
+                continue
+            # and whose post(top) is empty
+            if len(self.post(self.top(a)))!=0:
                 continue
             self.shift_node(a)
             changed=True
@@ -613,6 +628,7 @@ class adder_tree(graph):
         modified=[]
         for a in self:
             for b in self:
+
                 # If two nodes and their predecessors are parallel
                 if self.pre(a) is not None and \
                    self.pre(b) is not None and \
@@ -622,15 +638,18 @@ class adder_tree(graph):
                    a.x==b.x and \
                    a.y>0 and b.y>0:
 
-                    if (self.r_top(a)==b or self.r_top(b)==a) and \
-                       (not node._exists(self.pre(a))) and \
-                       (not node._exists(self.pre(b))):
+                    # Figure out which one is on top
+                    if (self.r_top(a)==b) and not node._exists(self.pre(a)):
+                        c = a
+                    elif (self.r_top(b)==a) and not node._exists(self.pre(b)):
+                        c = b
+                    else:
+                        continue
 
                     # Remove the lower pair's edge
-                        c = a if a.y>b.y else b
-                        self.remove_all_edges(c,self.pre(c))
-                        modified.append(c)
-                        modified.append(self.pre(c))
+                    self.remove_all_edges(c,self.pre(c))
+                    modified.append(c)
+                    modified.append(self.pre(c))
 
         # Filter out any modified buffers
         modified = [x for x in modified if node._exists(x)]
@@ -643,15 +662,18 @@ class adder_tree(graph):
             n=node(a.x,a.y,'invis_node')
             self.add_node(n)
             for b in post:
-                self._add_pre(b,pre=n)
+                self._add_pre(b,n)
 
     # If the last row of the tree is just buffers
     # Shortens the tree by one layer
 
     def trim_layer(self):
         # Check if last row is just buffers
-        if any([node._exists(self.top(x)) for x in self.node_list[-1]]):
-            return False
+        if any([ \
+               (node._exists(self.top(x)) and not node._isbuf(self.top(x))) \
+               for x in self.node_list[-1] \
+               ]): return False
+        [self._buf_to_invis(self.top(x)) for x in self.node_list[-1]]
         [self.shift_node(x) for x in self.node_list[-1]]
         [self.remove_node(x) for x in self.node_list[-1]]
         del self.node_list[-1]
