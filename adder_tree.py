@@ -51,10 +51,21 @@ class adder_tree(graph):
         if pre is not None and not isinstance(pre,node):
             raise TypeError("provided predecessor node must be a node")
 
+    # Calls on super-method
         super().add_node(n)
+
+    # Keeps track of group propagates/generates
+        n.group=[0]*self.w
+    # Initialize if node is P/G node
+        if n.m in ['pg_node']:
+            n.group[n.x]=1
+
+    # Connects up
         self._add_top(n)
+    # Connects diagonally
         self._add_pre(n,pre)
 
+    # Connects down
         if self.bot(n) is not None:
             self._add_top(self.bot(n))
 
@@ -63,24 +74,31 @@ class adder_tree(graph):
 
     def _add_top(self,n,pre=None):
 
-        if 'pin' in n.ins and 'pout' in self.top(n).outs:
+        top = self.top(n)
+        if top is None: return
+
+        if 'pin' in n.ins and 'pout' in top.outs:
             pos=len(n.ins['pin'])-1
-            self.add_edge(self.top(n),('pout',0),n,('pin',pos))
-        if 'gin' in n.ins and 'gout' in self.top(n).outs:
+            self.add_edge(top,('pout',0),n,('pin',pos))
+        if 'gin' in n.ins and 'gout' in top.outs:
             pos=len(n.ins['gin'])-1
-            self.add_edge(self.top(n),('gout',0),n,('gin',pos))
+            self.add_edge(top,('gout',0),n,('gin',pos))
+
+        n.group = [x|y for x,y in zip(n.group,top.group)]
 
     # Internal helper function to prevent re-writing of code
     # Connects node to a predecessor
 
     def _add_pre(self,n,pre):
-        if pre is None:
-            return
+
+        if pre is None: return
 
         if 'pin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('pout',0),n,('pin',0))
         if 'gin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('gout',0),n,('gin',0))
+
+        n.group = [x|y for x,y in zip(n.group,pre.group)]
 
     # Internal function to morph a buffer node to invis
 

@@ -161,3 +161,8 @@ def test():
     g.png('3.png')
 
 test()
+
+# Check that tree remains valid
+post_processing = g.node_list[-1]
+for i in range(len(post_processing)):
+    assert all(post_processing[i].group[:i+1])
