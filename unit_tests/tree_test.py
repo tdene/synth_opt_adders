@@ -149,14 +149,13 @@ def LFT():
     g.png('T.png')
 
 def test():
-    g.LF(7)
-    g.LF(6)
-    g.LF(7)
-    g.LF(6)
-    g.LF(5,clean=False)
     g.png('1.png')
-    g.clean()
+    g.LF(7)
     g.png('2.png')
+    g.LF(6)
+    g.LF(7)
+    g.LF(6)
+    g.LF(5)
     g.LF(7)
     g.png('3.png')
 

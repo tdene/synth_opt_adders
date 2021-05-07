@@ -648,6 +648,8 @@ class adder_tree(graph):
         for a in self:
             # Filter out invis nodes
             if not node._exists(a): continue
+            # Filter out post-processing nodes
+            if a.m in ['xor_node']: continue
             # If node does not introduce anything new, flag
             top = self.top(a)
             if top is None: continue
