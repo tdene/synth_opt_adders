@@ -167,5 +167,5 @@ test()
 # Check that tree remains valid
 post_processing = g.node_list[-1]
 for i in range(len(post_processing)):
-    assert all(post_processing[i].group[:i+1])
+    assert all(post_processing[i].pg[:i+1])
     assert post_processing[i].m in ['xor_node']

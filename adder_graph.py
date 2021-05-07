@@ -39,14 +39,17 @@ class adder_node():
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
     # Static helper function that checks whether a node is not invis
-
     def _exists(n):
         return n is not None and n.m not in ['invis_node']
 
     # Static helper function that checks whether a node is a buffer
-
     def _isbuf(n):
         return n is not None and n.m in ['buffer_node']
+
+    # Static helper function that checks whether a node is
+    # not none, pre-processing, or post-processing
+    def _is_prefix_logic(n):
+        return n is not None and n.m not in ['xor_node','pg_node']
 
     # The node object has dictionaries of input/output edges
     # These come in 3 possible flavors:

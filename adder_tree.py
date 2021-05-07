@@ -53,10 +53,10 @@ class adder_tree(graph):
         super().add_node(n)
 
     # Keeps track of group propagates/generates
-        n.group=[0]*self.w
+        n.pg=[0]*self.w
     # Initialize if node is P/G node
         if n.m in ['pg_node']:
-            n.group[n.x]=1
+            n.pg[n.x]=1
     #
     # Connects up
         self._add_top(n)
@@ -68,14 +68,14 @@ class adder_tree(graph):
             self._add_top(self.bot(n))
 
     # Recalculate the group P/G for a node
-    def _recalc_group(self,n):
+    def _recalc_pg(self,n):
         top = self.top(n)
         pre = self.pre(n)
 
-        top_g = top.group if top is not None else [0]*self.w
-        pre_g = pre.group if pre is not None else [0]*self.w
+        top_g = top.pg if top is not None else [0]*self.w
+        pre_g = pre.pg if pre is not None else [0]*self.w
 
-        n.group = [x|y for x,y in \
+        n.pg = [x|y for x,y in \
                    zip(top_g,pre_g)]
 
     # Traverse the graph downstream of a node
@@ -102,7 +102,7 @@ class adder_tree(graph):
             pos=len(n.ins['gin'])-1
             self.add_edge(top,('gout',0),n,('gin',pos))
 
-        n.group = [x|y for x,y in zip(n.group,top.group)]
+        n.pg = [x|y for x,y in zip(n.pg,top.pg)]
 
     # Internal helper function to prevent re-writing of code
     # Connects node to a predecessor
@@ -115,7 +115,7 @@ class adder_tree(graph):
         if 'gin' in n.ins and len(n.ins['pin'])>1:
             self.add_edge(pre,('gout',0),n,('gin',0))
 
-        n.group = [x|y for x,y in zip(n.group,pre.group)]
+        n.pg = [x|y for x,y in zip(n.pg,pre.pg)]
 
     # Internal function to morph a node to another type
     # no_warn and no_pre should NOT be set to True unless
@@ -155,7 +155,7 @@ class adder_tree(graph):
         # Currently commented-out, as you should NOT do this
 
         #if update_flag:
-        #    self.walk_downstream(new_n,fun=self._recalc_group)
+        #    self.walk_downstream(new_n,fun=self._recalc_pg)
 
         return new_n
 
@@ -208,10 +208,10 @@ class adder_tree(graph):
         new_inv = self._morph_node(n,new_m,no_pre=True)
         if new_inv.y<new_n.y and new_pre is None:
             self._add_pre(new_inv,pre)
-            self._recalc_group(new_inv)
+            self._recalc_pg(new_inv)
         else:
             self._add_pre(new_n,pre)
-            self._recalc_group(new_n)
+            self._recalc_pg(new_n)
 
         return n
 
@@ -225,7 +225,8 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the next-highest non-invis neighbor
     def r_top(self,n):
-        return (self.top(n) if node._exists(self.top(n)) else self.r_top(self.top(n)))
+        top = self.top(n)
+        return top if (node._exists(top) or top is None) else self.r_top(top)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y+1 neighbor (stops before post-processing logic)
@@ -237,7 +238,8 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the next-lowest non-invis neighbor
     def r_bot(self,n):
-        return (self.bot(n) if node._exists(self.bot(n)) else self.r_bot(self.bot(n)))
+        bot = self.bot(n)
+        return bot if (node._exists(bot) or bot is None) else self.r_bot(bot)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
@@ -660,18 +662,29 @@ class adder_tree(graph):
             return 0
 
     # Cancels out logically-equivalent nodes/edges
-    # As of commit 194923b83, this relies on node.group
+    # As of commit 194923b83, this relies on node groups
     def reduce_idem(self):
         modified=[]
         for a in self:
             # Filter out invis nodes
             if not node._exists(a): continue
-            # Filter out post-processing nodes
-            if a.m in ['xor_node']: continue
+            # Filter out pre/post-processing nodes
+            if not node._is_prefix_logic(a): continue
+            # Filter out buffers that have a purpose
+            if node._isbuf(a) and len(self.post(a))>0: continue
             # If node does not introduce anything new, flag
-            top = self.top(a)
-            if top is None: continue
-            if a.group==top.group: modified.append(a)
+            rtop = self.r_top(a)
+            rbot = self.r_bot(a)
+            pre = self.pre(a)
+
+            # Case 1: This node gives no more than rtop
+            if node._is_prefix_logic(rtop) and \
+               all([(not x)|y for x,y in zip(a.pg,rtop.pg)]):
+                modified.append(a)
+            # Case 2: This node gives no more than rbot
+            elif node._is_prefix_logic(rbot) and not node._isbuf(rbot) and \
+                 all([(not x)|y|z for x,y,z in zip(pre.pg,self.pre(rbot).pg,self.top(a).pg)]):
+                modified.append(a)
 
         # Reduce any nodes that are flagged
         for a in modified:
@@ -683,8 +696,7 @@ class adder_tree(graph):
                 m = 'buffer_node'
             self._morph_node(a,m,True)
 
-        if len(modified)>0:
-            return len(modified)+self.reduce_idem()
+        return len(modified)
 
     # If the last row of the tree is just buffers
     # Shortens the tree by one layer
