@@ -612,8 +612,8 @@ class adder_tree(graph):
     # extraneous layers
 
     def clean(self):
-        self.compress()
         self.reduce_idem()
+        self.compress()
         self.trim_layers()
 
     # Shifts all possible nodes up
@@ -641,40 +641,20 @@ class adder_tree(graph):
             return self.compress()
 
     # Cancels out logically-equivalent nodes/edges
+    # As of commit 194923b83, this relies on node.group
 
     def reduce_idem(self):
         modified=[]
         for a in self:
-            for b in self:
+            # Filter out invis nodes
+            if not node._exists(a): continue
+            # If node does not introduce anything new, flag
+            top = self.top(a)
+            if top is None: continue
+            if a.group==top.group: modified.append(a)
 
-                # If two nodes and their predecessors are parallel
-                if self.pre(a) is not None and \
-                   self.pre(b) is not None and \
-                   a is not b and \
-                   self.pre(a) is not self.pre(b) and \
-                   self.pre(a).x==self.pre(b).x and \
-                   a.x==b.x and \
-                   a.y>0 and b.y>0:
-
-                    # Figure out which one is on top
-                    if (self.r_top(a)==b) and not node._exists(self.pre(a)):
-                        c = a
-                    elif (self.r_top(b)==a) and not node._exists(self.pre(b)):
-                        c = b
-                    else:
-                        continue
-
-                    # Remove the lower pair's edge
-                    self.remove_all_edges(c,self.pre(c))
-                    modified.append(c)
-                    modified.append(self.pre(c))
-
-        # Filter out any modified buffers
-        modified = [x for x in modified if node._exists(x)]
-        # Delete any nodes that no longer have predecessors
+        # Delete any nodes that are flagged
         for a in modified:
-            if self.pre(a) is not None:
-                continue
             post = self.post(a)
             self.remove_node(a)
             n=node(a.x,a.y,'invis_node')
