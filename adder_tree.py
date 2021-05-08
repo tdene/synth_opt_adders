@@ -92,8 +92,8 @@ class adder_tree(graph):
         post = self.post(n)
 
         fun(n)
-        if bot is not None: walk_downstream(bot)
-        for x in post: walk_downstream(x)
+        if bot is not None: self.walk_downstream(bot)
+        for x in post: self.walk_downstream(x)
 
     # Internal helper function to prevent re-writing of code
     # Connects node to its upper neighbor
@@ -159,10 +159,9 @@ class adder_tree(graph):
         # If no_warn/no_pre was for some reason set to True,
         # first: please re-consider doing so
         # then: update all the groups down-stream
-        # Currently commented-out, as you should NOT do this
-
-        #if update_flag:
-        #    self.walk_downstream(new_n,fun=self._recalc_pg)
+        # Commented out as this should really not be done
+#        if update_flag:
+#            self.walk_downstream(new_n,fun=self._recalc_pg)
 
         return new_n
 
@@ -215,14 +214,13 @@ class adder_tree(graph):
         new_inv = self._morph_node(n,new_m,no_pre=True)
         if new_inv.y<new_n.y and new_pre is None:
             self._add_pre(new_inv,pre)
-            self._recalc_pg(new_n)
-            self._recalc_pg(new_inv)
         else:
             self._add_pre(new_n,pre)
-            self._recalc_pg(new_n)
-            self._recalc_pg(new_inv)
 
-        return n
+        self.walk_downstream(new_n,fun=self._recalc_pg)
+        self.walk_downstream(new_inv,fun=self._recalc_pg)
+
+        return new_n
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
@@ -316,13 +314,10 @@ class adder_tree(graph):
         if self.pre(a) is None:
             return (None,None)
         b = None
-        for x in self.node_list[y]:
+        for x in reversed(self.node_list[y]):
             if x.x<a.x and self.pre(x)==self.pre(a):
-        # ∃ c s.t a is below c and b is below pre(c)
-                c=a
-                while c.y>0:
-                    c = self.top(c)
-                    if self._is_below(self.pre(c),x): b=x; break;
+                # ∃ c s.t a is below c and b is below pre(c)
+                if self._is_below(self.pre(self.r_top(a)),x): b=x; break;
         if b is None:
             return (None,None)
         # ∄ bot(a) or bot(a) = post-processing
@@ -511,6 +506,7 @@ class adder_tree(graph):
         self.add_node(c,pre=self.top(self.top(b)))
         for x in post:
             self._add_pre(x,c)
+        self.walk_downstream(c,fun=self._recalc_pg)
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
@@ -523,8 +519,6 @@ class adder_tree(graph):
         return a,b
 
     def FL(self,x,y=None,clean=True):
-# As of the invis/buffer overhaul of commit c0363d063, below comment is false
-# Need to implement ∄ bot(a) by shifting in-place if ∄ top(b) and pre(b).y>top(b)
         a,b = self._checkFL(x,y)
         if b is None:
             return None
@@ -534,6 +528,7 @@ class adder_tree(graph):
         for x in post:
             self.remove_all_edges(x,a)
             self._add_pre(x,b)
+            self.walk_downstream(x,fun=self._recalc_pg)
 
         #a -> bot(a); pre(a) = b
         # This is done at the same time, to avoid add_edge exception
