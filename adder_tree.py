@@ -78,6 +78,13 @@ class adder_tree(graph):
         n.pg = [x|y for x,y in \
                    zip(top_g,pre_g)]
 
+    # Determine whether a combination of nodes (args)
+    # has the same group P/G as node a
+    def _is_pg_subset(a,*args):
+        b = [x.pg for x in args]
+        b = [any(x) for x in zip(*b)]
+        return all([(not y)|x for x,y in zip(a.pg,b)])
+
     # Traverse the graph downstream of a node
     # applying fun to every node you meet
     def walk_downstream(self,n,fun=lambda x: x):
@@ -515,7 +522,7 @@ class adder_tree(graph):
 
         return a,b
 
-    def FL(self,x,y=None,clean=False):
+    def FL(self,x,y=None,clean=True):
 # As of the invis/buffer overhaul of commit c0363d063, below comment is false
 # Need to implement ∄ bot(a) by shifting in-place if ∄ top(b) and pre(b).y>top(b)
         a,b = self._checkFL(x,y)
@@ -541,7 +548,7 @@ class adder_tree(graph):
 
         return a,b
 
-    def TF(self,x,y=None,clean=False):
+    def TF(self,x,y=None,clean=True):
         a,b = self._checkTF(x,y)
         if b is None:
             return None
@@ -560,7 +567,7 @@ class adder_tree(graph):
 
         return a,b
 
-    def FT(self,x,y=None,clean=False):
+    def FT(self,x,y=None,clean=True):
         a,b,z = self._checkFT(x,y)
         if b is None:
             return None
@@ -609,7 +616,7 @@ class adder_tree(graph):
 
         return a,b
 
-    def LT(self,x,y=None,clean=False):
+    def LT(self,x,y=None,clean=True):
         a,b = self._checkLT(x,y=y)
         if b is None:
             return None
@@ -671,6 +678,7 @@ class adder_tree(graph):
             if not node._is_prefix_logic(a): continue
             # Filter out buffers that have a purpose
             if node._isbuf(a) and len(self.post(a))>0: continue
+
             # If node does not introduce anything new, flag
             rtop = self.r_top(a)
             rbot = self.r_bot(a)
@@ -678,23 +686,23 @@ class adder_tree(graph):
 
             # Case 1: This node gives no more than rtop
             if node._is_prefix_logic(rtop) and \
-               all([(not x)|y for x,y in zip(a.pg,rtop.pg)]):
+                adder_tree._is_pg_subset(rtop,a):
                 modified.append(a)
             # Case 2: This node gives no more than rbot
             elif node._is_prefix_logic(rbot) and not node._isbuf(rbot) and \
-                 all([(not x)|y|z for x,y,z in zip(pre.pg,self.pre(rbot).pg,self.top(a).pg)]):
+                adder_tree._is_pg_subset(self.pre(rbot),pre):
                 modified.append(a)
 
         # Reduce any nodes that are flagged
         for a in modified:
+            pre = self.pre(a)
             # If node has post, it can only reduce down to buffer
             # Otherwise it can reduce down to invis
             if len(self.post(a))==0:
                 m = 'invis_node'
             else:
                 m = 'buffer_node'
-            self._morph_node(a,m,True)
-
+            a=self._morph_node(a,m,True)
         return len(modified)
 
     # If the last row of the tree is just buffers
