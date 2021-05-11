@@ -725,7 +725,9 @@ class adder_tree(graph):
             # Filter out pre/post-processing nodes
             if not node._is_prefix_logic(a): continue
             # Filter out buffers that have a purpose
-            if node._isbuf(a) and len(self.post(a))>0: continue
+            if node._isbuf(a) and \
+               len(self.post(a))>0 and \
+               node._is_prefix_logic(self.top(a)): continue
 
             # If node does not introduce anything new, flag
             rtop = self.r_top(a)
@@ -745,7 +747,7 @@ class adder_tree(graph):
             pre = self.pre(modified)
             # If node has post, it can only reduce down to buffer
             # Otherwise it can reduce down to invis
-            if len(self.post(modified))==0:
+            if len(self.post(modified))==0 or node._isbuf(modified):
                 m = 'invis_node'
             else:
                 m = 'buffer_node'

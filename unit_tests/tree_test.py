@@ -150,12 +150,12 @@ def LFT():
 def test():
     g.png('1.png')
     g.LF(7)
+    g.LF(7)
+    g.LF(6)
     g.png('2.png')
-    g.LF(7)
-    g.LF(6)
-    g.LF(7)
-    g.LF(6)
     g.LF(5)
+    g.LF(6)
+    g.LF(7)
     g.TF(7)
     g.LF(7)
     g.LF(6)
@@ -171,11 +171,12 @@ def test2():
     g.LF(7)
     g.LF(6)
     g.LF(7)
+    g.png('2.png')
     g.LF(5)
     g.LF(6)
     g.LF(7)
     g.LF(3)
-    g.png('2.png')
+    g.png('3.png')
     g.FL(3)
     g.FL(7)
     g.FL(6)
@@ -183,9 +184,8 @@ def test2():
     g.FL(7)
     g.FL(6)
     g.FL(7)
-    g.png('3.png')
 
-test2()
+test()
 
 # Check that tree remains valid
 post_processing = g.node_list[-1]
