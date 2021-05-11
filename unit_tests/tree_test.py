@@ -3,7 +3,6 @@
 import sys
 sys.path.append(".")
 
-from adder_graph import adder_graph as graph
 from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
 
@@ -15,9 +14,9 @@ assert(g._checkLF(2,2)==(None,None))
 assert(g._checkLT(2)==(None,None))
 
 assert(g._checkFT(7)==(None,None,None))
-assert(g._checkTF(7)==(None,None))
-assert(g._checkFL(7)==(None,None))
-assert(g._checkTL(7)==(None,None))
+#assert(g._checkTF(7)==(None,None))
+assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
+#assert(g._checkTL(7)==(None,None))
 
 assert(len(g.node_list)==9)
 g.trim_layer()
@@ -150,24 +149,44 @@ def LFT():
 
 def test():
     g.LF(7)
+    g.LF(7)
     g.LF(6)
+    g.LF(7)
+    g.LF(6)
+    g.LF(5)
+    g.TF(7)
     g.png('1.png')
     g.LF(7)
     g.LF(6)
     g.LF(5)
+    g.LF(4)
+    g.png('2.png')
+    g.LF(3)
+    g.LF(7)
+    g.LF(6)
+    g.png('3.png')
+
+def test2():
+    g.LF(7)
+    g.LF(6)
+    g.LF(7)
+    g.png('1.png')
+    g.LF(5)
+    g.png('2.png')
+    g.clean()
+    g.LF(6)
     g.LF(7)
     g.LF(3)
     g.FL(3)
     g.FL(7)
-    g.FL(5)
     g.FL(6)
+    g.FL(5)
     g.FL(7)
-    g.png('2.png')
     g.FL(6)
     g.FL(7)
     g.png('3.png')
 
-test()
+test2()
 
 # Check that tree remains valid
 post_processing = g.node_list[-1]

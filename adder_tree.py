@@ -78,12 +78,20 @@ class adder_tree(graph):
         n.pg = [x|y for x,y in \
                    zip(top_g,pre_g)]
 
-    # Determine whether a combination of nodes (args)
-    # has the same group P/G as node a
-    def _is_pg_subset(a,*args):
-        b = [x.pg for x in args]
+
+    # Pre-condition: a and b are both iterables
+    # Post-condition: return value is True/False
+
+    # Determine whether a combination of nodes (b)
+    # has the same group P/G as another combination (a)
+    # That is, if a PG is in b, then it has to be in a
+    # b -> a === (not b)|a
+    def _is_pg_subset(self,a,b):
+        a = [x.pg if x is not None else [0]*self.w for x in a]
+        a = [any(x) for x in zip(*a)]
+        b = [x.pg if x is not None else [0]*self.w for x in b]
         b = [any(x) for x in zip(*b)]
-        return all([(not y)|x for x,y in zip(a.pg,b)])
+        return all([(not y)|x for x,y in zip(a,b)])
 
     # Traverse the graph downstream of a node
     # applying fun to every node you meet
@@ -92,8 +100,8 @@ class adder_tree(graph):
         post = self.post(n)
 
         fun(n)
-        if bot is not None: self.walk_downstream(bot)
-        for x in post: self.walk_downstream(x)
+        if bot is not None: self.walk_downstream(bot,fun)
+        for x in post: self.walk_downstream(x,fun)
 
     # Internal helper function to prevent re-writing of code
     # Connects node to its upper neighbor
@@ -251,11 +259,15 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
-        return next(iter([a for a in self.adj[n] if a.y<n.y and (a.x<n.x or node._isbuf(n))]),None)
+        if node._is_prefix_logic(n) and (node._isbuf(n) or not node._exists(n)):
+            return self.top(n)
+        return next(iter([a for a in self.adj[n] if a.y<n.y and a.x<n.x]),None)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
     def post(self,n):
+        if node._is_prefix_logic(n) and (node._isbuf(n) or not node._exists(n)):
+            return [a for a in self.adj[n] if a.y>n.y]
         return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
 
     # Helper function that checks whether n2 is below n1
@@ -288,12 +300,23 @@ class adder_tree(graph):
         b = self.pre(a)
         if not node._exists(b):
             return (None,None)
-        # ∄ top(a), top(top(a))
-        if node._exists(self.top(a)) or node._exists(self.top(self.top(a))):
+        # ∄ top(a)
+        top = self.top(a)
+        if node._exists(top):
             return (None,None)
-#        # ∄ top(b)
-#        if node._exists(self.top(b)):
-#            return (None,None)
+
+        # Case 1: is_pg([top(top(a)),pre(b)], [top(b),pre(b)])
+        if self._is_pg_subset((self.top(top), self.pre(b)), \
+                                    (self.top(b), self.pre(b))):
+            pass
+        # Case 2: ∄ top(top(a)) and is_pg([top(top(b)),pre(b)], [top(b),pre(b)])
+        elif not node._exists(self.top(self.top(a))) and \
+             self._is_pg_subset((self.top(self.top(b)), self.pre(b)), \
+                                      (self.top(b), self.pre(b))):
+            pass
+        else:
+            return (None,None)
+
         return (a,b)
 
     def _checkFL(self,x,y=None):
@@ -308,24 +331,35 @@ class adder_tree(graph):
                     return a,b
             return (None,None)
 
+        # TO-DO: reimplement in-place transform?
+        # Need to think hard about this
+
         # Main clause of the function
         a = self[x,y]
-        # ∃ b s.t pre(a)=pre(b),
         if self.pre(a) is None:
             return (None,None)
+
         b = None
         for x in reversed(self.node_list[y]):
+        # ∃ b s.t pre(a)=pre(b),
             if x.x<a.x and self.pre(x)==self.pre(a):
-                # ∃ c s.t a is below c and b is below pre(c)
-                if self._is_below(self.pre(self.r_top(a)),x): b=x; break;
+        # ∀ post(a), is_pg([b],[post]) or ∄ top(post)
+                flag=True
+                for y in self.post(a):
+                    if not self._is_pg_subset((x,),(y,)) and \
+                       node._exists(self.top(a)):
+                        flag=False; break;
+                if flag:
+                    b=x; break;
         if b is None:
             return (None,None)
+
+        bot = self.bot(a)
         # ∄ bot(a) or bot(a) = post-processing
-        if node._exists(self.bot(a)) and not node._isbuf(self.bot(a)):
-            if self.bot(a).m in ['xor_node']:
-                self.add_layer()
-            else:
-                return (None,None)
+        if node._exists(bot) and \
+           not bot.m in ['xor_node'] and \
+           not node._isbuf(bot):
+            return (None,None)
 
         return (a,b)
 
@@ -499,19 +533,26 @@ class adder_tree(graph):
 
         # create c=top(top(a)); pre(c) = top(top(b))
         c=self.top(self.top(a))
-        post=self.post(c)
-        self.remove_node(c)
-
-        c=node(c.x,c.y,'black')
-        self.add_node(c,pre=self.top(self.top(b)))
-        for x in post:
-            self._add_pre(x,c)
-        self.walk_downstream(c,fun=self._recalc_pg)
+        if not node._exists(c):
+            post=self.post(c)
+            self.remove_node(c)
+            c=node(c.x,c.y,'black')
+            self.add_node(c,pre=self.top(self.top(b)))
+            for x in post:
+                self._add_pre(x,c)
+            self.walk_downstream(c,fun=self._recalc_pg)
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
         self.remove_all_edges(a,self.pre(a))
-        self.shift_node(a, self.top, new_pre=self.pre(b))
+        a = self.shift_node(a, self.top, new_pre=self.pre(b))
+
+        # pre(post(b)) = a
+        post = self.post(b)
+        for x in post:
+            self.remove_all_edges(x,b)
+            self._add_pre(x,a)
+            self.walk_downstream(x,fun=self._recalc_pg)
 
         if clean:
             self.clean()
@@ -523,20 +564,29 @@ class adder_tree(graph):
         if b is None:
             return None
 
+        # If we have space solely because this is the bottom
+        if not node._is_prefix_logic(self.bot(a)):
+            self.add_layer()
+
         # pre(post(a)) = b
+        # pre(top(post(a))) = top(a)
         post = self.post(a)
         for x in post:
             self.remove_all_edges(x,a)
             self._add_pre(x,b)
-            self.walk_downstream(x,fun=self._recalc_pg)
+            top = self.top(x)
+            top = self._morph_node(top,'black')
+            self._add_pre(top,self.top(a))
+            self.walk_downstream(top,fun=self._recalc_pg)
 
         #a -> bot(a); pre(a) = b
         # This is done at the same time, to avoid add_edge exception
-        self.remove_all_edges(a,self.pre(a))
-        self.shift_node(a, self.bot, new_pre=b)
 
-        #del c = top(top(a))
-        # Gets performed by clean
+        self.remove_all_edges(a,self.pre(a))
+        a = self.shift_node(a, self.bot, new_pre=b)
+
+        if not node._exists(b):
+            b=self._morph_node(b,'buffer_node')
 
         if clean:
             self.clean()
@@ -553,9 +603,11 @@ class adder_tree(graph):
             pre=self.pre(b)
             self.remove_all_edges(b,pre)
             self._add_pre(b,self.pre(a))
+            self.walk_downstream(b,fun=self._recalc_pg)
         else:
             c=node(b.x,b.y,'black')
             self.add_node(c,pre=self.pre(a))
+            self.walk_downstream(c,fun=self._recalc_pg)
 
         if clean:
             self.clean()
@@ -584,7 +636,7 @@ class adder_tree(graph):
         if node._exists(self.top(b)):
             self.remove_node(b)
         else:
-            self.shift_node(b, self.top)
+            b = self.shift_node(b, self.top)
 
         #if pre(pre(a)) exists
         #create c = bot(b); pre(c)=bot(pre(pre(a)))
@@ -635,6 +687,7 @@ class adder_tree(graph):
     def clean(self):
         self.reduce_idem()
         self.compact()
+        self.reduce_idem()
         self.trim_layers()
 
     # Shifts all possible nodes up
@@ -651,10 +704,16 @@ class adder_tree(graph):
             pre = self.pre(a)
             if pre is None or node._exists(pre):
                 continue
+            top = self.top(a)
             # and whose post(top) is empty
-            if len(self.post(self.top(a)))!=0:
+            # or whose top is invis (necessitates recalc)
+            flag = len(self.post(top))>0
+            if node._exists(top) and len(self.post(top))!=0:
                 continue
-            self.shift_node(a)
+            a = self.shift_node(a)
+            if flag:
+                self.walk_downstream(a,fun=self._recalc_pg)
+
             changed=True
             break
         if changed:
@@ -665,7 +724,7 @@ class adder_tree(graph):
     # Cancels out logically-equivalent nodes/edges
     # As of commit 194923b83, this relies on node groups
     def reduce_idem(self):
-        modified=[]
+        modified=None
         for a in self:
             # Filter out invis nodes
             if not node._exists(a): continue
@@ -681,24 +740,25 @@ class adder_tree(graph):
 
             # Case 1: This node gives no more than rtop
             if node._is_prefix_logic(rtop) and \
-                adder_tree._is_pg_subset(rtop,a):
-                modified.append(a)
+                self._is_pg_subset((rtop,),(a,)):
+                modified=a
             # Case 2: This node gives no more than rbot
             elif node._is_prefix_logic(rbot) and not node._isbuf(rbot) and \
-                adder_tree._is_pg_subset(self.pre(rbot),pre):
-                modified.append(a)
+                self._is_pg_subset((self.pre(rbot),),(pre,)):
+                modified=a
 
         # Reduce any nodes that are flagged
-        for a in modified:
-            pre = self.pre(a)
+        if modified is not None:
+            pre = self.pre(modified)
             # If node has post, it can only reduce down to buffer
             # Otherwise it can reduce down to invis
-            if len(self.post(a))==0:
+            if len(self.post(modified))==0:
                 m = 'invis_node'
             else:
                 m = 'buffer_node'
-            a=self._morph_node(a,m,True)
-        return len(modified)
+            self._morph_node(modified,m,True)
+            return 1+self.reduce_idem()
+        return 0
 
     # If the last row of the tree is just buffers
     # Shortens the tree by one layer
@@ -745,11 +805,12 @@ class adder_tree(graph):
                 if n.x==0 or n.y in [0,len(self.node_list)-1] or not node._exists(n):
                     continue
                 pre = self.pre(n)
-                rights = iter([x for x in row if self.pre(x)==pre and x.x<n.x])
+                rights = iter([x for x in row if self.pre(x)==pre and x.x<n.x and \
+                               (node._exists(x) and not node._isbuf(x))])
                 r1 = next(rights,None)
                 r2 = next(rights,None)
 
-                if pre is not None and r1 is not None and not node._isbuf(r1):
+                if pre is not None and r1 is not None:
 
                     pos_n="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
                     py_n1=pydot.Node(pos_n,style='invis',pos=pos_n,label="")
