@@ -259,15 +259,11 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
-        if node._is_prefix_logic(n) and (node._isbuf(n) or not node._exists(n)):
-            return self.top(n)
         return next(iter([a for a in self.adj[n] if a.y<n.y and a.x<n.x]),None)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
     def post(self,n):
-        if node._is_prefix_logic(n) and (node._isbuf(n) or not node._exists(n)):
-            return [a for a in self.adj[n] if a.y>n.y]
         return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
 
     # Helper function that checks whether n2 is below n1
@@ -342,7 +338,9 @@ class adder_tree(graph):
         b = None
         for x in reversed(self.node_list[y]):
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and self.pre(x)==self.pre(a):
+            if x.x<a.x and self.pre(x)==self.pre(a) or \
+               self.top(x)==self.pre(a) and \
+               x.m in ['invis_node','buffer_node']:
         # ∀ post(a), is_pg([b],[post]) or ∄ top(post)
                 flag=True
                 for y in self.post(a):
@@ -538,9 +536,6 @@ class adder_tree(graph):
             self.remove_node(c)
             c=node(c.x,c.y,'black')
             self.add_node(c,pre=self.top(self.top(b)))
-            for x in post:
-                self._add_pre(x,c)
-            self.walk_downstream(c,fun=self._recalc_pg)
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
@@ -548,7 +543,7 @@ class adder_tree(graph):
         a = self.shift_node(a, self.top, new_pre=self.pre(b))
 
         # pre(post(b)) = a
-        post = self.post(b)
+        post = [x for x in self.post(b) if x.x>a.x]
         for x in post:
             self.remove_all_edges(x,b)
             self._add_pre(x,a)
@@ -682,17 +677,16 @@ class adder_tree(graph):
         #TF, followed by FL
 
 
-    # Compresses, eliminates nodes using idempotence, and trims
-    # extraneous layers
+    # Compresses, eliminates nodes using idempotence,
+    # and trims extraneous layers
     def clean(self):
-        self.reduce_idem()
-        self.compact()
-        self.reduce_idem()
+        while self.reduce_idem() or self.compact(): pass
         self.trim_layers()
 
     # Shifts all possible nodes up
-    def compact(self,changed=False):
+    def compact(self):
         # Note: don't change data structure while iterating over it
+        changed = False
         for a in self:
             # Only pick non-invis nodes,
             if not node._exists(a):
@@ -722,7 +716,7 @@ class adder_tree(graph):
             return 0
 
     # Cancels out logically-equivalent nodes/edges
-    # As of commit 194923b83, this relies on node groups
+    # As of commit 194923b83, this relies on node group P/G
     def reduce_idem(self):
         modified=None
         for a in self:
@@ -739,12 +733,11 @@ class adder_tree(graph):
             pre = self.pre(a)
 
             # Case 1: This node gives no more than rtop
-            if node._is_prefix_logic(rtop) and \
-                self._is_pg_subset((rtop,),(a,)):
+            if self._is_pg_subset((rtop,),(a,)):
                 modified=a
             # Case 2: This node gives no more than rbot
-            elif node._is_prefix_logic(rbot) and not node._isbuf(rbot) and \
-                self._is_pg_subset((self.pre(rbot),),(pre,)):
+            elif not node._isbuf(rbot) and \
+                 self._is_pg_subset((self.pre(rbot),),(pre,)):
                 modified=a
 
         # Reduce any nodes that are flagged
