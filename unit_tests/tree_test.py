@@ -13,9 +13,9 @@ assert(g._checkLT(3)==(g[3,3],g[2,2]))
 assert(g._checkLF(2,2)==(None,None))
 assert(g._checkLT(2)==(None,None))
 
-assert(g._checkFT(7)==(None,None,None))
+#assert(g._checkFT(7)==(None,None,None))
 #assert(g._checkTF(7)==(None,None))
-assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
+#assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
 #assert(g._checkTL(7)==(None,None))
 
 assert(len(g.node_list)==9)
@@ -185,7 +185,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-test2()
+test()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

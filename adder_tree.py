@@ -330,20 +330,19 @@ class adder_tree(graph):
                     return a,b
             return (None,None)
 
-        # TO-DO: reimplement in-place transform?
-        # Need to think hard about this
-
         # Main clause of the function
         a = self[x,y]
-        if self.pre(a) is None:
+
+        pre = self.pre(a)
+        if pre is None:
             return (None,None)
 
         b = None
         for x in reversed(self.node_list[y]):
+            top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and self.pre(x)==self.pre(a) or \
-               self.top(x)==self.pre(a) and \
-               x.m in ['invis_node','buffer_node']:
+            if x.x<a.x and (self.pre(x)==pre or \
+               (top==pre and x.m in ['invis_node','buffer_node'])):
         # ∀ post(a), is_pg([b],[post]) or ∄ top(post)
                 flag=True
                 for y in self.post(a):
@@ -442,25 +441,35 @@ class adder_tree(graph):
 
         # Main clause of the function
         a = self[x,y]
-        # ∃ b s.t pre(a)=pre(b),
-        if self.pre(a) is None:
+
+        pre = self.pre(a)
+        if pre is None:
             return (None,None,None)
+
         b = None
-        for x in self.post(self.pre(a)):
-            if x is a:
+        for x in reversed(self.node_list[y]):
+            top = self.top(x)
+        # ∃ b s.t pre(a)=pre(b),
+            if x.x<a.x and (self.pre(x)==pre(a) or \
+               (top==pre and x.m in ['invis_node','buffer_node'])):
+                pass
+            else:
                 continue
-        # ∄ top(b) or pre^n(top(b))=top^n(pre(b))
-            if not node._exists(self.top(x)):
-                b=x; z=self.top(self.pre(x)); break;
-            tmp1,tmp2=(self.top(x),self.pre(x))
-            while (tmp1 is not None) and (tmp2 is not None):
-                tmp1=self.pre(tmp1); tmp2=self.top(tmp2);
-                if tmp1 is tmp2:
-                    b=x; z=tmp1; break;
+        # ∃ c s.t c.y = pre.y,
+            for y in reversed(self.node_list[pre.y]):
+        # is_pg([c,top(b)],[pre,top(b)])
+                if self._is_pg_subset((y,top),(pre,top)):
+                    b=x; c=y; break;
+        # or
+        # ∄ top(b) and is_pg([c],[pre(pre)])
+                elif not node._exists(top) and \
+                     self._is_pg_subset((y,),(self.pre(pre),)):
+                    b=x; c=y; break;
+
         if b is None:
             return (None,None,None)
 
-        return (a,b,z)
+        return (a,b,c)
 
     def _checkLT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -640,48 +649,22 @@ class adder_tree(graph):
         return a,b
 
     def FT(self,x,y=None,clean=True):
-        a,b,z = self._checkFT(x,y)
+        a,b,c = self._checkFT(x,y)
         if b is None:
             return None
 
         # note: pre = self.pre(b) = self.pre(a)
-        pre = self.pre(b)
+        pre = self.pre(a)
 
-        #pre(b) = top(pre(b))
+        # pre(b) = c
         self.remove_all_edges(b,pre)
+        self._add_pre(b,c)
 
-        self._add_pre(b,self.top(pre))
-
-        #b -> top(b)
-        post=self.post(b)
-        c=node(b.x,b.y,'black')
-
-        # This is the only transformation where the node/net
-        # being created might already exist, even optimized
-        if node._exists(self.top(b)):
-            self.remove_node(b)
-        else:
-            b = self.shift_node(b, self.top)
-
-        #if pre(pre(a)) exists
-        #create c = bot(b); pre(c)=bot(pre(pre(a)))
-        if self.pre(pre) is not None or z is not self.top(pre):
-            if self[c.x,c.y] is not None:
-                self.remove_node(self[c.x,c.y])
-            tmp=self.pre(self.bot(z))
-            while tmp.y<pre.y:
-                tmp=self.bot(tmp)
-            self.add_node(c,pre=tmp)
-
-        # Note to self:
-        # post(b) has to attach to the original b spot
-        # I think this is, like the rest of the complication,
-        # only when pre(pre(a)) exists
-        # Will need to revisit this and draw it out
-
-            for x in post:
-                self.remove_all_edges(x,b)
-                self._add_pre(x,c)
+        # create top(b); pre(top(b)) = top(pre)
+        top = self.top(b)
+        if not self._is_pg_subset((c,top),(pre,top)):
+            top = self._morph_node(top,'black')
+            self._add_pre(top,self.top(pre))
 
         if clean:
             self.clean()
