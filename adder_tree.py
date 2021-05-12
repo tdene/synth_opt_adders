@@ -343,11 +343,20 @@ class adder_tree(graph):
         # ∃ b s.t pre(a)=pre(b),
             if x.x<a.x and (self.pre(x)==pre or \
                (top==pre and x.m in ['invis_node','buffer_node'])):
-        # ∀ post(a), is_pg([b],[post]) or ∄ top(post)
+
+        # If we can shift in-place we are done
+        # ∄ top(b) and is_pg(pre(b),top(pre(b)))
+                if not node._exists(top) and \
+                   self._is_pg_subset((self.top(pre),),(pre,)):
+                       return (a,b)
+
+        # Otherwise we have to account for post(a) remapping
+        # ∀ post(a), is_pg([top(post),a],[top(post),b]) or ∄ top(post)
                 flag=True
                 for y in self.post(a):
-                    if not self._is_pg_subset((x,),(y,)) and \
-                       node._exists(self.top(a)):
+                    topy = self.top(y)
+                    if not self._is_pg_subset((topy,a),(topy,x)) and \
+                       node._exists(topy):
                         flag=False; break;
                 if flag:
                     b=x; break;
@@ -359,13 +368,7 @@ class adder_tree(graph):
         if node._exists(bot) and \
            not bot.m in ['xor_node'] and \
            not node._isbuf(bot):
-        # or if we can shift in-place
-        # ∄ top(b) and is_pg(pre(b),top(pre(b)))
-            pre = self.pre(b)
-            top = self.top(b)
-            if node._exists(top) or \
-               self._is_pg_subset((self.top(pre),),(pre,)):
-                   return (None,None)
+            return (None,None)
 
         return (a,b)
 
@@ -577,17 +580,6 @@ class adder_tree(graph):
         if b is None:
             return None
 
-        # pre(post(a)) = b
-        # pre(top(post(a))) = top(a)
-        post = self.post(a)
-        for x in post:
-            self.remove_all_edges(x,a)
-            self._add_pre(x,b)
-            top = self.top(x)
-            top = self._morph_node(top,'black')
-            self._add_pre(top,self.top(a))
-            self.walk_downstream(top,fun=self._recalc_pg)
-
         # If we can do this transform in-place, then do so
 
         pre = self.pre(b)
@@ -607,7 +599,19 @@ class adder_tree(graph):
                    self.clean()
                 return self.clean()
 
-        # Move to non-in-place-transform section
+        # Non-in-place-transform section below
+
+        # pre(post(a)) = b
+        # pre(top(post(a))) = top(a)
+        post = self.post(a)
+        for x in post:
+            self.remove_all_edges(x,a)
+            self._add_pre(x,b)
+            top = self.top(x)
+            if not self._is_pg_subset((top,a),(top,b)):
+                top = self._morph_node(top,'black')
+                self._add_pre(top,self.top(a))
+            self.walk_downstream(top,fun=self._recalc_pg)
 
         # If we have space solely because this is the bottom
         if not node._is_prefix_logic(self.bot(a)):

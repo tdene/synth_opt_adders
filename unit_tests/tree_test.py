@@ -185,7 +185,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-test()
+test2()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
