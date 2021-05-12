@@ -69,6 +69,9 @@ class adder_tree(graph):
 
     # Recalculate the group P/G for a node
     def _recalc_pg(self,n):
+        if n.m in ['pg_node']:
+            return
+
         top = self.top(n)
         pre = self.pre(n)
 
@@ -357,7 +360,13 @@ class adder_tree(graph):
         if node._exists(bot) and \
            not bot.m in ['xor_node'] and \
            not node._isbuf(bot):
-            return (None,None)
+        # or if we can shift in-place
+        # ∄ top(b) and is_pg(pre(b),top(pre(b)))
+            pre = self.pre(b)
+            top = self.top(b)
+            if node._exists(top) or \
+               self._is_pg_subset((self.top(pre),),(pre,)):
+                   return (None,None)
 
         return (a,b)
 
@@ -559,10 +568,6 @@ class adder_tree(graph):
         if b is None:
             return None
 
-        # If we have space solely because this is the bottom
-        if not node._is_prefix_logic(self.bot(a)):
-            self.add_layer()
-
         # pre(post(a)) = b
         # pre(top(post(a))) = top(a)
         post = self.post(a)
@@ -573,6 +578,31 @@ class adder_tree(graph):
             top = self._morph_node(top,'black')
             self._add_pre(top,self.top(a))
             self.walk_downstream(top,fun=self._recalc_pg)
+
+        # If we can do this transform in-place, then do so
+
+        pre = self.pre(b)
+        top = self.top(b)
+
+        if not node._exists(top) and \
+           self._is_pg_subset((self.top(pre),),(pre,)):
+                # b -> top(b); pre(b) = top(pre(b))
+                # This is done at the same time,
+                # to avoid add_edge exception
+
+                self.remove_all_edges(a,self.pre(b))
+                b = self.shift_node(a, self.top,
+                                   new_pre = self.top(self.pre(b)))
+
+                if clean:
+                   self.clean()
+                return self.clean()
+
+        # Move to non-in-place-transform section
+
+        # If we have space solely because this is the bottom
+        if not node._is_prefix_logic(self.bot(a)):
+            self.add_layer()
 
         #a -> bot(a); pre(a) = b
         # This is done at the same time, to avoid add_edge exception

@@ -171,12 +171,11 @@ def test2():
     g.LF(7)
     g.LF(6)
     g.LF(7)
-    g.png('2.png')
     g.LF(5)
     g.LF(6)
     g.LF(7)
     g.LF(3)
-    g.png('3.png')
+    g.png('2.png')
     g.FL(3)
     g.FL(7)
     g.FL(6)
@@ -184,8 +183,14 @@ def test2():
     g.FL(7)
     g.FL(6)
     g.FL(7)
+    g.png('3.png')
 
-test()
+test2()
+
+# Re-calculate the tree
+pre_processing = g.node_list[0]
+for n in pre_processing:
+    g.walk_downstream(n,fun=g._recalc_pg)
 
 # Check that tree remains valid
 post_processing = g.node_list[-1]
