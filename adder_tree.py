@@ -387,46 +387,22 @@ class adder_tree(graph):
         # Main clause of the function
         a = self[x,y]
 
-        ### Ugly condition
-        # ∃ b s.t pre^n(top(b))=top^n(pre(a)),
         pre = self.pre(a)
-        if pre is None or self.top(pre) is None:
+        if pre is None:
             return (None,None)
+
         b = None
-        for x in self.node_list[a.y][::-1]:
-            if (not node._exists(x)) or \
-                x.y != a.y or \
-                x.x >= a.x or \
-                self.top(x) is None or \
-                self.bot(x) is None or \
-                self.pre(self.top(x)) is None:
+        # ∃ b
+        for x in reversed(self.node_list[y]):
+        # s.t b.x > pre(a).x and pre(b) exists,
+            if not (x.x<pre.x and node._exists(self.pre(x))):
                 continue
-            srb=self.r_bot(x)
-            tmp1,tmp2=(self.top(x),pre)
-            while (tmp1 is not None) and (tmp2 is not None):
-                tmp1=self.pre(tmp1); tmp2=self.top(tmp2);
-                if tmp1 is tmp2:
-                    b=self[srb.x,a.y]; break;
-            if b is None:
-                return (None,None)
-            b=None
-        # ∄ b or pre^n(r_top(b))=top^n(pre(b))
-            if not node._exists(self[srb.x,a.y]):
-                b=self[srb.x,a.y]; break;
-            tmp1,tmp2,tmp3=(self.pre(x),pre,pre)
-            while (tmp1 is not None):
-                tmp1=self.top(tmp1)
-                swap=tmp2
-                if tmp3 is not None:
-                    tmp2=self.pre(tmp3)
-                if tmp2 is not None:
-                    tmp3=self.top(swap)
-                if tmp1 is tmp2 or tmp1 is tmp3:
-                    b=self[srb.x,a.y]; break
-            if b is not None:
-                break
-        if b is None:
-            return (None,None)
+        # is_pg([top(b),pre(b)],[top(a),pre(a)])
+            top = self.top(x)
+            if self._is_pg_subset((top,self.pre(x)),(top,pre)):
+                b=x; break;
+
+        if b is None: return (None,None)
 
         return (a,b)
 
@@ -453,8 +429,7 @@ class adder_tree(graph):
         for x in reversed(self.node_list[y]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and (self.pre(x)==pre(a) or \
-               (top==pre and x.m in ['invis_node','buffer_node'])):
+            if x.x<a.x and (self.pre(x)==pre(a)):
                 pass
             else:
                 continue
@@ -553,10 +528,9 @@ class adder_tree(graph):
         # create c=top(top(a)); pre(c) = top(top(b))
         c=self.top(self.top(a))
         if not node._exists(c):
-            post=self.post(c)
-            self.remove_node(c)
-            c=node(c.x,c.y,'black')
-            self.add_node(c,pre=self.top(self.top(b)))
+            c=self._morph_node(c,'black')
+            self._add_pre(c,self.top(self.top(b)))
+            self.walk_downstream(c,fun=self._recalc_pg)
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
@@ -637,15 +611,10 @@ class adder_tree(graph):
             return None
 
         #pre(b) = pre(a)
-        if node._exists(b):
-            pre=self.pre(b)
-            self.remove_all_edges(b,pre)
-            self._add_pre(b,self.pre(a))
-            self.walk_downstream(b,fun=self._recalc_pg)
-        else:
-            c=node(b.x,b.y,'black')
-            self.add_node(c,pre=self.pre(a))
-            self.walk_downstream(c,fun=self._recalc_pg)
+        pre = self.pre(b)
+        pre = self.remove_all_edges(b,pre)
+        self._add_pre(b,self.pre(a))
+        self.walk_downstream(b,fun=self._recalc_pg)
 
         if clean:
             self.clean()
