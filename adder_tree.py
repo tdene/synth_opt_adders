@@ -171,9 +171,8 @@ class adder_tree(graph):
         # first: please re-consider doing so
         # then: update all the groups down-stream
         # Commented out as this should really not be done
-#        if update_flag:
-#            self.walk_downstream(new_n,fun=self._recalc_pg)
-
+        if update_flag:
+            self.walk_downstream(new_n,fun=self._recalc_pg)
         return new_n
 
     # Shifts a node in a direction given by fun
@@ -392,14 +391,12 @@ class adder_tree(graph):
             return (None,None)
 
         b = None
-        # ∃ b
-        for x in reversed(self.node_list[y]):
-        # s.t b.x > pre(a).x and pre(b) exists,
-            if not (x.x<pre.x and node._exists(self.pre(x))):
-                continue
-        # is_pg([top(b),pre(b)],[top(a),pre(a)])
+        # ∃ b s.t. b.x > pre(a).x
+        for x in reversed(self.node_list[y][:pre.x]):
             top = self.top(x)
-            if self._is_pg_subset((top,self.pre(x)),(top,pre)):
+        # pre(b) exists and is_pg([top(b),pre(b)],[top(a),pre(a)])
+            if node._exists(self.pre(x)) and \
+               self._is_pg_subset((top,self.pre(x)),(top,pre)):
                 b=x; break;
 
         if b is None: return (None,None)
@@ -429,12 +426,12 @@ class adder_tree(graph):
         for x in reversed(self.node_list[y]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and (self.pre(x)==pre(a)):
+            if x.x<a.x and (self.pre(x)==pre):
                 pass
             else:
                 continue
-        # ∃ c s.t c.y = pre.y,
-            for y in reversed(self.node_list[pre.y]):
+        # ∃ c s.t c.y = pre.y and pre.x > c.x,
+            for y in reversed(self.node_list[pre.y][:pre.x]):
         # is_pg([c,top(b)],[pre,top(b)])
                 if self._is_pg_subset((y,top),(pre,top)):
                     b=x; c=y; break;
@@ -632,12 +629,14 @@ class adder_tree(graph):
         # pre(b) = c
         self.remove_all_edges(b,pre)
         self._add_pre(b,c)
+        self.walk_downstream(b,fun=self._recalc_pg)
 
         # create top(b); pre(top(b)) = top(pre)
         top = self.top(b)
         if not self._is_pg_subset((c,top),(pre,top)):
             top = self._morph_node(top,'black')
             self._add_pre(top,self.top(pre))
+            self.walk_downstream(top,fun=self._recalc_pg)
 
         if clean:
             self.clean()
@@ -773,7 +772,7 @@ class adder_tree(graph):
             return('"'+str(s)+'"')
 
         pg=nx.drawing.nx_pydot.to_pydot(self)
-        pg.set_splines("polyline")
+        pg.set_splines("false")
         pg.set_concentrate("true")
 
     # Make fan-out pretty:

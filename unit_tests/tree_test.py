@@ -13,10 +13,10 @@ assert(g._checkLT(3)==(g[3,3],g[2,2]))
 assert(g._checkLF(2,2)==(None,None))
 assert(g._checkLT(2)==(None,None))
 
-#assert(g._checkFT(7)==(None,None,None))
-#assert(g._checkTF(7)==(None,None))
-#assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
-#assert(g._checkTL(7)==(None,None))
+assert(g._checkFT(7)==(None,None,None))
+assert(g._checkTF(7)==(None,None))
+assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
+assert(g._checkTL(7)==(None,None))
 
 assert(len(g.node_list)==9)
 g.trim_layer()
@@ -152,7 +152,6 @@ def test():
     g.LF(7)
     g.LF(7)
     g.LF(6)
-    g.png('2.png')
     g.LF(5)
     g.LF(6)
     g.LF(7)
@@ -160,11 +159,22 @@ def test():
     g.LF(7)
     g.LF(6)
     g.LF(5)
+    g.png('2.png')
     g.LF(4)
     g.LF(3)
     g.LF(7)
     g.LF(6)
+    g.FT(7)
+    g.FT(7)
+    g.FT(7)
+    g.FT(5)
+    g.FT(5)
+    g.FT(3)
     g.png('3.png')
+    g.FT(7)
+    g.FT(6)
+    g.FT(5)
+    g.png('4.png')
 
 def test2():
     g.png('1.png')
@@ -185,7 +195,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-test2()
+test()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
