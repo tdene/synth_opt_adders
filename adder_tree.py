@@ -411,39 +411,41 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b,z=self._checkFT(x,a)
+                a,b,c,d=self._checkFT(x,a)
                 if b is not None:
-                    return (a,b,z)
-            return (None,None,None)
+                    return (a,b,c,d)
+            return (None,None,None,None)
 
         # Main clause of the function
         a = self[x,y]
 
         pre = self.pre(a)
         if pre is None:
-            return (None,None,None)
+            return (None,None,None,None)
 
-        b = None
+        b = None; d = None
         for x in reversed(self.node_list[y][pre.x+1:x]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
             if not self.pre(x)==pre:
                 continue
         # ∃ c s.t c.y = pre.y and pre.x > c.x,
-            for y in reversed(self.node_list[pre.y][:pre.x]):
+            for y in self.node_list[pre.y][:pre.x]:
         # is_pg([c,top(b)],[pre,top(b)])
                 if self._is_pg_subset((y,top),(pre,top)):
                     b=x; c=y; break;
         # or
-        # ∄ top(b) and is_pg([c],[pre(pre)])
-                elif not node._exists(top) and \
-                     self._is_pg_subset((y,),(self.pre(pre),)):
-                    b=x; c=y; break;
+        # ∄ top(b) and is_pg([c,top(b)],[b,])
+                elif not node._exists(top):
+                    for z in reversed(self.node_list[pre.y-1][:top.x]):
+                        if self._is_pg_subset((top,y,z),(x,)):
+                            b=x; c=y; d=z; break;
+                    if d is not None: break;
 
         if b is None:
-            return (None,None,None)
+            return (None,None,None,None)
 
-        return (a,b,c)
+        return (a,b,c,d)
 
     def _checkLT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -618,7 +620,7 @@ class adder_tree(graph):
         return a,b
 
     def FT(self,x,y=None,clean=True):
-        a,b,c = self._checkFT(x,y)
+        a,b,c,d = self._checkFT(x,y)
         if b is None:
             return None
 
@@ -630,17 +632,17 @@ class adder_tree(graph):
         self._add_pre(b,c)
         self.walk_downstream(b,fun=self._recalc_pg)
 
-        # create top(b); pre(top(b)) = top(pre)
+        # create top(b); pre(top(b)) = d
         top = self.top(b)
-        if not self._is_pg_subset((c,top),(pre,top)):
+        if d is not None:
             top = self._morph_node(top,'black')
-            self._add_pre(top,self.top(pre))
+            self._add_pre(top,d)
             self.walk_downstream(top,fun=self._recalc_pg)
 
         if clean:
             self.clean()
 
-        return a,b
+        return a,b,c,d
 
     def LT(self,x,y=None,clean=True):
         a,b = self._checkLT(x,y=y)
