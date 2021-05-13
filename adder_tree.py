@@ -337,11 +337,11 @@ class adder_tree(graph):
             return (None,None)
 
         b = None
-        for x in reversed(self.node_list[y]):
+        for x in reversed(self.node_list[y][pre.x:x]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and (self.pre(x)==pre or \
-               (top==pre and x.m in ['invis_node','buffer_node'])):
+            if self.pre(x)==pre or \
+               (top==pre and x.m in ['invis_node','buffer_node']):
 
         # If we can shift in-place we are done
         # ∄ top(b) and is_pg(pre(b),top(pre(b)))
@@ -392,11 +392,11 @@ class adder_tree(graph):
 
         b = None
         # ∃ b s.t. b.x > pre(a).x
-        for x in reversed(self.node_list[y][:pre.x]):
+        for x in reversed(self.node_list[y][pre.x+1:x]):
             top = self.top(x)
-        # pre(b) exists and is_pg([top(b),pre(b)],[top(a),pre(a)])
+        # pre(b) exists and is_pg([top(b),pre(b)],[top(b),pre(a)])
             if node._exists(self.pre(x)) and \
-               self._is_pg_subset((top,self.pre(x)),(top,pre)):
+               self._is_pg_subset((top,pre),(top,self.pre(x))):
                 b=x; break;
 
         if b is None: return (None,None)
@@ -423,12 +423,10 @@ class adder_tree(graph):
             return (None,None,None)
 
         b = None
-        for x in reversed(self.node_list[y]):
+        for x in reversed(self.node_list[y][pre.x+1:x]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
-            if x.x<a.x and (self.pre(x)==pre):
-                pass
-            else:
+            if not self.pre(x)==pre:
                 continue
         # ∃ c s.t c.y = pre.y and pre.x > c.x,
             for y in reversed(self.node_list[pre.y][:pre.x]):
