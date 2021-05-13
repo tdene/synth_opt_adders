@@ -394,8 +394,9 @@ class adder_tree(graph):
         # ∃ b s.t. b.x > pre(a).x
         for x in reversed(self.node_list[y][pre.x+1:x]):
             top = self.top(x)
-        # pre(b) exists and is_pg([top(b),pre(b)],[top(b),pre(a)])
-            if node._exists(self.pre(x)) and \
+        # pre(b) is not None and pre(b)!=pre(a)
+        # and is_pg([top(b),pre(b)],[top(b),pre(a)])
+            if self.pre(x) is not None and not self.pre(x)==pre and \
                self._is_pg_subset((top,pre),(top,self.pre(x))):
                 b=x; break;
 
@@ -721,7 +722,9 @@ class adder_tree(graph):
             if self._is_pg_subset((rtop,),(a,)):
                 modified=a
             # Case 2: This node gives no more than rbot
+            # and has no posts?
             elif not node._isbuf(rbot) and \
+                 len(self.post(a))==0 and \
                  self._is_pg_subset((self.pre(rbot),),(pre,)):
                 modified=a
 
