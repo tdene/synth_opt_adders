@@ -222,10 +222,7 @@ class adder_tree(graph):
         # Note that this sets no_pre, which is not advised
         new_n = self._morph_node(inv,n.m,no_pre=True)
         new_inv = self._morph_node(n,new_m,no_pre=True)
-        if new_inv.y<new_n.y and new_pre is None:
-            self._add_pre(new_inv,pre)
-        else:
-            self._add_pre(new_n,pre)
+        self._add_pre(new_n,pre)
 
         self.walk_downstream(new_n,fun=self._recalc_pg)
         self.walk_downstream(new_inv,fun=self._recalc_pg)
@@ -287,35 +284,39 @@ class adder_tree(graph):
             for a in range(len(self.node_list)-1,-1,-1):
                 if not node._exists(self[x,a]):
                     continue
-                a,b=self._checkLF(x,a)
+                a,b,c=self._checkLF(x,a)
                 if b is not None:
-                    return a,b
-            return (None,None)
+                    return a,b,c
+            return (None,None,None)
 
         # Main clause of the function
         a = self[x,y]
         # ∃ b = pre(a)
         b = self.pre(a)
         if not node._exists(b):
-            return (None,None)
+            return (None,None,None)
         # ∄ top(a)
         top = self.top(a)
         if node._exists(top):
-            return (None,None)
+            return (None,None,None)
 
         # Case 1: is_pg([top(top(a)),pre(b)], [top(b),pre(b)])
         if self._is_pg_subset((self.top(top), self.pre(b)), \
                                     (self.top(b), self.pre(b))):
-            pass
+            c = None
         # Case 2: ∄ top(top(a)) and is_pg([top(top(b)),pre(b)], [top(b),pre(b)])
         elif not node._exists(self.top(self.top(a))) and \
              self._is_pg_subset((self.top(self.top(b)), self.pre(b)), \
                                       (self.top(b), self.pre(b))):
-            pass
+            c = self.top(self.top(a))
+        # Case 3: len(post(b))==1 
+        # (we need to shift in-place)
+        elif len(self.post(b))==1:
+            c = self.top(a)
         else:
-            return (None,None)
+            return (None,None,None)
 
-        return (a,b)
+        return (a,b,c)
 
     def _checkFL(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -354,7 +355,7 @@ class adder_tree(graph):
                 flag=True
                 for y in self.post(a):
                     topy = self.top(y)
-                    if not self._is_pg_subset((topy,a),(topy,x)) and \
+                    if not self._is_pg_subset((topy,x),(topy,a)) and \
                        node._exists(topy):
                         flag=False; break;
                 if flag:
@@ -519,28 +520,48 @@ class adder_tree(graph):
         return (a,b)
 
     def LF(self,x,y=None,clean=True):
-        a,b = self._checkLF(x,y)
+        a,b,c = self._checkLF(x,y)
         if b is None:
             return None
 
+        inplace = (c==self.top(a))
+
         # create c=top(top(a)); pre(c) = top(top(b))
-        c=self.top(self.top(a))
-        if not node._exists(c):
+        # or if in-place
+        # create c=top(a); pre(c) = top(b)
+        if c is not None:
             c=self._morph_node(c,'black')
-            self._add_pre(c,self.top(self.top(b)))
+            if inplace:
+                pre = self.top(b)
+            else:
+                pre = self.top(self.top(b))
+            self._add_pre(c,pre)
             self.walk_downstream(c,fun=self._recalc_pg)
 
-        # pre(a) = pre(b); a -> top(a)
-        # This is done at the same time, to avoid add_edge exception
-        self.remove_all_edges(a,self.pre(a))
-        a = self.shift_node(a, self.top, new_pre=self.pre(b))
+        if inplace:
+            pre = self.pre(b)
+            # pre(a) = bot(pre(b))
+            self.remove_all_edges(a,self.pre(a))
+            self._add_pre(a,self.bot(pre))
+            self.walk_downstream(a,fun=self._recalc_pg)
+            # pre(b) = bot(pre(b)); b -> bot(a)
+            # This is done at the same time, to avoid add_edge exception
+            self.remove_all_edges(b,pre)
+            b = self.shift_node(b, self.bot, new_pre=self.bot(pre))
+        else:
+            # pre(a) = pre(b); a -> top(a)
+            # This is done at the same time, to avoid add_edge exception
+            self.remove_all_edges(a,self.pre(a))
+            a = self.shift_node(a, self.top, new_pre=self.pre(b))
 
-        # pre(post(b)) = a
-        post = [x for x in self.post(b) if x.x>a.x]
-        for x in post:
-            self.remove_all_edges(x,b)
-            self._add_pre(x,a)
-            self.walk_downstream(x,fun=self._recalc_pg)
+        # If we're doing an in-place transform, we're done
+        if not inplace:
+            # pre(post(b)) = a
+            post = [x for x in self.post(b) if x.x>a.x]
+            for x in post:
+                self.remove_all_edges(x,b)
+                self._add_pre(x,a)
+                self.walk_downstream(x,fun=self._recalc_pg)
 
         if clean:
             self.clean()
@@ -569,7 +590,7 @@ class adder_tree(graph):
 
                 if clean:
                    self.clean()
-                return self.clean()
+                return a,b
 
         # Non-in-place-transform section below
 
@@ -577,12 +598,12 @@ class adder_tree(graph):
         # pre(top(post(a))) = top(a)
         post = self.post(a)
         for x in post:
-            self.remove_all_edges(x,a)
-            self._add_pre(x,b)
             top = self.top(x)
-            if not self._is_pg_subset((top,a),(top,b)):
+            if not self._is_pg_subset((top,b),(top,a)):
                 top = self._morph_node(top,'black')
                 self._add_pre(top,self.top(a))
+            self.remove_all_edges(x,a)
+            self._add_pre(x,b)
             self.walk_downstream(top,fun=self._recalc_pg)
 
         # If we have space solely because this is the bottom
