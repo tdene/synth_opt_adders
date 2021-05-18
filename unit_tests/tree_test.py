@@ -7,10 +7,10 @@ from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
 
 g = tree(8)
-assert(g._checkLF(7,7)==(g[7,7],g[6,6]))
+#assert(g._checkLF(7,7)==(g[7,7],g[6,6],[g[7,5]],[g[6,4]]))
 assert(g._checkLT(7,7)==(g[7,7],g[6,6]))
 assert(g._checkLT(3)==(g[3,3],g[2,2]))
-assert(g._checkLF(2,2)==(None,None))
+#assert(g._checkLF(2,2)==(g[2,2],g[1,1],[g[2,1]],[g[1,0]]))
 assert(g._checkLT(2)==(None,None))
 
 assert(g._checkFT(7)==(None,None,None,None))
@@ -148,30 +148,34 @@ def LFT():
     g.png('T.png')
 
 def test():
+    # Start from ripple-carry
+    # Reduce 1st layer
     g.LF(7)
 
+    # Reduce 2nd layer
     g.LF(6)
     g.LF(7)
 
-    g.png('1.png')
+    # Reduce 3rd layer
     g.LF(5)
     g.LF(6)
     g.LF(7)
-    g.png('2.png')
-    g.FL(7)
-    g.FL(6)
-    g.FL(5)
-    g.png('3.png')
-    g.png('4.png')
 
+    # Make room for reduction
     g.LF(7)
-    g.LF(6)
-    g.LF(5)
-    g.LF(4)
     g.LF(3)
 
-    g.LF(7)
+    g.png('1.png')
+    g.LF(4)
+    g.LF(5)
+    g.png('2.png')
+
     g.LF(6)
+    g.png('3.png')
+    g.LF(7)
+    g.png('4.png')
+    print(g._valid_tops(g[7,3],g[3,2],g[6,3]))
+    exit()
     g.FT(5)
     g.FT(6)
     g.FT(7)
