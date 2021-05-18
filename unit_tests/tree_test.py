@@ -22,12 +22,30 @@ assert(len(g.node_list)==9)
 g.trim_layer()
 assert(len(g.node_list)==9)
 
-def sklanksy():
-    g.LF(7,clean=True)
-    g.LF(5,clean=True)
-    g.LF(3,clean=True)
-    g.LF(7,clean=True)
-    g.LF(6,clean=True)
+def sklansky():
+    # Start from ripple-carry
+    # Reduce 1st layer
+    g.LF(7)
+    g.png('1.png')
+
+    # Reduce 2nd layer
+    g.LF(6)
+    g.LF(7)
+    g.png('2.png')
+
+    # Reduce 3rd layer
+    g.LF(5)
+    g.LF(6)
+    g.LF(7)
+    g.png('3.png')
+
+    # Reduce 4th layer
+    g.LF(3)
+    g.LF(4)
+    g.LF(5)
+    g.LF(6)
+    g.LF(7)
+    g.png('4.png')
     g.png('sklansky.png')
 
 def koggestone():
@@ -39,25 +57,36 @@ def koggestone():
     g.png('koggestone.png')
 
 def brentkung():
-    g.LF(7)
-    g.compress()
-    g.LF(5)
-    g.compress()
+    # Start from ripple-carry
+    # Reduce 1st layer
+    g.FL(2)
     g.LF(3)
-    g.trim_layer()
-    g.trim_layer()
-    g.compress()
+    g.LF(4)
+    g.LF(5)
+    g.LF(6)
     g.LF(7)
-    g.shift_node(g[4,3],g.bot)
-    g.shift_node(g[4,4],g.bot)
     g.png('1.png')
-    g.shift_node(g[6,4],g.bot)
+
+    # Reduce 2nd layer
+    g.FL(4)
+    g.LF(5)
+    g.LF(6)
+    g.LF(7)
+
+    # Reduce 3rd layer
+    g.FL(4)
+    g.FL(5)
     g.png('2.png')
-    g.shift_node(g[5,3],g.bot)
-    g.shift_node(g[2,2],g.bot)
-    g.shift_node(g[2,3],g.bot)
-    g.shift_node(g[2,4],g.bot)
-    g.png('brentkung.png')
+    g.FL(5)
+    g.png('3.png')
+    exit()
+    g.FL(6)
+    g.LF(7)
+    g.LF(7)
+    g.png('4.png')
+
+    # Reduce 4th layer
+#    g.png('brentkung.png')
 
 def demo():
     g=tree(8)
@@ -148,34 +177,6 @@ def LFT():
     g.png('T.png')
 
 def test():
-    # Start from ripple-carry
-    # Reduce 1st layer
-    g.LF(7)
-
-    # Reduce 2nd layer
-    g.LF(6)
-    g.LF(7)
-
-    # Reduce 3rd layer
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-
-    # Make room for reduction
-    g.LF(7)
-    g.LF(3)
-
-    g.png('1.png')
-    g.LF(4)
-    g.LF(5)
-    g.png('2.png')
-
-    g.LF(6)
-    g.png('3.png')
-    g.LF(7)
-    g.png('4.png')
-    print(g._valid_tops(g[7,3],g[3,2],g[6,3]))
-    exit()
     g.FT(5)
     g.FT(6)
     g.FT(7)
@@ -211,7 +212,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-test()
+brentkung()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

@@ -256,6 +256,21 @@ class adder_tree(graph):
         return bot if (node._exists(bot) or bot is None) else self.r_bot(bot)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
+    # Post-condition: returns the x-1 neighbor (stops before post-processing logic)
+    def right(self,n):
+        if n is None or n.x==0:
+            return None
+        return self[n.x-1,n.y]
+
+    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
+    # Post-condition: returns the next-rightest non-invis + non-buffer neighbor
+    def r_right(self,n):
+        right = self.right(n)
+        if (node._exists(right) and not node._isbuf(right)) or right is None:
+            return right
+        return self.r_right(right)
+
+    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
         return next(iter([a for a in self.adj[n] if a.y<n.y and a.x<n.x]),None)
@@ -282,9 +297,8 @@ class adder_tree(graph):
     # Returns a tuple of lists of tops and pres that need be created
     # Or None,None if the requirement is impossible
     # Note that in the function call, a and pre are the new a and pre
-    def _valid_tops(self,a,a_pre,b,x=None,c=[],d=[]):
+    def _valid_tops(self,a,a_pre,b,b_pre,x=None,c=[],d=[]):
         a_top = self.top(a)
-        b_pre = self.pre(b)
         b_top = self.top(b)
 
         # If we are done, we are done!
@@ -296,20 +310,23 @@ class adder_tree(graph):
         # Take the next available top
         x = self.top(x)
         # If x is not part of the body, it's over
-        if not node._is_prefix_logic(x): return None
+        if not node._is_prefix_logic(x): return None,None
         # If x has a pre, give up on this level
         if self.pre(x) is not None:
-            return self._valid_tops(a,a_pre,b,x,c,d)
+            return self._valid_tops(a,a_pre,b,b_pre,x,c,d)
 
         # Iterate over all possible pre's
-        for y in reversed(self.node_list[x.y-1][:a.x]):
+        # First figure out iteration bounds
+        bound = self.pre(self.r_right(x))
+        bound = 0 if bound is None else bound.x
+        for y in reversed(self.node_list[x.y-1][bound:a.x]):
             # Recurs up through the tree
-            tmp = self._valid_tops(a,a_pre,b,x,c+[x],d+[y])
+            tmp = self._valid_tops(a,a_pre,b,b_pre,x,c+[x],d+[y])
             # If the recursion children succeed, we succeed!
-            if tmp is not None: return tmp
+            if tmp[0] is not None: return tmp
 
         # If no recursion children succeeded, we failed :(
-        return None
+        return None,None
 
     # Pre-condition: x,y are valid co-ordinates
     # (if y is not provided, searches entire column from bottom-up)
@@ -341,31 +358,17 @@ class adder_tree(graph):
         if node._exists(top):
             return (None,None,None,None)
 
-        pre = self.pre(b)
-        c=None; d=None;
-        # Case 1: is_pg([top(top(a)),pre(b)], [top(b),pre(b)])
-        # or b isbuf
-        if self._is_pg_subset((self.top(top), pre), \
-                              (self.top(b), pre)) or \
-           node._isbuf(b):
-            c=None; d=None;
-        # Case 2: ∄ top(top(a)) and is_pg([top(top(b)),pre(b)], [top(b),pre(b)])
-        elif not node._exists(self.top(self.top(a))):
-            c = self.top(self.top(a))
-            for z in reversed(self.node_list[b.y-2][pre.x+1:x]):
-                if self._is_pg_subset((z, pre), \
-                                      (self.top(b), pre)):
-                    d=z; break; 
-            if d is None: return (None,None,None,None)
-        # Case 3: len(post(b))==1 
-        # (we need to shift in-place)
-            if c is not None: 
-                if len(self.post(b))==1:
-                    c = self.top(a); d = self.top(b);
-            else:
-                b = None
+        pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
-        if b is None:
+        c,d = self._valid_tops(top,pre,b,pre)
+
+        # If there is no valid transform, do it in-place
+        # This is always valid
+        # This will never be the case taken if b is a buffer
+        if c is None and len(self.post(b))==1:
+            c = [self.top(a)]; d = [self.top(b)];
+
+        if c is None:
             return (None,None,None,None)
 
         return (a,b,c,d)
@@ -389,20 +392,14 @@ class adder_tree(graph):
         if pre is None:
             return (None,None)
 
-        b = None
+        b = None; alt_b = None;
         for x in reversed(self.node_list[y][pre.x:x]):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
             if self.pre(x)==pre or \
                (top==pre and x.m in ['invis_node','buffer_node']):
 
-        # If we can shift in-place we are done
-        # ∄ top(b) and is_pg(pre(b),top(pre(b)))
-                if not node._exists(top) and \
-                   self._is_pg_subset((self.top(pre),),(pre,)):
-                       return (a,b)
-
-        # Otherwise we have to account for post(a) remapping
+        # We have to account for post(a) remapping
         # ∀ post(a), is_pg([top(post),a],[top(post),b]) or ∄ top(post)
                 flag=True
                 for y in self.post(a):
@@ -412,17 +409,25 @@ class adder_tree(graph):
                         flag=False; break;
                 if flag:
                     b=x; break;
-        if b is None:
-            return (None,None)
+
+        # If we can shift in-place we could use this as a substitute
+        # ∄ top(b) and is_pg(pre(b),top(pre(b)))
+                if not node._exists(top) and alt_b is None and \
+                   self._is_pg_subset((self.top(pre),),(pre,)):
+                       alt_b=x;
 
         bot = self.bot(a)
         # ∄ bot(a) or bot(a) = post-processing
-        if node._exists(bot) and \
-           not bot.m in ['xor_node'] and \
-           not node._isbuf(bot):
-            return (None,None)
+        if b is not None and (not node._exists(bot) or \
+           bot.m in ['xor_node'] or \
+           node._isbuf(bot)):
+            return (a,b)
 
-        return (a,b)
+        # If we have to do in-place, do in-place
+        if alt_b is not None:
+            return (a,alt_b)
+
+        return (None,None)
 
     def _checkTF(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -572,39 +577,36 @@ class adder_tree(graph):
         return (a,b)
 
     def LF(self,x,y=None,clean=True):
-        a,b,c,d= self._checkLF(x,y)
+        a,b,c,d = self._checkLF(x,y)
         if b is None:
             return None
 
-        inplace = (c==self.top(a))
+        inplace = (c==[self.top(a)])
 
         # create c=top(top(a)); pre(c) = top(top(b))
         # or if in-place
         # create c=top(a); pre(c) = top(b)
-        if c is not None:
-            c=self._morph_node(c,'black')
-            if inplace:
-                pre = self.top(b)
-            else:
-                pre = self.top(self.top(b))
-            self._add_pre(c,pre)
-            self.walk_downstream(c,fun=self._recalc_pg)
-#        for x,y in zip([c],[d]):
-#            x=self._morph_node(x,'black')
-#            self._add_pre(x,y)
-#            self.walk_downstream(x,fun=self._recalc_pg)
+        for x,y in zip(c,d):
+            x=self._morph_node(x,'black')
+            if not node._exists(y):
+                y=self._morph_node(y,'buffer_node')
+            self._add_pre(x,y)
+            self.walk_downstream(x,fun=self._recalc_pg)
 
         pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
         if inplace:
             # pre(a) = bot(pre(b))
+            new_pre = self.bot(pre)
             self.remove_all_edges(a,self.pre(a))
-            self._add_pre(a,self.bot(pre))
+            if not node._exists(new_pre):
+                new_pre=self._morph_node(new_pre,'buffer_node')
+            self._add_pre(a,new_pre)
             self.walk_downstream(a,fun=self._recalc_pg)
-            # pre(b) = bot(pre(b)); b -> bot(a)
+            # pre(b) = bot(pre(b)); b -> bot(b)
             # This is done at the same time, to avoid add_edge exception
             self.remove_all_edges(b,pre)
-            b = self.shift_node(b, self.bot, new_pre=self.bot(pre))
+            b = self.shift_node(b, self.bot, new_pre=new_pre)
         else:
             # pre(a) = pre(b); a -> top(a)
             # This is done at the same time, to avoid add_edge exception
