@@ -59,27 +59,27 @@ def koggestone():
 def brentkung():
     # Start from ripple-carry
     # Reduce 1st layer
-    g.FL(2)
     g.LF(3)
     g.LF(4)
     g.LF(5)
     g.LF(6)
     g.LF(7)
+    g.png('1.png')
 
     # Reduce 2nd layer
-    g.FL(4)
     g.LF(5)
     g.LF(6)
     g.LF(7)
-    g.png('1.png')
 
     # Reduce 3rd layer
-    g.FL(4)
-    g.png('2.png')
+    g.FL(2)
     g.FL(5)
     g.FL(6)
-    g.png('3.png')
     g.LF(7)
+    g.png('2.png')
+    g.FL(4)
+    g.FL(4)
+    g.png('3.png')
     g.LF(7)
     g.png('4.png')
 

@@ -276,6 +276,12 @@ class adder_tree(graph):
         return next(iter([a for a in self.adj[n] if a.y<n.y and a.x<n.x]),None)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
+    # Post-condition: goes up the chain of predecessors as far as it can
+    def r_pre(self,n):
+        pre = self.pre(n)
+        return n if pre is None else self.r_pre(pre)
+
+    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
     def post(self,n):
         return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
@@ -310,18 +316,29 @@ class adder_tree(graph):
         # Take the next available top
         x = self.top(x)
         # If x is not part of the body, it's over
-        if not node._is_prefix_logic(x): return None,None
-        # If x has a pre, give up on this level
-        if self.pre(x) is not None:
-            return self._valid_tops(a,a_pre,b,b_pre,x,c,d)
+        if not node._in_tree(x): return None,None
 
-        # Iterate over all possible pre's
+        # If x has a pre, try navigating up the pre chain
+        r_pre = self.r_pre(x)
+        # If the pre chain ends at pre-processing, give up
+        if not node._in_tree(r_pre):
+            return self._valid_tops(a,a_pre,b,b_pre,x,c,d)
+        # Else, use r_pre as the root for exploration
+        if not r_pre==x:
+            c_ = r_pre
+        else:
+            c_ = x
+
         # First figure out iteration bounds
-        bound = self.pre(self.r_right(x))
+        # So that wires don't cross illegaly
+        bound = self.r_right(c_)
+        bound = None if bound is None else self.pre(bound)
         bound = 0 if bound is None else bound.x
-        for y in reversed(self.node_list[x.y-1][bound:a.x]):
+        # Iterate over all possible pre's
+        for y in reversed(self.node_list[c_.y-1][bound:c_.x]):
             # Recurs up through the tree
-            tmp = self._valid_tops(a,a_pre,b,b_pre,x,c+[x],d+[y])
+            d_ = y
+            tmp = self._valid_tops(a,a_pre,b,b_pre,x,c+[c_],d+[d_])
             # If the recursion children succeed, we succeed!
             if tmp[0] is not None: return tmp
 
@@ -610,7 +627,7 @@ class adder_tree(graph):
             self.walk_downstream(top,fun=self._recalc_pg)
 
         # If we have space solely because this is the bottom
-        if not node._is_prefix_logic(self.bot(a)):
+        if not node._in_tree(self.bot(a)):
             self.add_layer()
 
         # a -> bot(a); pre(a) = b
@@ -698,7 +715,7 @@ class adder_tree(graph):
         changed = False
         for a in self:
             # Only pick non-invis nodes inside the prefix logic,
-            if not node._exists(a) or not node._is_prefix_logic(a):
+            if not node._exists(a) or not node._in_tree(a):
                 continue
             # that do not have a top,
             if node._exists(self.top(a)):
@@ -722,12 +739,12 @@ class adder_tree(graph):
             # Filter out invis nodes
             if not node._exists(a): continue
             # Filter out pre/post-processing nodes
-            if not node._is_prefix_logic(a): continue
+            if not node._in_tree(a): continue
 
             # Filter out buffers that have a purpose
             # That is, either the buffer has more than 1 post
             # Or the buffer has 1 post and no black cells under
-            if node._isbuf(a) and node._is_prefix_logic(self.top(a)):
+            if node._isbuf(a) and node._in_tree(self.top(a)):
                 if len(self.post(a))>1: continue
                 if len(self.post(a))==1:
                     tmp=[x[a.x] for x in self.node_list[a.y:-1]]

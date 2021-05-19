@@ -48,7 +48,7 @@ class adder_node():
 
     # Static helper function that checks whether a node is
     # not none, pre-processing, or post-processing
-    def _is_prefix_logic(n):
+    def _in_tree(n):
         return n is not None and n.m not in ['xor_node','pg_node']
 
     # The node object has dictionaries of input/output edges
