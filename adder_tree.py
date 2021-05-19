@@ -697,8 +697,8 @@ class adder_tree(graph):
         # Note: don't change data structure while iterating over it
         changed = False
         for a in self:
-            # Only pick non-invis nodes,
-            if not node._exists(a):
+            # Only pick non-invis nodes inside the prefix logic,
+            if not node._exists(a) or not node._is_prefix_logic(a):
                 continue
             # that do not have a top,
             if node._exists(self.top(a)):
@@ -707,18 +707,8 @@ class adder_tree(graph):
             pre = self.pre(a)
             if pre is None or node._exists(pre):
                 continue
-            top = self.top(a)
-            # and whose post(top) is empty
-            # or whose top is invis (necessitates recalc)
-            flag = len(self.post(top))>0
-            if node._exists(top) and len(self.post(top))!=0:
-                continue
             a = self.shift_node(a)
-            if flag:
-                self.walk_downstream(a,fun=self._recalc_pg)
-
-            changed=True
-            break
+            changed=True; break;
         if changed:
             return 1+self.compact()
         else:
@@ -733,10 +723,16 @@ class adder_tree(graph):
             if not node._exists(a): continue
             # Filter out pre/post-processing nodes
             if not node._is_prefix_logic(a): continue
+
             # Filter out buffers that have a purpose
-            if node._isbuf(a) and \
-               len(self.post(a))>0 and \
-               node._is_prefix_logic(self.top(a)): continue
+            # That is, either the buffer has more than 1 post
+            # Or the buffer has 1 post and no black cells under
+            if node._isbuf(a) and node._is_prefix_logic(self.top(a)):
+                if len(self.post(a))>1: continue
+                if len(self.post(a))==1:
+                    tmp=[x[a.x] for x in self.node_list[a.y:-1]]
+                    tmp=[not node._exists(x) or node._isbuf(x) for x in tmp]
+                    if all(tmp): continue
 
             # If node does not introduce anything new, flag
             rtop = self.r_top(a)
