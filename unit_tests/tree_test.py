@@ -6,7 +6,9 @@ sys.path.append(".")
 from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
 
-g = tree(8)
+n = 8
+
+g = tree(n)
 #assert(g._checkLF(7,7)==(g[7,7],g[6,6],[g[7,5]],[g[6,4]]))
 assert(g._checkLT(7,7)==(g[7,7],g[6,6]))
 assert(g._checkLT(3)==(g[3,3],g[2,2]))
@@ -22,7 +24,47 @@ assert(len(g.node_list)==9)
 g.trim_layer()
 assert(len(g.node_list)==9)
 
+def lg(x):
+    return x.bit_length()-1
+
 def sklansky():
+    # Start from ripple-carry
+    # Reduce layer by layer
+    # From a total of n layers
+    # To a total of lg(n) layers
+    g.LF(3)
+    for a in range(lg(n)+1,n):
+        g.batch_transform('LF',a,n)
+        g.png("{0}.png".format(a-lg(n)))
+    g.png('sklansky.png')
+
+def koggestone():
+    # Start from ripple-carry
+    # Reduce 1st layer
+    g.LT(7)
+    g.png('1.png')
+
+    # Reduce 2nd layer
+    g.LT(6)
+    g.LT(7)
+    g.png('2.png')
+
+    # Reduce 3rd layer
+    g.LT(5)
+    g.LT(6)
+    g.LT(7)
+    g.png('3.png')
+
+    # Reduce 4th layer
+    g.LT(3)
+    g.LT(4)
+    g.LT(5)
+    g.LT(6)
+    g.LT(7)
+    g.png('4.png')
+    g.png('koggestone.png')
+
+def brentkung():
     # Start from ripple-carry
     # Reduce 1st layer
     g.LF(7)
@@ -31,13 +73,12 @@ def sklansky():
     # Reduce 2nd layer
     g.LF(6)
     g.LF(7)
-    g.png('2.png')
 
     # Reduce 3rd layer
     g.LF(5)
     g.LF(6)
     g.LF(7)
-    g.png('3.png')
+    g.png('2.png')
 
     # Reduce 4th layer
     g.LF(3)
@@ -45,42 +86,15 @@ def sklansky():
     g.LF(5)
     g.LF(6)
     g.LF(7)
-    g.png('4.png')
-    g.png('sklansky.png')
+    g.png('3.png')
 
-def koggestone():
-    g.LT(7,clean=True)
-    g.LT(5,clean=True)
-    g.LT(3,clean=True)
-    g.LT(7,clean=True)
-    g.LT(6,clean=True)
-    g.png('koggestone.png')
-
-def brentkung():
-    # Start from ripple-carry
-    # Reduce 1st layer
-    g.LF(3)
-    g.LF(4)
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-    g.png('1.png')
-
-    # Reduce 2nd layer
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-
-    # Reduce 3rd layer
-    g.FL(2)
+    g.FL(4)
     g.FL(5)
     g.FL(6)
-    g.LF(7)
-    g.png('2.png')
+
+    g.FL(2)
     g.FL(4)
-    g.FL(4)
-    g.png('3.png')
-    g.LF(7)
+    g.FL(6)
     g.png('4.png')
 
     # Reduce 4th layer
@@ -210,7 +224,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-brentkung()
+sklansky()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

@@ -264,11 +264,12 @@ class adder_tree(graph):
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the next-rightest non-invis + non-buffer neighbor
-    def r_right(self,n):
+    def r_right(self,n,c=[]):
         right = self.right(n)
-        if (node._exists(right) and not node._isbuf(right)) or right is None:
+        if (node._exists(right) and not node._isbuf(right)) or \
+        right is None or right in c:
             return right
-        return self.r_right(right)
+        return self.r_right(right,c)
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
@@ -291,6 +292,21 @@ class adder_tree(graph):
     def _is_below(self,n1,n2):
         return (n2 is None) or (n1 is not None and n2.x==n1.x and n2.y>n1.y)
 
+    # Pre-condition: n is a valid node
+    # Post-condition: returns a list of all nodes it could connect to as a pre
+    def _possible_pres(self,n,c=[],d=[]):
+        # If it already has a pre, return empty list
+        if self.pre(n) is not None: return []
+        # Figure out bounds so that wires don't cross illegaly
+        post = self.r_right(n,c)
+        if post in c:
+            bound = d[c.index(post)]
+        else:
+            bound = None if post is None else self.pre(post)
+        bound = 0 if bound is None else bound.x
+        # Return all possible nodes in that range
+        return reversed(self.node_list[n.y-1][bound:n.x])
+
     # Helper function
     # Pre-condition:
     # We have a pair of nodes, a and b, such that pre(a) = b
@@ -303,47 +319,50 @@ class adder_tree(graph):
     # Returns a tuple of lists of tops and pres that need be created
     # Or None,None if the requirement is impossible
     # Note that in the function call, a and pre are the new a and pre
-    def _valid_tops(self,a,a_pre,b,b_pre,x=None,c=[],d=[]):
-        a_top = self.top(a)
-        b_top = self.top(b)
+    def _valid_tops(self,a,a_bits,b,b_bits,x=None,c=[],d=[],path=[],result=(None,None)):
+
+        # If our current solution is worse than a pre-existing one, abort
+        if result[0] is not None and len(result[0])<len(c):
+            return None,None
 
         # If we are done, we are done!
-        if self._is_pg_subset((*d,a_top,a_pre),(b_top,b_pre)):
+        if self._is_pg_subset((*d,*a_bits),b_bits):
             return c,d
 
         # x is where we currently sit
-        if x is None: x = a
-        # Take the next available top
-        x = self.top(x)
-        # If x is not part of the body, it's over
-        if not node._in_tree(x): return None,None
+        if x is None: x = self.top(a)
 
-        # If x has a pre, try navigating up the pre chain
-        r_pre = self.r_pre(x)
-        # If the pre chain ends at pre-processing, give up
-        if not node._in_tree(r_pre):
-            return self._valid_tops(a,a_pre,b,b_pre,x,c,d)
-        # Else, use r_pre as the root for exploration
-        if not r_pre==x:
-            c_ = r_pre
-        else:
-            c_ = x
+        # If x is not part of the body,
+        # fork back up the recursion tree
+        if not node._in_tree(x):
+            # If we've reached the end, this fork is dead
+            if len(path)==0: return None,None
+            # Otherwise fork up
+            return self._valid_tops(a,a_bits,b,b_bits, \
+                   self.top(path[-1]),c,d,path[:-1],result)
 
-        # First figure out iteration bounds
-        # So that wires don't cross illegaly
-        bound = self.r_right(c_)
-        bound = None if bound is None else self.pre(bound)
-        bound = 0 if bound is None else bound.x
-        # Iterate over all possible pre's
-        for y in reversed(self.node_list[c_.y-1][bound:c_.x]):
-            # Recurs up through the tree
-            d_ = y
-            tmp = self._valid_tops(a,a_pre,b,b_pre,x,c+[c_],d+[d_])
-            # If the recursion children succeed, we succeed!
-            if tmp[0] is not None: return tmp
+        # Forking down into the recursion tree
 
-        # If no recursion children succeeded, we failed :(
-        return None,None
+        # Figure out x's pre, or attempted pre
+        pre = self.pre(x)
+        # If x has no pre, try forking through possible pre's
+        if pre is None and x not in c:
+            # Iterate over all possible pre's
+            for y in self._possible_pres(x,c,d):
+                # Fork up through the prefix tree
+                tmp = self._valid_tops(a,a_bits,b,b_bits,y,c+[x],d+[y],path+[x],result)
+                if tmp[0] is not None: result = tmp;
+        # If x has a pre, try forking thru the pre chain
+        elif pre is not None:
+            tmp = self._valid_tops(a,a_bits,b,b_bits,pre,c,d,path+[x],result)
+            if tmp[0] is not None: result = tmp;
+
+        # Either way, fork up through the top as well
+        tmp = self._valid_tops(a,a_bits,b,b_bits,self.top(x),c,d,path,result)
+        if tmp[0] is not None: result = tmp;
+
+        # Return list of candidates
+        return result
 
     # Pre-condition: x,y are valid co-ordinates
     # (if y is not provided, searches entire column from bottom-up)
@@ -377,7 +396,7 @@ class adder_tree(graph):
 
         pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
-        c,d = self._valid_tops(top,pre,b,pre)
+        c,d = self._valid_tops(top,(pre,self.top(top)),b,(pre,self.top(b)))
 
         if c is None:
             return (None,None,None,None)
@@ -584,6 +603,8 @@ class adder_tree(graph):
 
         # create c=top(top(a)); pre(c) = top(top(b))
         for x,y in zip(c,d):
+            x=self[x.x,x.y]
+            y=self[y.x,y.y]
             x=self._morph_node(x,'black')
             if not node._exists(y):
                 y=self._morph_node(y,'buffer_node')
@@ -703,6 +724,12 @@ class adder_tree(graph):
         #TF, followed by FL
 
 
+    def batch_transform(self,transform,x1,x2):
+        for x in range(x1,x2):
+            if not getattr(self,transform)(x):
+                err="batch transform {0} failed on {1}".format(transform,x)
+                raise ValueError(err)
+
     # Compresses, eliminates nodes using idempotence,
     # and trims extraneous layers
     def clean(self):
@@ -759,11 +786,11 @@ class adder_tree(graph):
             # Case 1: This node gives no more than rtop
             if self._is_pg_subset((rtop,),(a,)):
                 modified=a
-            # Case 2: This node gives no more than rbot
+            # Case 2: This node provides nothing to rbot
             # and has no posts?
             elif not node._isbuf(rbot) and \
-                 len(self.post(a))==0 and \
-                 self._is_pg_subset((self.pre(rbot),),(pre,)):
+            len(self.post(a))==0 and \
+            self._is_pg_subset((self.pre(rbot),rtop),(pre,rtop)):
                 modified=a
 
         # Reduce any nodes that are flagged
