@@ -209,7 +209,10 @@ class adder_tree(graph):
                 raise ValueError("cannot shift node past successor")
 
         # If new_pre is provided, use that, not what we calculate
-        pre = new_pre if new_pre is not None else pre
+        if new_pre is not None:
+            if not node._exists(new_pre):
+                new_pre=self._morph_node(new_pre,'buffer_node')
+            pre = new_pre
 
         # if ∃ post(n):
         # add buffer instead of inv
@@ -656,9 +659,6 @@ class adder_tree(graph):
         self.remove_all_edges(a,self.pre(a))
         a = self.shift_node(a, self.bot, new_pre=b)
 
-        if not node._exists(b):
-            b=self._morph_node(b,'buffer_node')
-
         if clean:
             self.clean()
 
@@ -747,7 +747,7 @@ class adder_tree(graph):
             # that do not have a top,
             if node._exists(self.top(a)):
                 continue
-            # whose pre does not exist
+            # whose pre is invis
             pre = self.pre(a)
             if pre is None or node._exists(pre):
                 continue
@@ -774,8 +774,9 @@ class adder_tree(graph):
             if node._isbuf(a) and node._in_tree(self.top(a)):
                 if len(self.post(a))>1: continue
                 if len(self.post(a))==1:
-                    tmp=[x[a.x] for x in self.node_list[a.y:-1]]
+                    tmp=[x[a.x] for x in self.node_list[a.y+1:-1]]
                     tmp=[not node._exists(x) or node._isbuf(x) for x in tmp]
+#                    tmp=[not node._exists(x) for x in tmp]
                     if all(tmp): continue
 
             # If node does not introduce anything new, flag

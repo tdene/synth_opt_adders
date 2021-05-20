@@ -65,28 +65,10 @@ def koggestone():
     g.png('koggestone.png')
 
 def brentkung():
-    # Start from ripple-carry
-    # Reduce 1st layer
-    g.LF(7)
-    g.png('1.png')
-
-    # Reduce 2nd layer
-    g.LF(6)
-    g.LF(7)
-
-    # Reduce 3rd layer
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-    g.png('2.png')
-
-    # Reduce 4th layer
     g.LF(3)
-    g.LF(4)
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-    g.png('3.png')
+    # Start from ripple-carry
+    # Arrive at Sklansky
+    g.png('1.png')
 
     g.FL(4)
     g.FL(5)
@@ -95,10 +77,15 @@ def brentkung():
     g.FL(2)
     g.FL(4)
     g.FL(6)
+    g.png('2.png')
+
+    g.png('3.png')
+    for a in range(lg(n)+1,n):
+        g.batch_transform('LF',a,n)
     g.png('4.png')
 
     # Reduce 4th layer
-#    g.png('brentkung.png')
+    g.png('brentkung.png')
 
 def demo():
     g=tree(8)
@@ -224,7 +211,7 @@ def test2():
     g.FL(7)
     g.png('3.png')
 
-sklansky()
+brentkung()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
