@@ -5,6 +5,7 @@ sys.path.append(".")
 
 from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
+from util import lg
 
 n = 8
 
@@ -20,12 +21,9 @@ assert(g._checkTF(7)==(None,None))
 assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
 assert(g._checkTL(7)==(None,None))
 
-assert(len(g.node_list)==9)
+assert(len(g)==7)
 g.trim_layer()
-assert(len(g.node_list)==9)
-
-def lg(x):
-    return x.bit_length()-1
+assert(len(g)==7)
 
 def sklansky():
     # Start from ripple-carry
@@ -35,7 +33,7 @@ def sklansky():
     g.LF(3)
     for a in range(lg(n)+1,n):
         g.batch_transform('LF',a,n)
-        g.png("{0}.png".format(a-lg(n)))
+#        g.png("{0}.png".format(a-lg(n)))
     g.png('sklansky.png')
 
 def koggestone():
@@ -65,27 +63,20 @@ def koggestone():
     g.png('koggestone.png')
 
 def brentkung():
-    g.LF(3)
-    # Start from ripple-carry
-    # Arrive at Sklansky
-    g.png('1.png')
+    # Start from Sklansky
+    sklansky()
 
-    g.FL(4)
-    g.FL(5)
-    g.FL(6)
+    g.harris_step('FL',2)
 
-    g.FL(2)
-    g.FL(4)
-    g.FL(6)
-    g.png('2.png')
-
-    g.png('3.png')
-    for a in range(lg(n)+1,n):
-        g.batch_transform('LF',a,n)
-    g.png('4.png')
-
-    # Reduce 4th layer
     g.png('brentkung.png')
+
+def ladnerfischer():
+    # Start from Sklansky
+    sklansky()
+
+    g.harris_step('FL',1)
+
+    g.png('ladnerfischer.png')
 
 def demo():
     g=tree(8)
@@ -175,43 +166,7 @@ def LFT():
     g.FT(3)
     g.png('T.png')
 
-def test():
-    g.FT(5)
-    g.FT(6)
-    g.FT(7)
-    g.FT(5)
-    g.FT(5)
-    g.FT(3)
-    g.FT(7)
-    g.FT(6)
-    g.FT(5)
-    g.TF(7)
-    g.TF(6)
-    g.TF(5)
-    g.FT(5)
-    g.FT(6)
-    g.FT(7)
-
-def test2():
-    g.png('1.png')
-    g.LF(7)
-    g.LF(6)
-    g.LF(7)
-    g.LF(5)
-    g.LF(6)
-    g.LF(7)
-    g.LF(3)
-    g.png('2.png')
-    g.FL(3)
-    g.FL(7)
-    g.FL(6)
-    g.FL(5)
-    g.FL(7)
-    g.FL(6)
-    g.FL(7)
-    g.png('3.png')
-
-brentkung()
+ladnerfischer()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

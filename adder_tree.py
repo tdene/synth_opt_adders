@@ -1,6 +1,7 @@
 from modules import modules
 from adder_graph import adder_graph as graph
 from adder_graph import adder_node as node
+from util import lg
 import networkx as nx
 import pydot
 
@@ -41,6 +42,11 @@ class adder_tree(graph):
 
         for a in range(self.w):
             self.add_node(node(a,self.w,'xor_node'))
+
+    # Redefine __len__ to be the y-axis size of the tree logic
+    # since this definition proves to be useful in practice
+    def __len__(self):
+        return len(self.node_list)-2
 
     # Pre-condition: n is a valid new node; pre is either None or a node in the graph
     # Post-condition: adds node into graph and connects it correctly
@@ -723,12 +729,28 @@ class adder_tree(graph):
         return self.FL(a.x,a.y,clean)
         #TF, followed by FL
 
-
-    def batch_transform(self,transform,x1,x2):
-        for x in range(x1,x2):
+    def batch_transform(self,transform,x1,x2,step=1):
+        for x in range(x1,x2,step):
             if not getattr(self,transform)(x):
                 err="batch transform {0} failed on {1}".format(transform,x)
                 raise ValueError(err)
+
+    def harris_step(self,transform,steps=1):
+        if steps==0: return
+        # Harris space is different from transform space
+        # Brent-Kung is the L corner of Harris space
+        # Ripple-carry is our L corner
+        # So if we're moving to/from L, we need to
+        # modify our transform to move towards Brent-Kung
+        if transform in ['LF','FL','LT','TL']:
+
+            step = 2*lg(self.w)-len(self)-(transform[1]=='L')
+            top  = self.w-1
+            bot  = top-1 - (lg(self.w)-1)*step
+
+        self.batch_transform(transform,bot,top,step)
+
+        self.harris_step(transform,steps-1)
 
     # Compresses, eliminates nodes using idempotence,
     # and trims extraneous layers
@@ -881,3 +903,7 @@ class adder_tree(graph):
                     pg.del_edge(wrap(r1),wrap(pre))
 
         pg.write_png(fname,prog='neato')
+
+if __name__=="__main__":
+    raise RuntimeError("This file is importable, but not executable")
+
