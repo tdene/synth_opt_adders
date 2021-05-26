@@ -328,18 +328,15 @@ class adder_tree(graph):
     # Returns a tuple of lists of tops and pres that need be created
     # Or None,None if the requirement is impossible
     # Note that in the function call, a and pre are the new a and pre
-    def _valid_tops(self,a,a_bits,b,b_bits,x=None,c=[],d=[],path=[],result=(None,None)):
+    def _valid_tops(self,a_bits,b,x,c=[],d=[],path=[],result=(None,None)):
 
         # If our current solution is worse than a pre-existing one, abort
         if result[0] is not None and len(result[0])<len(c):
             return None,None
 
         # If we are done, we are done!
-        if self._is_pg_subset((*d,*a_bits),b_bits):
+        if self._is_pg_subset((*d,*a_bits),(b,)):
             return c,d
-
-        # x is where we currently sit
-        if x is None: x = self.top(a)
 
         # If x is not part of the body,
         # fork back up the recursion tree
@@ -347,7 +344,7 @@ class adder_tree(graph):
             # If we've reached the end, this fork is dead
             if len(path)==0: return None,None
             # Otherwise fork up
-            return self._valid_tops(a,a_bits,b,b_bits, \
+            return self._valid_tops(a_bits,b, \
                    self.top(path[-1]),c,d,path[:-1],result)
 
         # Forking down into the recursion tree
@@ -359,15 +356,15 @@ class adder_tree(graph):
             # Iterate over all possible pre's
             for y in self._possible_pres(x,c,d):
                 # Fork up through the prefix tree
-                tmp = self._valid_tops(a,a_bits,b,b_bits,y,c+[x],d+[y],path+[x],result)
+                tmp = self._valid_tops(a_bits,b,y,c+[x],d+[y],path+[x],result)
                 if tmp[0] is not None: result = tmp;
         # If x has a pre, try forking thru the pre chain
         elif pre is not None:
-            tmp = self._valid_tops(a,a_bits,b,b_bits,pre,c,d,path+[x],result)
+            tmp = self._valid_tops(a_bits,b,pre,c,d,path+[x],result)
             if tmp[0] is not None: result = tmp;
 
         # Either way, fork up through the top as well
-        tmp = self._valid_tops(a,a_bits,b,b_bits,self.top(x),c,d,path,result)
+        tmp = self._valid_tops(a_bits,b,self.top(x),c,d,path,result)
         if tmp[0] is not None: result = tmp;
 
         # Return list of candidates
@@ -405,7 +402,7 @@ class adder_tree(graph):
 
         pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
-        c,d = self._valid_tops(top,(pre,self.top(top)),b,(pre,self.top(b)))
+        c,d = self._valid_tops((pre,self.top(top)),b,self.top(top))
 
         if c is None:
             return (None,None,None,None)
@@ -479,12 +476,9 @@ class adder_tree(graph):
 
         b = None
         # ∃ b s.t. b.x > pre(a).x
-        for x in reversed(self.node_list[y][pre.x+1:x]):
-            top = self.top(x)
-        # pre(b) is not None and pre(b)!=pre(a)
-        # and is_pg([top(b),pre(b)],[top(b),pre(a)])
-            if self.pre(x) is not None and not self.pre(x)==pre and \
-               self._is_pg_subset((top,pre),(top,self.pre(x))):
+        for x in self.node_list[y-1][pre.x+1:x]:
+        # is_pg([x],[pre])
+            if self._is_pg_subset((x,),(pre,)):
                 b=x; break;
 
         if b is None: return (None,None)
@@ -510,24 +504,13 @@ class adder_tree(graph):
         if pre is None:
             return (None,None,None,None)
 
-        b = None; d = None
-        for x in reversed(self.node_list[y][pre.x+1:x]):
-            top = self.top(x)
-        # ∃ b s.t pre(a)=pre(b),
-            if not self.pre(x)==pre:
-                continue
-        # ∃ c s.t c.y = pre.y and pre.x > c.x,
-            for y in self.node_list[pre.y][:pre.x]:
-        # is_pg([c,top(b)],[pre,top(b)])
-                if self._is_pg_subset((y,top),(pre,top)):
-                    b=x; c=y; break;
-        # or
-        # ∄ top(b) and is_pg([c,top(b)],[b,])
-                elif not node._exists(top):
-                    for z in reversed(self.node_list[pre.y-1][:top.x]):
-                        if self._is_pg_subset((top,y,z),(x,)):
-                            b=x; c=y; d=z; break;
-                    if d is not None: break;
+        b = None; c = None; d = None;
+        top = self.top(a)
+        # Check each possible nouveau pre
+        for x in reversed(self.node_list[pre.y][:pre.x]):
+            # Figure out if a valid remapping exists
+            c,d = self._valid_tops((top,x),pre,top)
+            if c is not None: b=x; break;
 
         if b is None:
             return (None,None,None,None)
@@ -612,8 +595,7 @@ class adder_tree(graph):
 
         # create c=top(top(a)); pre(c) = top(top(b))
         for x,y in zip(c,d):
-            x=self[x.x,x.y]
-            y=self[y.x,y.y]
+            x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,'black')
             if not node._exists(y):
                 y=self._morph_node(y,'buffer_node')
@@ -675,10 +657,14 @@ class adder_tree(graph):
         if b is None:
             return None
 
-        #pre(b) = pre(a)
-        pre = self.pre(b)
-        pre = self.remove_all_edges(b,pre)
-        self._add_pre(b,self.pre(a))
+        # Make sure b is at least a buffer
+        if not node._exists(b):
+            b=self._morph_node(b,'buffer_node')
+
+        #pre(a) = b
+        pre = self.pre(a)
+        pre = self.remove_all_edges(a,pre)
+        self._add_pre(a,b)
         self.walk_downstream(b,fun=self._recalc_pg)
 
         if clean:
@@ -691,20 +677,19 @@ class adder_tree(graph):
         if b is None:
             return None
 
-        # note: pre = self.pre(b) = self.pre(a)
         pre = self.pre(a)
 
-        # pre(b) = c
-        self.remove_all_edges(b,pre)
-        self._add_pre(b,c)
-        self.walk_downstream(b,fun=self._recalc_pg)
-
-        # create top(b); pre(top(b)) = d
-        top = self.top(b)
-        if d is not None:
-            top = self._morph_node(top,'black')
-            self._add_pre(top,d)
-            self.walk_downstream(top,fun=self._recalc_pg)
+        # pre(a) = b, and any other additions necessary
+        self.remove_all_edges(a,pre)
+        c=[a]+c
+        d=[b]+d
+        for x,y in zip(c,d):
+            x=self[x.x,x.y]; y=self[y.x,y.y];
+            x=self._morph_node(x,'black')
+            if not node._exists(y):
+                y=self._morph_node(y,'buffer_node')
+            self._add_pre(x,y)
+            self.walk_downstream(x,fun=self._recalc_pg)
 
         if clean:
             self.clean()

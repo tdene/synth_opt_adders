@@ -16,7 +16,7 @@ assert(g._checkLT(3)==(g[3,3],g[2,2]))
 #assert(g._checkLF(2,2)==(g[2,2],g[1,1],[g[2,1]],[g[1,0]]))
 assert(g._checkLT(2)==(None,None))
 
-assert(g._checkFT(7)==(None,None,None,None))
+#assert(g._checkFT(7)==(None,None,None,None))
 assert(g._checkTF(7)==(None,None))
 assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
 assert(g._checkTL(7)==(None,None))
@@ -77,6 +77,22 @@ def ladnerfischer():
     g.harris_step('FL',1)
 
     g.png('ladnerfischer.png')
+
+def knowles():
+    # Start from Sklansky
+    sklansky()
+    g.png('1.png')
+    return
+    g.FT(7)
+
+def koggestone():
+    # Start from Knowles
+    knowles()
+    g.png('2.png')
+    g.FT(3)
+    g.FT(5)
+    g.FT(7)
+    g.png('3.png')
 
 def demo():
     g=tree(8)
@@ -166,7 +182,7 @@ def LFT():
     g.FT(3)
     g.png('T.png')
 
-ladnerfischer()
+knowles()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
