@@ -82,8 +82,15 @@ def knowles():
     # Start from Sklansky
     sklansky()
     g.png('1.png')
-    return
-    g.FT(7)
+    g.FT(4)
+    g.FT(4)
+    g.png('2.png')
+    g.FT(5)
+    g.FT(5)
+    g.png('3.png')
+    g.TF(5)
+    g.TF(5)
+    g.png('4.png')
 
 def koggestone():
     # Start from Knowles
@@ -179,10 +186,12 @@ def LFT():
     g.png('L.png')
     g.LF(3)
     g.png('F.png')
-    g.FT(3)
+    g.FT(2)
     g.png('T.png')
 
-knowles()
+g.png('rca.png')
+#knowles()
+LFT()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

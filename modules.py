@@ -184,7 +184,7 @@ endmodule
 
 pg_node['shape']='square'
 pg_node['fillcolor']='white'
-pg_node['label']='P/G'
+pg_node['label']='pre'
 pg_node['style']='dashed'
 
 pg_node['ins']=[('a',1),('b',1)]
@@ -208,6 +208,8 @@ xor_node['verilog']="""
 xor_node['shape']='invtrapezium'
 xor_node['fillcolor']='white'
 xor_node['style']='dashed'
+xor_node['label']='post'
+xor_node['fixedsize']='shape'
 
 xor_node['ins']=[('pin',1),('gin',1)]
 xor_node['outs']=[('s',1)]

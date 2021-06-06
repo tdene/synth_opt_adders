@@ -304,8 +304,6 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node
     # Post-condition: returns a list of all nodes it could connect to as a pre
     def _possible_pres(self,n,c=[],d=[]):
-        # If it already has a pre, return empty list
-        if self.pre(n) is not None: return []
         # Figure out bounds so that wires don't cross illegaly
         post = self.r_right(n,c)
         if post in c:
@@ -314,7 +312,7 @@ class adder_tree(graph):
             bound = None if post is None else self.pre(post)
         bound = 0 if bound is None else bound.x
         # Return all possible nodes in that range
-        return reversed(self.node_list[n.y-1][bound:n.x])
+        return self.node_list[n.y-1][bound:n.x]
 
     # Helper function
     # Pre-condition:
@@ -475,11 +473,13 @@ class adder_tree(graph):
             return (None,None)
 
         b = None
+        top = self.top(a)
         # ∃ b s.t. b.x > pre(a).x
-        for x in self.node_list[y-1][pre.x+1:x]:
-        # is_pg([x],[pre])
-            if self._is_pg_subset((x,),(pre,)):
-                b=x; break;
+        for x in self._possible_pres(a):
+            if not x.x>pre.x: continue
+            # Figure out if a valid remapping exists
+            c,d = self._valid_tops((top,x),pre,top)
+            if c is not None: b=x; break;
 
         if b is None: return (None,None)
 
@@ -506,8 +506,9 @@ class adder_tree(graph):
 
         b = None; c = None; d = None;
         top = self.top(a)
-        # Check each possible nouveau pre
-        for x in reversed(self.node_list[pre.y][:pre.x]):
+        # Check each possible pre
+        for x in reversed(self._possible_pres(a)):
+            if not x.x<pre.x: continue
             # Figure out if a valid remapping exists
             c,d = self._valid_tops((top,x),pre,top)
             if c is not None: b=x; break;
