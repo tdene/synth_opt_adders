@@ -779,13 +779,16 @@ class adder_tree(graph):
             # Filter out buffers that have a purpose
             # That is, either the buffer has more than 1 post
             # Or the buffer has 1 post and no black cells under
-            if node._isbuf(a) and node._in_tree(self.top(a)):
-                if len(self.post(a))>1: continue
-                if len(self.post(a))==1:
-                    tmp=[x[a.x] for x in self.node_list[a.y+1:-1]]
-                    tmp=[not node._exists(x) or node._isbuf(x) for x in tmp]
-#                    tmp=[not node._exists(x) for x in tmp]
-                    if all(tmp): continue
+
+            # Do not filter out any buffers that are at the
+            # top of the tree and have black cells under
+            if node._isbuf(a):
+                tmp=[x[a.x] for x in self.node_list[a.y+1:-1]]
+                tmp=[not node._exists(x) or node._isbuf(x) for x in tmp]
+                black_under = not all(tmp)
+                in_the_way = black_under and not node._in_tree(self.top(a))
+                if len(self.post(a))>1 and not in_the_way: continue
+                if len(self.post(a))==1 and not black_under: continue
 
             # If node does not introduce anything new, flag
             rtop = self.r_top(a)

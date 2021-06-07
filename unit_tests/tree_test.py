@@ -87,19 +87,21 @@ def knowles():
     g.png('2.png')
     g.FT(5)
     g.FT(5)
+    g.png('knowles.png')
     g.png('3.png')
-    g.TF(5)
-    g.TF(5)
-    g.png('4.png')
+#    g.TF(5)
+#    g.png('4.png')
 
 def koggestone():
     # Start from Knowles
     knowles()
-    g.png('2.png')
-    g.FT(3)
-    g.FT(5)
-    g.FT(7)
-    g.png('3.png')
+    g.FT(2)
+    g.FT(4)
+    g.FT(6)
+    g.png('4.png')
+    g.FT(4)
+    g.FT(6)
+    g.png('koggestone.png')
 
 def demo():
     g=tree(8)
@@ -191,7 +193,8 @@ def LFT():
 
 g.png('rca.png')
 #knowles()
-LFT()
+koggestone()
+#LFT()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
