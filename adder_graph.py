@@ -116,7 +116,7 @@ class adder_node():
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
-class adder_graph(nx.MultiGraph):
+class adder_graph(nx.MultiDiGraph):
 
     # Pre-condition: width is an integer
     # Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
@@ -195,30 +195,16 @@ class adder_graph(nx.MultiGraph):
         n1.outs[p1][b1]=n2.ins[p2][b2]=len(self.edges)
 
         # Styles the edge
-        edge_kwargs={'arrowhead':'none','ins':pin1,'outs':pin2}
-
-#        # Draw lines to the center of invis nodes
-#        if n1.m=='invis_node':
-#            edge_kwargs['tailclip']='false'
-#        if n2.m=='invis_node':
-#            edge_kwargs['headclip']='false'
+        edge_kwargs={'arrowhead':'none',
+                     'headport':'ne','tailport':'sw',
+                     'ins':pin1,'outs':pin2}
+        if n2.x==n1.x:
+            edge_kwargs['headport']='n'
+            edge_kwargs['tailport']='s'
+        if adder_node._isbuf(n1):
+            edge_kwargs['tailport']='s'
 
         super().add_edge(n1,n2,**edge_kwargs)
-
-#        if (n2,n1) in self.edges():
-#            for x in self.adj[n2][n1].values():
-#                if 'headclip' in x:
-#                    x['tailclip']=x['headclip']
-#                    del x['tailclip']
-#                if 'tailclip' in x:
-#                    x['headclip']=x['tailclip']
-#                    del x['headclip']
-
-#        if n2.x==7 and n2.y==8:
-#            print(n1,n2)
-#            print(n1 in self._adj, n2 in self._adj, n2 in self._adj[n1])
-#            [print(x) for x in self.edges if x==(n2,n1)]
-#            print(self.adj[n2][n1])
 
     # NetworkX has no way to remove all edges between 2 nodes in a MultiGraph?
     # Keep removing until an Exception is thrown?

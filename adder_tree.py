@@ -283,7 +283,9 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
-        return next(iter([a for a in self.adj[n] if a.y<n.y and a.x<n.x]),None)
+        for x in self._possible_pres(n):
+            if n in self.post(x): return x
+        return None
 
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: goes up the chain of predecessors as far as it can
@@ -294,7 +296,7 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the list of diagonal successors
     def post(self,n):
-        return [a for a in self.adj[n] if a.y>n.y and a.x>n.x]
+        return [a for a in self.adj[n] if a.x>n.x]
 
     # Helper function that checks whether n2 is below n1
     # Same column, higher row, or second node straight-up does not exist
@@ -607,13 +609,13 @@ class adder_tree(graph):
 
         # pre(a) = pre(b); a -> top(a)
         # This is done at the same time, to avoid add_edge exception
-        self.remove_all_edges(a,self.pre(a))
+        self.remove_all_edges(self.pre(a),a)
         a = self.shift_node(a, self.top, new_pre=pre)
 
         # pre(post(b)) = a
         post = [x for x in self.post(b) if x.x>a.x]
         for x in post:
-            self.remove_all_edges(x,b)
+            self.remove_all_edges(b,x)
             self._add_pre(x,a)
             self.walk_downstream(x,fun=self._recalc_pg)
 
@@ -635,7 +637,7 @@ class adder_tree(graph):
             if not self._is_pg_subset((top,b),(top,a)):
                 top = self._morph_node(top,'black')
                 self._add_pre(top,self.top(a))
-            self.remove_all_edges(x,a)
+            self.remove_all_edges(a,x)
             self._add_pre(x,b)
             self.walk_downstream(top,fun=self._recalc_pg)
 
@@ -645,7 +647,7 @@ class adder_tree(graph):
 
         # a -> bot(a); pre(a) = b
         # This is done at the same time, to avoid add_edge exception
-        self.remove_all_edges(a,self.pre(a))
+        self.remove_all_edges(self.pre(a),a)
         a = self.shift_node(a, self.bot, new_pre=b)
 
         if clean:
@@ -664,7 +666,7 @@ class adder_tree(graph):
 
         #pre(a) = b
         pre = self.pre(a)
-        pre = self.remove_all_edges(a,pre)
+        pre = self.remove_all_edges(pre,a)
         self._add_pre(a,b)
         self.walk_downstream(b,fun=self._recalc_pg)
 
@@ -681,7 +683,7 @@ class adder_tree(graph):
         pre = self.pre(a)
 
         # pre(a) = b, and any other additions necessary
-        self.remove_all_edges(a,pre)
+        self.remove_all_edges(pre,a)
         c=[a]+c
         d=[b]+d
         for x,y in zip(c,d):
@@ -881,15 +883,22 @@ class adder_tree(graph):
                         pg.add_node(py_n2)
 
                     if r2 is None:
-                        pg.add_edge(pydot.Edge(str(pre),pos_r1,headclip="false"))
-                        pg.add_edge(pydot.Edge(pos_r1,str(r1),headclip="false",tailclip="false"))
-                    pg.add_edge(pydot.Edge(pos_r1,pos_n,headclip="false",tailclip="false"))
-                    pg.add_edge(pydot.Edge(pos_n,str(n),headclip="false",tailclip="false"))
+                        tail = 's' if node._isbuf(pre) else 'sw'
+                        pg.add_edge(pydot.Edge(str(pre),pos_r1,
+                            headclip="false",arrowhead="none",
+                            tailport=tail))
+                        pg.add_edge(pydot.Edge(pos_r1,str(r1),
+                            headclip="false",tailclip="false",arrowhead="none",
+                            headport='ne'))
+                    pg.add_edge(pydot.Edge(pos_r1,pos_n,
+                        headclip="false",tailclip="false",arrowhead="none"))
+                    #    headport='n',tailport='s'))
+                    pg.add_edge(pydot.Edge(pos_n,str(n),
+                        headclip="false",tailclip="false",arrowhead="none",
+                        headport='ne'))
 
                     pg.del_edge(wrap(pre),wrap(n))
-                    pg.del_edge(wrap(n),wrap(pre))
                     pg.del_edge(wrap(pre),wrap(r1))
-                    pg.del_edge(wrap(r1),wrap(pre))
 
         pg.write_png(fname,prog='neato')
 
