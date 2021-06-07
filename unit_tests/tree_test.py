@@ -192,9 +192,11 @@ def LFT():
     g.png('T.png')
 
 g.png('rca.png')
+LFT()
 #knowles()
-koggestone()
-#LFT()
+#koggestone()
+#ladnerfischer()
+brentkung()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]

@@ -283,7 +283,8 @@ class adder_tree(graph):
     # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
     # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
-        for x in self._possible_pres(n):
+#        for x in self._possible_pres(n):
+        for x in self.node_list[n.y-1][:n.x]:
             if n in self.post(x): return x
         return None
 
@@ -637,6 +638,8 @@ class adder_tree(graph):
             if not self._is_pg_subset((top,b),(top,a)):
                 top = self._morph_node(top,'black')
                 self._add_pre(top,self.top(a))
+                if not node._exists(self.top(a)):
+                    self._morph_node(self.top(a),'buffer_node')
             self.remove_all_edges(a,x)
             self._add_pre(x,b)
             self.walk_downstream(top,fun=self._recalc_pg)
