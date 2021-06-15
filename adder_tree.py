@@ -27,21 +27,48 @@ class adder_tree(graph):
 
         # Initialize P/G nodes:
         for a in range(self.w):
-            self.add_node(node(a,0,'pg_node'))
+            if a==0:
+                n = self.add_node(node(a,0,'fake_pre'))
+                n.outs['pout'][0]="$p_lsb"
+                n.outs['gout'][0]="$g_lsb"
+            else:
+                n = self.add_node(node(a,0,'pre_node'))
+                n.outs['pout'][0]="$p{0}".format(a-1)
+                n.outs['gout'][0]="$g{0}".format(a-1)
 
         # Initialize serial structure
 
-        for a in range(1,self.w):
-            for b in range(self.w):
-                if b!=a:
-                    self.add_node(node(b,a,'invis_node'))
-                else:
-                    self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
+        # Initialize Sklansky
+        if False:
+            for a in range(1,self.w):
+                num_buf = 2**(a-1)
+                ctr = num_buf
+                for b in range(self.w):
+                    if ctr>0:
+                        self.add_node(node(b,a,'invis_node'))
+                        ctr-=1
+                    elif ctr==-1*num_buf:
+                        self.add_node(node(b,a,'invis_node'))
+                        ctr = num_buf-1
+                    else:
+                        self.add_node(node(b,a,'black'),pre=self[b+ctr-1,a-1])
+                        ctr-=1
+            self.dna="sklansky"
+        else:
+            for a in range(1,self.w):
+                for b in range(self.w):
+                    if b!=a:
+                        self.add_node(node(b,a,'invis_node'))
+                    else:
+                        self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
+            self.dna="rca"
 
         # Post-processing (in progress)
 
         for a in range(self.w):
-            self.add_node(node(a,self.w,'xor_node'))
+            n = self.add_node(node(a,self.w,'post_node'))
+
+        self.clean()
 
     # Redefine __len__ to be the y-axis size of the tree logic
     # since this definition proves to be useful in practice
@@ -56,26 +83,39 @@ class adder_tree(graph):
             raise TypeError("provided predecessor node must be a node")
 
     # Calls on super-method
-        super().add_node(n)
+        n = super().add_node(n)
 
     # Keeps track of group propagates/generates
         n.pg=[0]*self.w
-    # Initialize if node is P/G node
-        if n.m in ['pg_node']:
+    # Initialize pg if node is P/G node
+        if n.m in ['pre_node','fake_pre']:
             n.pg[n.x]=1
-    #
+
     # Connects up
         self._add_top(n)
     # Connects diagonally
         self._add_pre(n,pre)
-    #
     # Connects down
         if self.bot(n) is not None:
             self._add_top(self.bot(n))
 
+    # If pre_node is added, HDL connect it to input pins
+        if n.m in ['pre_node']:
+            n.ins['a'][0]='$a[{0}]'.format(n.x-1)
+            n.ins['b'][0]='$b[{0}]'.format(n.x-1)
+        if n.m in ['fake_pre']:
+            n.ins['cin'][0]='$cin'
+
+    # If post_node is added, HDL connect it to output pins
+        if n.m in ['post_node']:
+            #n.ins['gin'][0]='$c{0}'.format(n.x)
+            n.outs['sum'][0]='$sum[{0}]'.format(n.x)
+
+        return n
+
     # Recalculate the group P/G for a node
     def _recalc_pg(self,n):
-        if n.m in ['pg_node']:
+        if n.m in ['pre_node','fake_pre']:
             return
 
         top = self.top(n)
@@ -120,10 +160,10 @@ class adder_tree(graph):
         if top is None: return
 
         if 'pin' in n.ins and 'pout' in top.outs:
-            pos=len(n.ins['pin'])-1
+            pos=0
             self.add_edge(top,('pout',0),n,('pin',pos))
         if 'gin' in n.ins and 'gout' in top.outs:
-            pos=len(n.ins['gin'])-1
+            pos=0
             self.add_edge(top,('gout',0),n,('gin',pos))
 
         n.pg = [x|y for x,y in zip(n.pg,top.pg)]
@@ -135,9 +175,11 @@ class adder_tree(graph):
         if pre is None: return
 
         if 'pin' in n.ins and len(n.ins['pin'])>1:
-            self.add_edge(pre,('pout',0),n,('pin',0))
+            pos=len(n.ins['pin'])-1
+            self.add_edge(pre,('pout',0),n,('pin',pos))
         if 'gin' in n.ins and len(n.ins['pin'])>1:
-            self.add_edge(pre,('gout',0),n,('gin',0))
+            pos=len(n.ins['gin'])-1
+            self.add_edge(pre,('gout',0),n,('gin',pos))
 
         n.pg = [x|y for x,y in zip(n.pg,pre.pg)]
 
@@ -355,7 +397,9 @@ class adder_tree(graph):
         # If x has no pre, try forking through possible pre's
         if pre is None and x not in c:
             # Iterate over all possible pre's
-            for y in self._possible_pres(x,c,d):
+            possi = reversed(self._possible_pres(x,c,d))
+            #possi = sorted(possi, key = lambda x: x.m in ['buffer_node','invis_node'])
+            for y in possi:
                 # Fork up through the prefix tree
                 tmp = self._valid_tops(a_bits,b,y,c+[x],d+[y],path+[x],result)
                 if tmp[0] is not None: result = tmp;
@@ -450,7 +494,7 @@ class adder_tree(graph):
         bot = self.bot(a)
         # ∄ bot(a) or bot(a) = post-processing
         if b is not None and (not node._exists(bot) or \
-           bot.m in ['xor_node'] or \
+           bot.m in ['post_node'] or \
            node._isbuf(bot)):
             return (a,b)
 
@@ -597,6 +641,8 @@ class adder_tree(graph):
         if b is None:
             return None
 
+        self.dna+="_LF{0},{1}".format(a.x,a.y)
+
         # create c=top(top(a)); pre(c) = top(top(b))
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
@@ -623,12 +669,16 @@ class adder_tree(graph):
         if clean:
             self.clean()
 
+        #self.hdl('hdl/'+self.dna+'.v')
+
         return a,b
 
     def FL(self,x,y=None,clean=True):
         a,b = self._checkFL(x,y)
         if b is None:
             return None
+
+        self.dna+="_FL{0},{1}".format(a.x,a.y)
 
         # pre(post(a)) = b
         # pre(top(post(a))) = top(a)
@@ -656,12 +706,16 @@ class adder_tree(graph):
         if clean:
             self.clean()
 
+        #self.hdl('hdl/'+self.dna+'.v')
+
         return a,b
 
     def TF(self,x,y=None,clean=True):
         a,b = self._checkTF(x,y)
         if b is None:
             return None
+
+        self.dna+="_TF{0},{1}".format(a.x,a.y)
 
         # Make sure b is at least a buffer
         if not node._exists(b):
@@ -676,12 +730,16 @@ class adder_tree(graph):
         if clean:
             self.clean()
 
+        #self.hdl('hdl/'+self.dna+'.v')
+
         return a,b
 
     def FT(self,x,y=None,clean=True):
         a,b,c,d = self._checkFT(x,y)
         if b is None:
             return None
+
+        self.dna+="_FT{0},{1}".format(a.x,a.y)
 
         pre = self.pre(a)
 
@@ -699,6 +757,8 @@ class adder_tree(graph):
 
         if clean:
             self.clean()
+
+        #self.hdl('hdl/'+self.dna+'.v')
 
         return a,b,c,d
 
@@ -735,11 +795,11 @@ class adder_tree(graph):
         # modify our transform to move towards Brent-Kung
         if transform in ['LF','FL','LT','TL']:
 
-            step = 2*lg(self.w)-len(self)-(transform[1]=='L')
-            top  = self.w-1
-            bot  = top-1 - (lg(self.w)-1)*step
+            for i in range(1,len(self)-lg(self.w)+1-(transform[0]=='L')+1):
+                top = self.w-1
+                bot = 2**i+2**(i-1)-1
 
-        self.batch_transform(transform,bot,top,step)
+                self.batch_transform(transform,bot,top,2**i)
 
         self.harris_step(transform,steps-1)
 
@@ -762,9 +822,14 @@ class adder_tree(graph):
                 continue
             # whose pre is invis
             pre = self.pre(a)
-            if pre is None or node._exists(pre):
+            if not (pre is None or node._exists(pre)):
+                a = self.shift_node(a)
+            # or a buffer with no top
+#            elif node._isbuf(pre) and not node._exists(self.top(pre)):
+#                pre = self.shift_node(pre)
+#                a = self.shift_node(a,new_pre=pre)
+            else:
                 continue
-            a = self.shift_node(a)
             changed=True; break;
         if changed:
             return 1+self.compact()

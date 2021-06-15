@@ -11,11 +11,11 @@ black=dict()
 black['verilog']="""
 module black(gin, pin, gout, pout);
 
- input [1:0] gin, pin;
- output gout, pout;
+    input [1:0] gin, pin;
+    output gout, pout;
 
- assign pout=pin[1]&pin[0];
- assign gout=gin[1]|(pin[1]&gin[0]);
+    assign pout=pin[1]&pin[0];
+    assign gout=gin[1]|(pin[1]&gin[0]);
 
 endmodule
 """
@@ -41,13 +41,13 @@ modules['black']=black
 grey=dict()
 
 grey['verilog']="""
-module grey(gout, gin, pin);
+module grey(gin, pin, gout);
 
- input[1:0] gin;
- input pin;
- output gout;
+    input[1:0] gin;
+    input pin;
+    output gout;
 
- assign gout=gin[1]|(pin&gin[0]);
+    assign gout=gin[1]|(pin&gin[0]);
 
 endmodule
 """
@@ -74,11 +74,11 @@ rblk=dict()
 rblk['verilog']="""
 module rblk(hout, iout, gin, pin);
 
- input [1:0] gin, pin;
- output hout, iout;
+    input [1:0] gin, pin;
+    output hout, iout;
 
- assign iout=pin[1]&pin[0];
- assign hout=gin[1]|gin[0];
+    assign iout=pin[1]&pin[0];
+    assign hout=gin[1]|gin[0];
 
 endmodule
 """
@@ -106,10 +106,10 @@ rgry=dict()
 rgry['verilog']="""
 module rgry(hout, gin);
 
- input[1:0] gin;
- output hout;
+    input[1:0] gin;
+    output hout;
 
- assign hout=gin[1]|gin[0];
+    assign hout=gin[1]|gin[0];
 
 endmodule
 """
@@ -134,13 +134,13 @@ modules['rgry']=rgry
 buffer_node=dict()
 
 buffer_node['verilog']="""
-module buf(pin, gin, pout, gout);
+module buffer_node(pin, gin, pout, gout);
 
-  input pin, gin;
-  output pout, gout;
+    input pin, gin;
+    output pout, gout;
 
-  assign pout=pin;
-  assign gout=gin;
+    assign pout=pin;
+    assign gout=gin;
 
 endmodule
 """
@@ -151,12 +151,14 @@ buffer_node['fillcolor']='white'
 buffer_node['ins']=[('gin',1),('pin',1)]
 buffer_node['outs']=[('gout',1),('pout',1)]
 
-buffer_node['logic'] = lambda x: [x]
+buffer_node['logic'] = lambda pin,gin: [pin,gin]
 
 modules['buffer_node']=buffer_node
 
 ### Invis nodes
-invis_node=dict(buffer_node)
+invis_node=dict()
+
+invis_node['verilog']=buffer_node['verilog'].replace('buffer','invis')
 
 #invis_node['style']='invis'
 invis_node['shape']='point'
@@ -165,13 +167,18 @@ invis_node['width']=0
 invis_node['height']=0
 invis_node['fillcolor']='black'
 
+invis_node['ins']=[('gin',1),('pin',1)]
+invis_node['outs']=[('gout',1),('pout',1)]
+
+invis_node['logic'] = lambda pin,gin: [pin,gin]
+
 modules['invis_node']=invis_node
 
-### P/G generation node
-pg_node=dict()
+### Pre-processing node
+pre_node=dict()
 
-pg_node['verilog']="""
-module pg_node(a, b, pout, gout);
+pre_node['verilog']="""
+module pre_node(a, b, pout, gout);
 
     input a, b;
     output pout, gout;
@@ -182,43 +189,79 @@ module pg_node(a, b, pout, gout);
 endmodule
 """
 
-pg_node['shape']='square'
-pg_node['fillcolor']='white'
-pg_node['label']='pre'
-pg_node['style']='dashed'
+pre_node['shape']='square'
+pre_node['fillcolor']='white'
+pre_node['label']='pre'
+pre_node['style']='dashed'
 
-pg_node['ins']=[('a',1),('b',1)]
-pg_node['outs']=[('pout',1),('gout',1)]
+pre_node['ins']=[('a',1),('b',1)]
+pre_node['outs']=[('pout',1),('gout',1)]
 
-pg_node['logic'] = lambda a,b: [
+pre_node['logic'] = lambda a,b: [
                    a^b,
                    a&b
                    ]
 
-modules['pg_node']=pg_node
+modules['pre_node']=pre_node
+
+### Fake pre-processing node
+fake_pre=dict(pre_node)
+
+fake_pre['verilog']="""
+module fake_pre(cin, pout, gout);
+
+    input cin;
+    output pout, gout;
+
+    assign pout=1'b0;
+    assign gout=cin;
+
+endmodule
+"""
+
+fake_pre['ins']=[('cin',1)]
+
+fake_pre['logic'] = lambda cin: [0,cin]
+
+modules['fake_pre']=fake_pre
 
 ### XOR node
 
 xor_node=dict()
 
 xor_node['verilog']="""
-    assign s=pin^gin;
+module xor_node(pin, gin, sum);
+
+    input pin, gin;
+    output sum;
+
+    assign sum=pin^gin;
+
+endmodule
 """
 
 xor_node['shape']='invtrapezium'
 xor_node['fillcolor']='white'
 xor_node['style']='dashed'
-xor_node['label']='post'
+xor_node['label']='XOR'
 xor_node['fixedsize']='shape'
 
 xor_node['ins']=[('pin',1),('gin',1)]
-xor_node['outs']=[('s',1)]
+xor_node['outs']=[('sum',1)]
 
 xor_node['logic'] = lambda pin,gin: [pin^gin]
 
 modules['xor_node']=xor_node
 
-###
+### Post-processing node
+
+post_node=dict(xor_node)
+
+post_node['verilog']=post_node['verilog'].replace('xor_node','post_node')
+post_node['label']='post'
+
+modules['post_node']=post_node
+
 
 if __name__=="__main__":
 

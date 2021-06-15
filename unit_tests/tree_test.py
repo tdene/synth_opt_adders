@@ -11,47 +11,44 @@ n = 8
 
 g = tree(n)
 #assert(g._checkLF(7,7)==(g[7,7],g[6,6],[g[7,5]],[g[6,4]]))
-assert(g._checkLT(7,7)==(g[7,7],g[6,6]))
-assert(g._checkLT(3)==(g[3,3],g[2,2]))
+#assert(g._checkLT(7,7)==(g[7,7],g[6,6]))
+#assert(g._checkLT(3)==(g[3,3],g[2,2]))
 #assert(g._checkLF(2,2)==(g[2,2],g[1,1],[g[2,1]],[g[1,0]]))
-assert(g._checkLT(2)==(None,None))
+#assert(g._checkLT(2)==(None,None))
 
 #assert(g._checkFT(7)==(None,None,None,None))
-assert(g._checkTF(7)==(None,None))
-assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
-assert(g._checkTL(7)==(None,None))
+#assert(g._checkTF(7)==(None,None))
+#assert(g._checkFL(7,7)==(g[7,7],g[6,7]))
+#assert(g._checkTL(7)==(None,None))
 
-assert(len(g)==7)
-g.trim_layer()
-assert(len(g)==7)
+#assert(len(g)==7)
+#g.trim_layer()
+#assert(len(g)==7)
 
 def sklansky():
     # Start from ripple-carry
     # Reduce layer by layer
     # From a total of n layers
     # To a total of lg(n) layers
-    g.LF(3)
-    for a in range(lg(n)+1,n):
+    for a in range(1,n):
+        if a & (a-1)==0: continue
         g.batch_transform('LF',a,n)
-#        g.png("{0}.png".format(a-lg(n)))
+        g.png("{0}.png".format(a-lg(n)))
     g.png('sklansky.png')
 
 def koggestone():
     # Start from ripple-carry
     # Reduce 1st layer
     g.LT(7)
-    g.png('1.png')
 
     # Reduce 2nd layer
     g.LT(6)
     g.LT(7)
-    g.png('2.png')
 
     # Reduce 3rd layer
     g.LT(5)
     g.LT(6)
     g.LT(7)
-    g.png('3.png')
 
     # Reduce 4th layer
     g.LT(3)
@@ -59,7 +56,6 @@ def koggestone():
     g.LT(5)
     g.LT(6)
     g.LT(7)
-    g.png('4.png')
     g.png('koggestone.png')
 
 def brentkung():
@@ -81,14 +77,11 @@ def ladnerfischer():
 def knowles():
     # Start from Sklansky
     sklansky()
-    g.png('1.png')
     g.FT(4)
     g.FT(4)
-    g.png('2.png')
     g.FT(5)
     g.FT(5)
     g.png('knowles.png')
-    g.png('3.png')
 #    g.TF(5)
 #    g.png('4.png')
 
@@ -98,7 +91,6 @@ def koggestone():
     g.FT(2)
     g.FT(4)
     g.FT(6)
-    g.png('4.png')
     g.FT(4)
     g.FT(6)
     g.png('koggestone.png')
@@ -191,12 +183,54 @@ def LFT():
     g.FT(2)
     g.png('T.png')
 
-g.png('rca.png')
-LFT()
+def paper_review():
+    n=64
+    g=tree(n)
+    g.harris_step('FL',1)
+    g.harris_step('FL',1)
+    g.harris_step('FL',1)
+    g.harris_step('FL',1)
+    g.harris_step('FL',1)
+    print('hi')
+    g.LF(47)
+    g.LF(51)
+    g.LF(53)
+    g.LF(54)
+    g.LF(51)
+    g.LF(53)
+    g.LF(54)
+    g.png('1.png')
+
+    print('hi')
+    g.LF(51)
+    g.LF(54)
+
+    print('hi')
+    g.LF(54)
+    g.png('2.png')
+    print('hi')
+    g.png('3.png')
+    print('hi')
+    g.FT(47)
+    g.png('4.png')
+    # Re-calculate the tree
+    pre_processing = g.node_list[0]
+    for n in pre_processing:
+        g.walk_downstream(n,fun=g._recalc_pg)
+
+    # Check that tree remains valid
+    post_processing = g.node_list[-1]
+    for i in range(len(post_processing)):
+        assert all(post_processing[i].pg[:i+1])
+        assert post_processing[i].m in ['post_node']
+    g.hdl('hdl64/brent_kung_mod.v')
+
+#LFT()
 #knowles()
 #koggestone()
 #ladnerfischer()
 brentkung()
+#sklansky()
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
@@ -207,4 +241,4 @@ for n in pre_processing:
 post_processing = g.node_list[-1]
 for i in range(len(post_processing)):
     assert all(post_processing[i].pg[:i+1])
-    assert post_processing[i].m in ['xor_node']
+    assert post_processing[i].m in ['post_node']

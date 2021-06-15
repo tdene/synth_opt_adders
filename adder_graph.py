@@ -49,7 +49,7 @@ class adder_node():
     # Static helper function that checks whether a node is
     # not none, pre-processing, or post-processing
     def _in_tree(n):
-        return n is not None and n.m not in ['xor_node','pg_node']
+        return n is not None and n.m not in ['post_node','pre_node']
 
     # The node object has dictionaries of input/output edges
     # These come in 3 possible flavors:
@@ -63,14 +63,16 @@ class adder_node():
             return "1'b0"
         if isinstance(x,int):
             return "n"+str(x)
+        if "$" in x:
+            return x.replace("$","")
         if "'" in x:
             return x
-        raise TypeError("net stored in node {0} is invalid",repr(self))
+        raise TypeError("net stored in node {0} is invalid".format(repr(x)))
 
     # Return single line of verilog consisting of module instantiation
 
     def _verilog(self):
-        ret="{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
+        ret="    {3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
         tmp=self.ins.copy()
         tmp.update(self.outs)
         for a in tmp:
@@ -128,6 +130,8 @@ class adder_graph(nx.MultiDiGraph):
         # Initialize graph to "width" of width
         self.node_list=[[None]*self.w]
 
+        self.next_net = 1
+
         super().__init__(self)
 
     # Pre-condtions:
@@ -163,6 +167,7 @@ class adder_graph(nx.MultiDiGraph):
         n_kwargs['pos'] = "{0},{1}!".format(-1*n.x,-1*n.y)
 
         super().add_node(n,**n_kwargs)
+        return n
 
     # Removes node from nodelist array as well as graph
 
@@ -171,6 +176,7 @@ class adder_graph(nx.MultiDiGraph):
             return
         self.node_list[n.y][n.x]=None
         super().remove_node(n)
+        return n
 
     # Pre-conditions:
     # n1, n2, are 2-element integer arrays, [x,y] describing valid nodes
@@ -192,7 +198,14 @@ class adder_graph(nx.MultiDiGraph):
             raise ValueError("cannot add an edge between invalid ports")
 
         # Assigns name to edge, based on order in which it was added
-        n1.outs[p1][b1]=n2.ins[p2][b2]=len(self.edges)
+        #edge_name = len(self.edges)
+        #edge_name = "${0}_{1}_{2}_{3}".format(p1,b1,n1.x,n1.y)
+        edge_name = self.next_net
+        self.next_net += 1
+        if not n1.outs[p1][b1] is None: edge_name = n1.outs[p1][b1]
+        elif not n2.ins[p2][b2] is None: edge_name = n2.ins[p2][b2]
+        n1.outs[p1][b1]=edge_name
+        n2.ins[p2][b2]=edge_name
 
         # Styles the edge
         edge_kwargs={'arrowhead':'none',
@@ -222,6 +235,39 @@ class adder_graph(nx.MultiDiGraph):
         if len(n)!=2:
             raise ValueError("must input two numbers to access node in graph")
         return self.node_list[n[1]][n[0]]
+
+    def hdl(self,out=None):
+        module_list=[]
+        #module_defs=""
+        module_defs=modules['grey']['verilog']
+        ret="\nmodule adder(cout, sum, a, b, cin);\n"
+        ret+="\tinput [{0}:0] a, b;\n".format(self.w-1)
+        ret+="\tinput cin;\n"
+        ret+="\toutput [{0}:0] sum;\n".format(self.w-1)
+        ret+="\toutput cout;\n"
+        ret+="\tpre_node pre_node_{1}_0 ( .a( a[{0}] ), .b( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
+        cfinal=self.node_list[-1][-1].ins['gin'][0]
+        ret+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        for a in self.node_list:
+            for n in a:
+                if n.m in ['post_node']:
+                    tmp = n.ins['pin'][0]
+                    n.ins['pin'][0]="$p{0}".format(n.x)
+                    ret+=n.hdl()+'\n'
+                    n.ins['pin'][0] = tmp
+                else:
+                    ret+=n.hdl()+'\n'
+#                if n.m in ['post_node','buffer_node','invis_node']:
+#                    n.flatten()
+                if n.m not in module_list:
+                    module_list.append(n.m)
+                    module_defs+=modules[n.m]['verilog']
+        ret+="endmodule\n"
+        ret=ret+module_defs
+        if out is not None:
+            with open(out,'w') as f:
+                print(ret,file=f)
+        return ret
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")
