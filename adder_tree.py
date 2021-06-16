@@ -929,6 +929,18 @@ class adder_tree(graph):
     def trim_layers(self):
         while(self.trim_layer()): pass
 
+    def check_tree(self):
+        # Re-calculate the tree
+        pre_processing = self.node_list[0]
+        for n in pre_processing:
+            self.walk_downstream(n,fun=self._recalc_pg)
+
+        # Check that tree remains valid
+        post_processing = self.node_list[-1]
+        for i in range(len(post_processing)):
+            assert all(post_processing[i].pg[:i+1])
+            assert post_processing[i].m in ['post_node']
+
     # Prints a png
     def png(self,fname='out.png'):
 
