@@ -19,7 +19,7 @@ class adder_tree(graph):
 
     # Pre-condition: width is an integer
     # Post-condition: initializes serial structure
-    def __init__(self,width):
+    def __init__(self,width,network="rca"):
         if not isinstance(width,int):
             raise TypeError("provided width must be an integer")
 
@@ -39,7 +39,7 @@ class adder_tree(graph):
         # Initialize serial structure
 
         # Initialize Sklansky
-        if False:
+        if network=="sklansky":
             for a in range(1,self.w):
                 num_buf = 2**(a-1)
                 ctr = num_buf
@@ -54,6 +54,15 @@ class adder_tree(graph):
                         self.add_node(node(b,a,'black'),pre=self[b+ctr-1,a-1])
                         ctr-=1
             self.dna="sklansky"
+        elif network=="kogge-stone":
+            for a in range(1,self.w):
+                for b in range(self.w):
+                    num_buf = 2**(a-1)
+                    if b>num_buf-1:
+                        self.add_node(node(b,a,'black'),pre=self[b-num_buf,a-1])
+                    else:
+                        self.add_node(node(b,a,'buffer_node'))
+            self.dna="kogge-stone"
         else:
             for a in range(1,self.w):
                 for b in range(self.w):
@@ -69,6 +78,11 @@ class adder_tree(graph):
             n = self.add_node(node(a,self.w,'post_node'))
 
         self.clean()
+
+    def _to_sklansky(self):
+        for a in range(1,n):
+            if a & (a-1)==0: continue
+            self.batch_transform('LF',a,n)
 
     # Redefine __len__ to be the y-axis size of the tree logic
     # since this definition proves to be useful in practice
@@ -786,7 +800,9 @@ class adder_tree(graph):
                 err="batch transform {0} failed on {1}".format(transform,x)
                 raise ValueError(err)
 
-    def harris_step(self,transform,steps=1):
+    def harris_step(self,transform,steps=1,bot_bit=None,top_bit=None):
+        if top_bit==None: top_bit=self.w
+        if bot_bit==None: bot_bit=0
         if steps==0: return
         # Harris space is different from transform space
         # Brent-Kung is the L corner of Harris space
@@ -796,12 +812,12 @@ class adder_tree(graph):
         if transform in ['LF','FL','LT','TL']:
 
             for i in range(1,len(self)-lg(self.w)+1-(transform[0]=='L')+1):
-                top = self.w-1
+                top = top_bit-1
                 bot = 2**i+2**(i-1)-1
 
                 self.batch_transform(transform,bot,top,2**i)
 
-        self.harris_step(transform,steps-1)
+        self.harris_step(transform,steps-1,bot_bit=bot_bit,top_bit=top_bit)
 
     # Compresses, eliminates nodes using idempotence,
     # and trims extraneous layers
