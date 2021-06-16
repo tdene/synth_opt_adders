@@ -250,6 +250,9 @@ class adder_graph(nx.MultiDiGraph):
         ret+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
         for a in self.node_list:
             for n in a:
+#                if n.m in ['post_node','buffer_node','invis_node']:
+                if n.m in ['buffer_node','invis_node']:
+                    n.flatten()
                 if n.m in ['post_node']:
                     tmp = n.ins['pin'][0]
                     n.ins['pin'][0]="$p{0}".format(n.x)
@@ -257,8 +260,6 @@ class adder_graph(nx.MultiDiGraph):
                     n.ins['pin'][0] = tmp
                 else:
                     ret+=n.hdl()+'\n'
-#                if n.m in ['post_node','buffer_node','invis_node']:
-#                    n.flatten()
                 if n.m not in module_list:
                     module_list.append(n.m)
                     module_defs+=modules[n.m]['verilog']

@@ -225,12 +225,42 @@ def paper_review():
         assert post_processing[i].m in ['post_node']
     g.hdl('hdl64/brent_kung_mod.v')
 
+def sk_bk(n,hybrid=False):
+    g = tree(n,"sklansky")
+    g.hdl('hdl{0}/pure_sklansky.v'.format(n))
+    g.png('1.png')
+    if hybrid:
+        g.harris_step('FL',lg(n),top_bit=n//2)
+        g.png('3.png')
+        g.hdl('hdl{0}/sklanksy_brentkung.v'.format(n))
+    else:
+        g.harris_step('FL',lg(n))
+        g.png('2.png')
+        g.hdl('hdl{0}/pure_brentkung.v'.format(n))
+    # Re-calculate the tree
+    pre_processing = g.node_list[0]
+    for n in pre_processing:
+        g.walk_downstream(n,fun=g._recalc_pg)
+
+    # Check that tree remains valid
+    post_processing = g.node_list[-1]
+    for i in range(len(post_processing)):
+        assert all(post_processing[i].pg[:i+1])
+        assert post_processing[i].m in ['post_node']
+    
+
 #LFT()
 #knowles()
 #koggestone()
 #ladnerfischer()
-brentkung()
+#brentkung()
 #sklansky()
+sk_bk(32,False)
+sk_bk(64,False)
+sk_bk(128,False)
+sk_bk(32,True)
+sk_bk(64,True)
+sk_bk(128,True)
 
 # Re-calculate the tree
 pre_processing = g.node_list[0]
