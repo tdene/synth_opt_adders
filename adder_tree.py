@@ -150,9 +150,14 @@ class adder_tree(graph):
     # That is, if a PG is in b, then it has to be in a
     # b -> a === (not b)|a
     def _is_pg_subset(self,a,b):
+        # Turn a list of nodes into a list of pg
         a = [x.pg if x is not None else [0]*self.w for x in a]
-        a = [any(x) for x in zip(*a)]
         b = [x.pg if x is not None else [0]*self.w for x in b]
+        # If either list is empty, default it to all 0's
+        if len(a)==0: a = [[0]*self.w]
+        if len(b)==0: b = [[0]*self.w]
+        # Merge lists of pg into single comprehensive list
+        a = [any(x) for x in zip(*a)]
         b = [any(x) for x in zip(*b)]
         return all([(not y)|x for x,y in zip(a,b)])
 
