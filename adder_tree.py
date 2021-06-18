@@ -411,7 +411,7 @@ class adder_tree(graph):
         # If x has no pre, try forking through possible pre's
         if pre is None and x not in c:
             # Iterate over all possible pre's
-            possi = reversed(self._possible_pres(x,c,d))
+            possi = self._possible_pres(x,c,d)
             #possi = sorted(possi, key = lambda x: x.m in ['buffer_node','invis_node'])
             for y in possi:
                 # Fork up through the prefix tree
@@ -572,7 +572,10 @@ class adder_tree(graph):
             if not x.x<pre.x: continue
             # Figure out if a valid remapping exists
             c,d = self._valid_tops((top,x),pre,top)
-            if c is not None: b=x; break;
+            if c is not None:
+                # Ignore possibilities that are immediately redundant
+                if not self._is_pg_subset((*d,),(x,)):
+                    b=x; break;
 
         if b is None:
             return (None,None,None,None)
