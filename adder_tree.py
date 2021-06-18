@@ -539,8 +539,13 @@ class adder_tree(graph):
         for x in self._possible_pres(a):
             if not x.x>pre.x: continue
             # Figure out if a valid remapping exists
-            c,d = self._valid_tops((top,x),pre,top)
-            if c is not None: b=x; break;
+            if self._is_pg_subset((top,x),(pre,)):
+                b=x; break;
+#            c,d = self._valid_tops((top,x),pre,top)
+#            if c is not None:
+#                # Ignore possibilities that are immediately redundant
+#                if not self._is_pg_subset((*d,),(x,)):
+#                    b=x; break;
 
         if b is None: return (None,None)
 
