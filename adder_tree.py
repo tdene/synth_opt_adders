@@ -4,6 +4,7 @@ from adder_graph import adder_node as node
 from util import lg
 import networkx as nx
 import pydot
+from functools import reduce
 
 # Class that generates parallel prefix adder trees
 
@@ -100,10 +101,10 @@ class adder_tree(graph):
         n = super().add_node(n)
 
     # Keeps track of group propagates/generates
-        n.pg=[0]*self.w
+        n.pg=0
     # Initialize pg if node is P/G node
         if n.m in ['pre_node','fake_pre']:
-            n.pg[n.x]=1
+            n.pg=1<<n.x
 
     # Connects up
         self._add_top(n)
@@ -135,12 +136,10 @@ class adder_tree(graph):
         top = self.top(n)
         pre = self.pre(n)
 
-        top_g = top.pg if top is not None else [0]*self.w
-        pre_g = pre.pg if pre is not None else [0]*self.w
+        top_g = top.pg if top is not None else 0
+        pre_g = pre.pg if pre is not None else 0
 
-        n.pg = [x|y for x,y in \
-                   zip(top_g,pre_g)]
-
+        n.pg = top_g|pre_g
 
     # Pre-condition: a and b are both iterables
     # Post-condition: return value is True/False
@@ -151,15 +150,21 @@ class adder_tree(graph):
     # b -> a === (not b)|a
     def _is_pg_subset(self,a,b):
         # Turn a list of nodes into a list of pg
-        a = [x.pg if x is not None else [0]*self.w for x in a]
-        b = [x.pg if x is not None else [0]*self.w for x in b]
-        # If either list is empty, default it to all 0's
-        if len(a)==0: a = [[0]*self.w]
-        if len(b)==0: b = [[0]*self.w]
+        a = [x.pg if x is not None else 0 for x in a]
+        b = [x.pg if x is not None else 0 for x in b]
         # Merge lists of pg into single comprehensive list
-        a = [any(x) for x in zip(*a)]
-        b = [any(x) for x in zip(*b)]
-        return all([(not y)|x for x,y in zip(a,b)])
+        a = reduce(lambda x,y: x|y, a, 0)
+        b = reduce(lambda x,y: x|y, b, 0)
+        ret = ~b|a
+        # Return True if all bits are high
+        return ret&(ret+1)==0
+    
+    def _recurs_is_pg_subset(self,a,b,iter_point):
+        if _is_pg_subset(a,b):
+            return True
+        if not node._in_tree(iter_point):
+            return False
+        return _recurs_is_pg_subset((*a,iter_point),b,iter_point)
 
     # Traverse the graph downstream of a node
     # applying fun to every node you meet
@@ -185,7 +190,7 @@ class adder_tree(graph):
             pos=0
             self.add_edge(top,('gout',0),n,('gin',pos))
 
-        n.pg = [x|y for x,y in zip(n.pg,top.pg)]
+        n.pg = n.pg|top.pg
 
     # Internal helper function to prevent re-writing of code
     # Connects node to a predecessor
@@ -200,7 +205,7 @@ class adder_tree(graph):
             pos=len(n.ins['gin'])-1
             self.add_edge(pre,('gout',0),n,('gin',pos))
 
-        n.pg = [x|y for x,y in zip(n.pg,pre.pg)]
+        n.pg = n.pg|pre.pg
 
     # Internal function to morph a node to another type
     # no_warn and no_pre should NOT be set to True unless
@@ -390,14 +395,14 @@ class adder_tree(graph):
     # Returns a tuple of lists of tops and pres that need be created
     # Or None,None if the requirement is impossible
     # Note that in the function call, a and pre are the new a and pre
-    def _valid_tops(self,a_bits,b,x,c=[],d=[],path=[],result=(None,None)):
+    def _valid_tops(self,a,a_bits,b,x,c=[],d=[],path=[],result=(None,None)):
 
         # If our current solution is worse than a pre-existing one, abort
         if result[0] is not None and len(result[0])<len(c):
             return None,None
 
         # If we are done, we are done!
-        if self._is_pg_subset((*d,*a_bits),(b,)):
+        if self._is_pg_subset((*d,*a_bits),(a,)):
             return c,d
 
         # If x is not part of the body,
@@ -406,7 +411,7 @@ class adder_tree(graph):
             # If we've reached the end, this fork is dead
             if len(path)==0: return None,None
             # Otherwise fork up
-            return self._valid_tops(a_bits,b, \
+            return self._valid_tops(a,a_bits,b, \
                    self.top(path[-1]),c,d,path[:-1],result)
 
         # Forking down into the recursion tree
@@ -420,15 +425,15 @@ class adder_tree(graph):
             #possi = sorted(possi, key = lambda x: x.m in ['buffer_node','invis_node'])
             for y in possi:
                 # Fork up through the prefix tree
-                tmp = self._valid_tops(a_bits,b,y,c+[x],d+[y],path+[x],result)
+                tmp = self._valid_tops(a,a_bits,b,y,c+[x],d+[y],path+[x],result)
                 if tmp[0] is not None: result = tmp;
         # If x has a pre, try forking thru the pre chain
         elif pre is not None:
-            tmp = self._valid_tops(a_bits,b,pre,c,d,path+[x],result)
+            tmp = self._valid_tops(a,a_bits,b,pre,c,d,path+[x],result)
             if tmp[0] is not None: result = tmp;
 
         # Either way, fork up through the top as well
-        tmp = self._valid_tops(a_bits,b,self.top(x),c,d,path,result)
+        tmp = self._valid_tops(a,a_bits,b,self.top(x),c,d,path,result)
         if tmp[0] is not None: result = tmp;
 
         # Return list of candidates
@@ -466,7 +471,7 @@ class adder_tree(graph):
 
         pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
-        c,d = self._valid_tops((pre,self.top(top)),b,self.top(top))
+        c,d = self._valid_tops(a,(self.top(top),pre),b,self.top(top))
 
         if c is None:
             return (None,None,None,None)
@@ -541,10 +546,13 @@ class adder_tree(graph):
         b = None; c = None; d = None;
         top = self.top(a)
         # ∃ b s.t. b.x > pre(a).x
-        for x in self._possible_pres(a):
-            if not x.x>pre.x: continue
+        poss_b = self._possible_pres(a)
+        poss_b = [x for x in poss_b if x.x>pre.x]
+        if any(node._exists(x) for x in poss_b):
+            poss_b = [x for x in poss_b if node._exists(x)]
+        for x in poss_b:
             # Figure out if a valid remapping exists
-            c,d = self._valid_tops((top,x),pre,top)
+            c,d = self._valid_tops(a,(top,x),pre,top)
             if c is not None:
                 # Ignore possibilities that are immediately redundant
                 if not self._is_pg_subset((*c,*d),(x,)):
@@ -576,10 +584,13 @@ class adder_tree(graph):
         b = None; c = None; d = None;
         top = self.top(a)
         # Check each possible pre
-        for x in reversed(self._possible_pres(a)):
-            if not x.x<pre.x: continue
+        poss_b = list(reversed(self._possible_pres(a)))
+        poss_b = [x for x in poss_b if x.x<pre.x]
+        if any(node._exists(x) for x in poss_b):
+            poss_b = [x for x in poss_b if node._exists(x)]
+        for x in poss_b:
             # Figure out if a valid remapping exists
-            c,d = self._valid_tops((top,x),pre,top)
+            c,d = self._valid_tops(a,(top,x),pre,top)
             if c is not None:
                 # Ignore possibilities that are immediately redundant
                 if not self._is_pg_subset((*c,*d),(x,)):
@@ -957,7 +968,9 @@ class adder_tree(graph):
         # Check that tree remains valid
         post_processing = self.node_list[-1]
         for i in range(len(post_processing)):
-            assert all(post_processing[i].pg[:i+1])
+            pg = post_processing[i].pg
+            # Return True if all bits are high
+            assert pg&(pg+1)==0
             assert post_processing[i].m in ['post_node']
 
     # Prints a png
