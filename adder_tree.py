@@ -526,35 +526,33 @@ class adder_tree(graph):
         # If no y is provided, check whole column from bottom up
         if y is None:
             for a in range(len(self.node_list)-1,-1,-1):
-                a,b=self._checkTF(x,a)
+                a,b,c,d=self._checkTF(x,a)
                 if b is not None:
-                    return a,b
-            return (None,None)
+                    return a,b,c,d
+            return (None,None,None,None)
 
         # Main clause of the function
         a = self[x,y]
 
         pre = self.pre(a)
         if pre is None:
-            return (None,None)
+            return (None,None,None,None)
 
-        b = None
+        b = None; c = None; d = None;
         top = self.top(a)
         # ∃ b s.t. b.x > pre(a).x
         for x in self._possible_pres(a):
             if not x.x>pre.x: continue
             # Figure out if a valid remapping exists
-            if self._is_pg_subset((top,x),(pre,)):
-                b=x; break;
-#            c,d = self._valid_tops((top,x),pre,top)
-#            if c is not None:
-#                # Ignore possibilities that are immediately redundant
-#                if not self._is_pg_subset((*d,),(x,)):
-#                    b=x; break;
+            c,d = self._valid_tops((top,x),pre,top)
+            if c is not None:
+                # Ignore possibilities that are immediately redundant
+                if not self._is_pg_subset((*c,*d),(x,)):
+                    b=x; break;
 
-        if b is None: return (None,None)
+        if b is None: return (None,None,None,None)
 
-        return (a,b)
+        return (a,b,c,d)
 
     def _checkFT(self,x,y=None):
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
@@ -584,7 +582,7 @@ class adder_tree(graph):
             c,d = self._valid_tops((top,x),pre,top)
             if c is not None:
                 # Ignore possibilities that are immediately redundant
-                if not self._is_pg_subset((*d,),(x,)):
+                if not self._is_pg_subset((*c,*d),(x,)):
                     b=x; break;
 
         if b is None:
@@ -738,7 +736,7 @@ class adder_tree(graph):
         return a,b
 
     def TF(self,x,y=None,clean=True):
-        a,b = self._checkTF(x,y)
+        a,b,c,d = self._checkTF(x,y)
         if b is None:
             return None
 
@@ -748,11 +746,19 @@ class adder_tree(graph):
         if not node._exists(b):
             b=self._morph_node(b,'buffer_node')
 
-        #pre(a) = b
         pre = self.pre(a)
+
+        # pre(a) = b, and any other additions necessary
         pre = self.remove_all_edges(pre,a)
-        self._add_pre(a,b)
-        self.walk_downstream(b,fun=self._recalc_pg)
+        c=[a]+c
+        d=[b]+d
+        for x,y in zip(c,d):
+            x=self[x.x,x.y]; y=self[y.x,y.y];
+            x=self._morph_node(x,'black')
+            if not node._exists(y):
+                y=self._morph_node(y,'buffer_node')
+            self._add_pre(x,y)
+            self.walk_downstream(x,fun=self._recalc_pg)
 
         if clean:
             self.clean()
@@ -771,7 +777,7 @@ class adder_tree(graph):
         pre = self.pre(a)
 
         # pre(a) = b, and any other additions necessary
-        self.remove_all_edges(pre,a)
+        pre = self.remove_all_edges(pre,a)
         c=[a]+c
         d=[b]+d
         for x,y in zip(c,d):
