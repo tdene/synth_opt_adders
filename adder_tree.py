@@ -141,6 +141,9 @@ class adder_tree(graph):
 
         n.pg = top_g|pre_g
 
+        if top is not None: n.upstream.update(top.upstream)
+        if pre is not None: n.upstream.update(pre.upstream)
+
     # Pre-condition: a and b are both iterables
     # Post-condition: return value is True/False
 
@@ -158,14 +161,19 @@ class adder_tree(graph):
         ret = ~b|a
         # Return True if all bits are high
         return ret&(ret+1)==0
-    
-    def _recurs_is_pg_subset(self,a,b,iter_point):
-        if _is_pg_subset(a,b):
-            return True
-        if not node._in_tree(iter_point):
-            return False
-        return _recurs_is_pg_subset((*a,iter_point),b,iter_point)
 
+    # Pre-condition: a is an iterable, b is a number
+    # Post-condition: return value is True/False
+
+    # Determine whether a combination of nodes can act
+    # as the b'th end node
+    def _is_pg_end_node(self,a,b):
+        a = [x.pg if x is not None else 0 for x in a]
+        a = reduce(lambda x,y: x|y, a, 0)
+        b = (1<<(b+1))-1
+        ret = ~b|a
+        return ret&(ret+1)==0
+    
     # Traverse the graph downstream of a node
     # applying fun to every node you meet
     def walk_downstream(self,n,fun=lambda x: x):

@@ -38,6 +38,9 @@ class adder_node():
         self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
+        # A list of all nodes that directly or indirectly feed into this one
+        self.upstream=set()
+
     # Static helper function that checks whether a node is not invis
     def _exists(n):
         return n is not None and n.m not in ['invis_node']
@@ -216,6 +219,9 @@ class adder_graph(nx.MultiDiGraph):
             edge_kwargs['tailport']='s'
         if adder_node._isbuf(n1):
             edge_kwargs['tailport']='s'
+
+        n2.upstream.add((n1.x,n1.y))
+        n2.upstream.update(n1.upstream)
 
         super().add_edge(n1,n2,**edge_kwargs)
 
