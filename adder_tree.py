@@ -162,7 +162,7 @@ class adder_tree(graph):
         # Return True if all bits are high
         return ret&(ret+1)==0
 
-    # Pre-condition: a is an iterable, b is a number
+    # Pre-condition: a is an iterable, b is an integer
     # Post-condition: return value is True/False
 
     # Determine whether a combination of nodes can act
@@ -173,6 +173,22 @@ class adder_tree(graph):
         b = (1<<(b+1))-1
         ret = ~b|a
         return ret&(ret+1)==0
+
+    # Pre-condition: n is (x,y) coordinate, b is an iterable 
+    # Post-condition: return value is True/False
+
+    # Checks whether replacing a node in the graph, a,
+    # can be replaced by a list of changes and still lead to
+    # a valid graph
+    def _remains_pg_valid(self,n,b):
+        ret = False
+        for x in self.node_list[-1]:
+            tmp = x.upstream
+            if n not in tmp: continue
+            orig = [self[i] for i in x.upstream if i[0]!=n[0] and i[1]==n[1]]
+            orig.extend(b)
+            ret = ret or self._is_pg_end_node(orig,x.x)
+        return ret
     
     # Traverse the graph downstream of a node
     # applying fun to every node you meet
@@ -410,7 +426,7 @@ class adder_tree(graph):
             return None,None
 
         # If we are done, we are done!
-        if self._is_pg_subset((*d,*a_bits),(a,)):
+        if self._remains_pg_valid((a.x,a.y),(*d,*a_bits)):
             return c,d
 
         # If x is not part of the body,
