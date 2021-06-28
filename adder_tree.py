@@ -141,8 +141,13 @@ class adder_tree(graph):
 
         n.pg = top_g|pre_g
 
-        if top is not None: n.upstream.update(top.upstream)
-        if pre is not None: n.upstream.update(pre.upstream)
+        n.upstream=set()
+        if top is not None:
+            n.upstream.add((top.x,top.y))
+            n.upstream.update(top.upstream)
+        if pre is not None:
+            n.upstream.add((pre.x,pre.y))
+            n.upstream.update(pre.upstream)
 
     # Pre-condition: a and b are both iterables
     # Post-condition: return value is True/False
@@ -177,9 +182,9 @@ class adder_tree(graph):
     # Pre-condition: n is (x,y) coordinate, b is an iterable 
     # Post-condition: return value is True/False
 
-    # Checks whether replacing a node in the graph, a,
-    # can be replaced by a list of changes and still lead to
-    # a valid graph
+    # Checks whether replacing a node in the graph, n,
+    # can be replaced by a list of changes, b, and still lead
+    # to a valid graph
     def _remains_pg_valid(self,n,b):
         ret = False
         for x in self.node_list[-1]:
@@ -187,6 +192,9 @@ class adder_tree(graph):
             if n not in tmp: continue
             orig = [self[i] for i in x.upstream if i[0]!=n[0] and i[1]==n[1]]
             orig.extend(b)
+            tmp = self._is_pg_end_node(orig,x.x)
+            a = [x.pg if x is not None else 0 for x in orig]
+            a = reduce(lambda x,y: x|y, a, 0)
             ret = ret or self._is_pg_end_node(orig,x.x)
         return ret
     
@@ -785,6 +793,7 @@ class adder_tree(graph):
 
         # pre(a) = b, and any other additions necessary
         pre = self.remove_all_edges(pre,a)
+        self.walk_downstream(a,fun=self._recalc_pg)
         c=[a]+c
         d=[b]+d
         for x,y in zip(c,d):
@@ -813,6 +822,7 @@ class adder_tree(graph):
 
         # pre(a) = b, and any other additions necessary
         pre = self.remove_all_edges(pre,a)
+        self.walk_downstream(a,fun=self._recalc_pg)
         c=[a]+c
         d=[b]+d
         for x,y in zip(c,d):
@@ -994,8 +1004,12 @@ class adder_tree(graph):
         for i in range(len(post_processing)):
             pg = post_processing[i].pg
             # Return True if all bits are high
-            assert pg&(pg+1)==0
-            assert post_processing[i].m in ['post_node']
+            try:
+                assert pg&(pg+1)==0
+                assert post_processing[i].m in ['post_node']
+            except AssertionError as e:
+                print("\nTree check failed on bit {0}\n".format(i))
+                raise e
 
     # Prints a png
     def png(self,fname='out.png'):
