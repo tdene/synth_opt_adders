@@ -41,6 +41,9 @@ class adder_node():
         # A list of all nodes that directly or indirectly feed into this one
         self.upstream=set()
 
+        # All nodes start, by default, outside of any blocks
+        self.block=None
+
     # Static helper function that checks whether a node is not invis
     def _exists(n):
         return n is not None and n.m not in ['invis_node']
@@ -55,21 +58,23 @@ class adder_node():
         return n is not None and n.m not in ['post_node','pre_node']
 
     # The node object has dictionaries of input/output edges
-    # These come in 3 possible flavors:
-    # - None (unassigned net) -> parsed to 1'b0
+    # These come in 4 possible flavors:
+    # - None (unassigned net) -> parsed to n0
     # - Integer (assigned net) -> parsed to n`Integer
+    # - Hardcoded name ($net_name) -> parsed to net_name
     # - Hardcoded value (x'bx) -> kept as is
+    # ::: UPDATE ::: removing 4th functionality
     # This is a static method that performs this conversion
 
     def _parse_net(x):
         if x is None:
-            return "1'b0"
+            return "n0"
         if isinstance(x,int):
             return "n"+str(x)
         if "$" in x:
             return x.replace("$","")
-        if "'" in x:
-            return x
+#        if "'" in x:
+#            return x
         raise TypeError("net stored in node {0} is invalid".format(repr(x)))
 
     # Return single line of verilog consisting of module instantiation
@@ -133,9 +138,21 @@ class adder_graph(nx.MultiDiGraph):
         # Initialize graph to "width" of width
         self.node_list=[[None]*self.w]
 
+        # Procedurally-generated net names start with "n1"
         self.next_net = 1
 
+        # Procedurally-generated block names start with "block1"
+        self.next_block = 1
+        self.blocks = [None,None]
+
         super().__init__(self)
+
+    # Simplify self.node_list[y][x] to self[x,y]
+    def __getitem__(self,n):
+        # Auto-raise error if n is not iterable with the len call
+        if len(n)!=2:
+            raise ValueError("must input two numbers to access node in graph")
+        return self.node_list[n[1]][n[0]]
 
     # Pre-condtions:
     # 0 <= x < width
@@ -235,42 +252,128 @@ class adder_graph(nx.MultiDiGraph):
         except nx.NetworkXError:
             return
 
-    # Simplify self.node_list[y][x] to self[x,y]
-    def __getitem__(self,n):
-        # Auto-raise error if n is not iterable with the len call
-        if len(n)!=2:
-            raise ValueError("must input two numbers to access node in graph")
-        return self.node_list[n[1]][n[0]]
+    # Create a new block
+    # Pre-condition:
+    # nodes is a list of nodes, all of which have attribute block = None
+    # Post-condition: adds new block, containing nodes
+    def add_block(self,*nodes):
+        if not all([n.block is None for n in nodes]):
+            raise ValueError("cannot add node to multiple blocks")
+        # Set block attribute for all nodes
+        for n in nodes: n.block = self.next_block
+        # Add block to blocks list
+        new_block = set(nodes)
+        if self.next_block==len(self.blocks)-1: self.blocks.append(None)
+        self.blocks[self.next_block]=new_block
 
+        self.next_block = next(x for x in range(1,len(self.blocks)) if self.blocks[x] is None)
+
+    # Remove a block
+    # Pre-condition: block is a valid block ID
+    # Post-condition: removes block
+    def remove_block(self,block):
+        if block>=len(self.blocks) or self.blocks[block] is None:
+            raise ValueError("trying to remove non-existent block")
+        for n in self.blocks[block]: n.block = None
+        self.blocks[block] = None
+
+    # Remove all block from graph
+    def remove_all_blocks(self):
+        for b in range(len(self.blocks)):
+            if self.blocks[b] is not None:
+                self.remove_block(b)
+        self.next_block = 1
+        self.blocks = [None,None]
+
+    # Print out HDL
+    # Needs to be cleaned
     def hdl(self,out=None):
         module_list=[]
         #module_defs=""
+        head=""; body=""; block_instances="";
         module_defs=modules['grey']['verilog']
-        ret="\nmodule adder(cout, sum, a, b, cin);\n"
-        ret+="\tinput [{0}:0] a, b;\n".format(self.w-1)
-        ret+="\tinput cin;\n"
-        ret+="\toutput [{0}:0] sum;\n".format(self.w-1)
-        ret+="\toutput cout;\n"
-        ret+="\tpre_node pre_node_{1}_0 ( .a( a[{0}] ), .b( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
+        block_defs=""
+        endmodule="\nendmodule\n"
+        ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
+        head="\nmodule adder(cout, sum, a, b, cin);\n"
+        head+="\tinput [{0}:0] a, b;\n".format(self.w-1)
+        head+="\tinput cin;\n"
+        head+="\toutput [{0}:0] sum;\n".format(self.w-1)
+        head+="\toutput cout;\n"
+        head+="\tpre_node pre_node_{1}_0 ( .a( a[{0}] ), .b( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
         cfinal=self.node_list[-1][-1].ins['gin'][0]
-        ret+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        ### CLEAN ABOVE PLEASE!!!!!
         for a in self.node_list:
             for n in a:
-#                if n.m in ['post_node','buffer_node','invis_node']:
+                if n.block is not None:
+                    continue
                 if n.m in ['buffer_node','invis_node']:
                     n.flatten()
                 if n.m in ['post_node']:
                     tmp = n.ins['pin'][0]
                     n.ins['pin'][0]="$p{0}".format(n.x)
-                    ret+=n.hdl()+'\n'
+                    body+=n.hdl()+'\n'
                     n.ins['pin'][0] = tmp
                 else:
-                    ret+=n.hdl()+'\n'
+                    body+=n.hdl()+'\n'
                 if n.m not in module_list:
                     module_list.append(n.m)
                     module_defs+=modules[n.m]['verilog']
-        ret+="endmodule\n"
-        ret=ret+module_defs
+
+        # Iterate over all blocks
+        for b in range(len(self.blocks)):
+            nodes = self.blocks[b]
+            # Skip empty blocks
+            if nodes is None: continue
+            # For each block
+            # Create list of inputs and outputs
+            ins = set()
+            outs = set()
+            # Iterate over all nodes in a block
+            for n in nodes:
+                # Add ins/outs to block ins/outs
+                for x in n.ins.values(): ins.update([adder_node._parse_net(y) for y in x])
+                for x in n.outs.values(): outs.update([adder_node._parse_net(y) for y in x])
+            # end iterate over all nodes in a block
+
+            # Should a signal be generated as an output by
+            # a node inside the block, it is clearly not a
+            # block input, and should not be in the header.
+            ins = ins - outs
+
+            # Instantiate block
+            inst_b = "    block_{0} block_{0}_instance (".format(b)
+            tmp=ins|outs
+            # Add ins/outs to block instantiation with dot notation
+            for x in tmp: inst_b+=" .{0} ( {0} ),".format(x)
+            inst_b=inst_b[:-1]+' );\n'
+            # Add block instantiation to list of block_instances
+            block_instances+=inst_b
+
+            # Define block
+            block_def="\nmodule block_{0}(".format(b)
+            # List all ins/outs in module definition
+            for x in tmp: block_def+=' '+x+','
+            block_def = block_def[:-1]+');\n\n'
+            # Declare all inputs and outputs
+            block_def += "    input"
+            for x in ins: block_def+=" {0},".format(x)
+            block_def = block_def[:-1]+";\n"
+
+            block_def += "    output"
+            for x in outs: block_def+=" {0},".format(x)
+            block_def = block_def[:-1]+";\n"
+            # Put all nodes' hdl inside block definition
+            for n in nodes:
+                block_def+=n.hdl()+'\n'
+            # Write endmodule line
+            block_def+=endmodule
+            # Add block definition to list of block_defs
+            block_defs+=block_def
+
+        # end iterate over all blocks
+        ret=head+body+block_instances+endmodule+module_defs+block_defs
         if out is not None:
             with open(out,'w') as f:
                 print(ret,file=f)
