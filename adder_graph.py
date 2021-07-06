@@ -260,7 +260,9 @@ class adder_graph(nx.MultiDiGraph):
         if not all([n.block is None for n in nodes]):
             raise ValueError("cannot add node to multiple blocks")
         # Set block attribute for all nodes
-        for n in nodes: n.block = self.next_block
+        for n in nodes:
+            n.block = self.next_block
+            n.flatten()
         # Add block to blocks list
         new_block = set(nodes)
         if self.next_block==len(self.blocks)-1: self.blocks.append(None)
@@ -274,7 +276,9 @@ class adder_graph(nx.MultiDiGraph):
     def remove_block(self,block):
         if block>=len(self.blocks) or self.blocks[block] is None:
             raise ValueError("trying to remove non-existent block")
-        for n in self.blocks[block]: n.block = None
+        for n in self.blocks[block]:
+            n.block = None
+            n.flatten(False)
         self.blocks[block] = None
 
     # Remove all block from graph
@@ -365,6 +369,7 @@ class adder_graph(nx.MultiDiGraph):
             for x in outs: block_def+=" {0},".format(x)
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
+            block_def += '\n'
             for n in nodes:
                 block_def+=n.hdl()+'\n'
             # Write endmodule line

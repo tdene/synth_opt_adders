@@ -1014,12 +1014,47 @@ class adder_tree(graph):
     # Prints a png
     def png(self,fname='out.png'):
 
+        # Helper function to format node name for pyDot
         def wrap(s):
             return('"'+str(s)+'"')
+
+        # Helper function to convert between pos string and tuple
+        def parse_pos(n,flag=True):
+            if flag:
+                return [float(x) for x in n[:-1].split(',')]
+            else:
+                return ','.join([str(x) for x in n])+'!'
+
+        # Helper function to sort the nodes of a block in order
+        def sort_block(l):
+            return sorted(l,key=lambda x: (-x[1],-x[0]))
+
+        # Helper function to add invis node next to node
+        def add_invis(orig_pos,x_dir=1,y_dir=1):
+            if not orig_pos[1].is_integer():
+                y_space_ = y_space / 2
+            else:
+                y_space_ = y_space
+            new_pos = [orig_pos[0]+x_space*x_dir,orig_pos[1]+y_space_*y_dir]
+            new_pos = parse_pos(new_pos,False)
+            new_n = pydot.Node(new_pos,style='invis',pos=new_pos,label="")
+            if len(pg.get_node(wrap(new_pos)))==0: pg.add_node(new_n)
+            return new_pos
 
         pg=nx.drawing.nx_pydot.to_pydot(self)
         pg.set_splines("false")
         pg.set_concentrate("true")
+
+        # Make local copy of list of blocks
+        blocks = []
+        for x in self.blocks:
+            if x is not None:
+                blocks.append(x.copy())
+            else:
+                blocks.append(None)
+
+        # Flag gets set if fan-out group has a block
+        block_flags = set()
 
     # Make fan-out pretty:
     # Go through each node
@@ -1028,27 +1063,47 @@ class adder_tree(graph):
 
         for row in self.node_list:
             for n in row:
+
+                # Select nodes in the main part of the graph
                 if n.x==0 or n.y in [0,len(self.node_list)-1] or not node._exists(n):
                     continue
+
+                # Get pre
                 pre = self.pre(n)
+                # Get all nodes to the right that are attached to the same pre
                 rights = iter([x for x in row if self.pre(x)==pre and x.x<n.x and \
                                (node._exists(x) and not node._isbuf(x))])
+                # Get the 1st node to the right
                 r1 = next(rights,None)
-                r2 = next(rights,None)
 
+                # If this node shares a pre with at least one other node
                 if pre is not None and r1 is not None:
 
+                    # Make a new, invis, node next to this node
                     pos_n="{0},{1}!".format(-1*(n.x-0.5),-1*(n.y-0.5))
                     py_n1=pydot.Node(pos_n,style='invis',pos=pos_n,label="")
                     if len(pg.get_node(wrap(pos_n)))==0:
                         pg.add_node(py_n1)
+                        # If this node and the pre are part of the same block
+                        # This invis node also needs to join the block
+                        if pre.block is not None and pre.block==n.block:
+                            blocks[n.block].add(pos_n)
+                            block_flags.add(pre)
 
+                    # Make a new, invis, node next to the 1st right
                     pos_r1="{0},{1}!".format(-1*(r1.x-0.5),-1*(r1.y-0.5))
                     py_n2=pydot.Node(pos_r1,style='invis',pos=pos_r1,label="")
                     if len(pg.get_node(wrap(pos_r1)))==0:
                         pg.add_node(py_n2)
+                        # If this node and the pre are part of the same block
+                        # This invis node also needs to join the block
+                        if pre.block is not None and pre.block==r1.block:
+                            blocks[r1.block].add(pos_r1)
+                            block_flags.add(pre)
 
-                    if r2 is None:
+                    # If there are no more rights
+                    if next(rights,None) is None:
+                        # Add edge from pre to this fan-out group
                         tail = 's' if node._isbuf(pre) else 'sw'
                         pg.add_edge(pydot.Edge(str(pre),pos_r1,
                             headclip="false",arrowhead="none",
@@ -1056,16 +1111,71 @@ class adder_tree(graph):
                         pg.add_edge(pydot.Edge(pos_r1,str(r1),
                             headclip="false",tailclip="false",arrowhead="none",
                             headport='ne'))
+
+                    # Add edge from 1st right to this node
                     pg.add_edge(pydot.Edge(pos_r1,pos_n,
                         headclip="false",tailclip="false",arrowhead="none"))
-                    #    headport='n',tailport='s'))
                     pg.add_edge(pydot.Edge(pos_n,str(n),
                         headclip="false",tailclip="false",arrowhead="none",
                         headport='ne'))
+                    # Add parent invis node to block if needed
+                    if pre in block_flags:
+                        blocks[pre.block].add(pos_r1)
 
+                    # Delete edge from pre to this node
+                    # Delete edge from pre to the 1st right
                     pg.del_edge(wrap(pre),wrap(n))
                     pg.del_edge(wrap(pre),wrap(r1))
 
+# Clusters don't draw boundaries well
+#        for b in self.blocks:
+#            if b is None: continue
+#            sg = pydot.Cluster(str(b),shape="oval",fillcolor="gray90",style='dashed')
+#            for n in b:
+#                sg.add_node(pg.get_node(wrap(n))[0])
+#            pg.add_subgraph(sg)
+        for block in blocks:
+            if block is None: continue
+            # Define how far out the outlines sit
+            x_space = 0.3
+            y_space = 0.3
+            # Get list of nodes in block and sort it
+            orig_list=[]
+            for n in block:
+                # Get position of nodes
+                orig_list.append(parse_pos(pg.get_node(wrap(n))[0].get('pos')))
+            orig_list = sort_block(orig_list)
+            # Make list of invisible side nodes
+            left_list = []
+            right_list = []
+            for i,orig_pos in enumerate(orig_list):
+                if i==0:
+                    new_n = add_invis(orig_pos,1,1)
+                    right_list.append(new_n)
+                new_n = add_invis(orig_pos,-1,1)
+                left_list.append(new_n)
+                new_n = add_invis(orig_pos,1,-1)
+                right_list.append(new_n)
+                if i==len(orig_list)-1:
+                    new_n = add_invis(orig_pos,-1,-1)
+                    left_list.append(new_n)
+            # Add edges
+            for i,x in enumerate(left_list):
+                if i==0: continue
+                pg.add_edge(pydot.Edge(left_list[i-1],x,
+                                       arrowhead="none",style="dashed",color="red",penwidth="3",
+                                       headclip="false",tailclip="false"))
+            for i,x in enumerate(right_list):
+                if i==0: continue
+                pg.add_edge(pydot.Edge(right_list[i-1],x,
+                                       arrowhead="none",style="dashed",color="red",penwidth="3",
+                                       headclip="false",tailclip="false"))
+            pg.add_edge(pydot.Edge(left_list[0],right_list[0],
+                                   arrowhead="none",style="dashed",color="red",penwidth="3",
+                                   headclip="false",tailclip="false"))
+            pg.add_edge(pydot.Edge(left_list[-1],right_list[-1],
+                                   arrowhead="none",style="dashed",color="red",penwidth="3",
+                                   headclip="false",tailclip="false"))
         pg.write_png(fname,prog='neato')
 
 if __name__=="__main__":
