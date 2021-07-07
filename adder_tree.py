@@ -5,6 +5,7 @@ from util import lg
 import networkx as nx
 import pydot
 from functools import reduce
+from itertools import cycle
 
 # Class that generates parallel prefix adder trees
 
@@ -116,8 +117,8 @@ class adder_tree(graph):
 
     # If pre_node is added, HDL connect it to input pins
         if n.m in ['pre_node']:
-            n.ins['a'][0]='$a[{0}]'.format(n.x-1)
-            n.ins['b'][0]='$b[{0}]'.format(n.x-1)
+            n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
+            n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
         if n.m in ['fake_pre']:
             n.ins['cin'][0]='$cin'
 
@@ -993,6 +994,7 @@ class adder_tree(graph):
     def trim_layers(self):
         while(self.trim_layer()): pass
 
+    # Check tree for validity
     def check_tree(self):
         # Re-calculate the tree
         pre_processing = self.node_list[0]
@@ -1010,6 +1012,16 @@ class adder_tree(graph):
             except AssertionError as e:
                 print("\nTree check failed on bit {0}\n".format(i))
                 raise e
+
+    # Recalculate weights of all edges
+    # using logical effort and coupling capacitance approximations
+    def recalc_weights(self):
+        for e in self.edges.data():
+            p = modules[e[0].m]['parasitic_delay']
+            g = modules[e[0].m]['logical_effort']
+            fanout = len(self.post(e[1]))+1
+            tracks = 1
+            e[2]['weight'] = p + g*(fanout+tracks)
 
     # Prints a png
     def png(self,fname='out.png'):
@@ -1134,8 +1146,11 @@ class adder_tree(graph):
 #            for n in b:
 #                sg.add_node(pg.get_node(wrap(n))[0])
 #            pg.add_subgraph(sg)
+        block_colors = cycle(['red','seagreen2','darkorchid1','blue'])
         for block in blocks:
+            color = next(block_colors)
             if block is None: continue
+#            if len(block)<2: continue
             # Define how far out the outlines sit
             x_space = 0.3
             y_space = 0.3
@@ -1163,18 +1178,18 @@ class adder_tree(graph):
             for i,x in enumerate(left_list):
                 if i==0: continue
                 pg.add_edge(pydot.Edge(left_list[i-1],x,
-                                       arrowhead="none",style="dashed",color="red",penwidth="3",
+                                       arrowhead="none",style="dashed",color=color,penwidth="3",
                                        headclip="false",tailclip="false"))
             for i,x in enumerate(right_list):
                 if i==0: continue
                 pg.add_edge(pydot.Edge(right_list[i-1],x,
-                                       arrowhead="none",style="dashed",color="red",penwidth="3",
+                                       arrowhead="none",style="dashed",color=color,penwidth="3",
                                        headclip="false",tailclip="false"))
             pg.add_edge(pydot.Edge(left_list[0],right_list[0],
-                                   arrowhead="none",style="dashed",color="red",penwidth="3",
+                                   arrowhead="none",style="dashed",color=color,penwidth="3",
                                    headclip="false",tailclip="false"))
             pg.add_edge(pydot.Edge(left_list[-1],right_list[-1],
-                                   arrowhead="none",style="dashed",color="red",penwidth="3",
+                                   arrowhead="none",style="dashed",color=color,penwidth="3",
                                    headclip="false",tailclip="false"))
         pg.write_png(fname,prog='neato')
 

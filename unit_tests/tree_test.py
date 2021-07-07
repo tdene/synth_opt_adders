@@ -3,6 +3,8 @@
 import sys
 sys.path.append(".")
 
+import networkx as nx
+
 from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
 from util import lg
@@ -246,6 +248,7 @@ def test(n):
     g.harris_step('FL',top_bit=16)
     # Ladner-Fischer
     g.png('1.png')
+
     g.FT(9,4)
     g.FT(9,4)
     g.FT(11,4)
@@ -254,6 +257,7 @@ def test(n):
     g.FT(5,3)
     g.FT(9,3)
     g.FT(13,3)
+    # Harris
     g.png('2.png')
 
 #    g.harris_step('FL',top_bit=16)
@@ -273,6 +277,10 @@ def test(n):
 
 #    g.harris_step('FL',lg(n)-1)
     g.check_tree()
+    g.recalc_weights()
+    g.add_best_blocks()
+    g.png('3.png')
+    g.hdl('16b_harris_good.v')
 
 def test2(n):
     g = tree(n,"kogge-stone")
@@ -310,8 +318,8 @@ def test2(n):
 def hdl_test():
     g = tree(8,"sklansky")
     g.png('1.png')
-    g.add_block(g[0,0],g[1,1],g[3,2],g[4,3])
-#    g.add_block(g[3,0],g[3,1])
+#    g.add_block(g[0,0],g[1,1],g[3,2],g[4,3])
+    g.add_best_blocks()
     g.png('2.png')
     g.hdl('test.v')
 
@@ -321,9 +329,9 @@ def hdl_test():
 #ladnerfischer()
 #brentkung()
 #sklansky()
-#test(16)
+test(16)
 #test2(8)
-hdl_test()
+#hdl_test()
 
 #sk_bk(32,False)
 #sk_bk(64,False)

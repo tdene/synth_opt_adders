@@ -123,6 +123,13 @@ class adder_node():
     def __repr__(self):
         return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
 
+    # Define less-than by position in tree
+    def __lt__(self,value):
+        return (self.x,self.y)<(value.x,value.y)
+
+    # Define greater-than by position in tree
+    def __gt__(self,value):
+        return (self.x,self.y)>(value.x,value.y)
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
@@ -237,6 +244,10 @@ class adder_graph(nx.MultiDiGraph):
         if adder_node._isbuf(n1):
             edge_kwargs['tailport']='s'
 
+        # Initialize weight to 1
+        edge_kwargs['weight']=1
+
+        # Keep track of which nodes lie upstream
         n2.upstream.add((n1.x,n1.y))
         n2.upstream.update(n1.upstream)
 
@@ -259,16 +270,25 @@ class adder_graph(nx.MultiDiGraph):
     def add_block(self,*nodes):
         if not all([n.block is None for n in nodes]):
             raise ValueError("cannot add node to multiple blocks")
+        if len([n.y for n in nodes])!=len(set([n.y for n in nodes])):
+            raise ValueError("block cannot have multiple nodes on same level")
+        # If the list of nodes is empty, return None
+        if len(nodes)==0:
+            return None
         # Set block attribute for all nodes
+        this_block = self.next_block
         for n in nodes:
-            n.block = self.next_block
+            n.block = this_block
             n.flatten()
         # Add block to blocks list
         new_block = set(nodes)
-        if self.next_block==len(self.blocks)-1: self.blocks.append(None)
-        self.blocks[self.next_block]=new_block
+        if this_block==len(self.blocks)-1: self.blocks.append(None)
+        self.blocks[this_block]=new_block
 
+        # Find next available block ID
         self.next_block = next(x for x in range(1,len(self.blocks)) if self.blocks[x] is None)
+
+        return this_block
 
     # Remove a block
     # Pre-condition: block is a valid block ID
@@ -289,6 +309,51 @@ class adder_graph(nx.MultiDiGraph):
         self.next_block = 1
         self.blocks = [None,None]
 
+    # Calculate longest path from a node down the graph
+    # Note: neither the start nor end point may be buffer / invis
+    def longest_path(self):
+        # Get ordered list of all nodes
+        topo_order = nx.lexicographical_topological_sort(self)
+        topo_order = (x for x in topo_order if x.block is None)
+        # Iterate through graph looking for longest paths
+        dists = {}
+        for n in topo_order:
+            # For each node, first get distances through all predecessors
+            weight_list = [(v,dists[v][1]+e[0]['weight']) \
+                    for v,e in self.pred[n].items() \
+                    if v.block is None]
+            # In case of a tie, select left-most beginpoint
+            dists[n] = max(weight_list,key = lambda x: (x[1],x[0].x),default=(n,0))
+        # Helper function used for filtering
+        def is_node(n):
+            return adder_node._exists(n) and not adder_node._isbuf(n)
+        # Filter out paths that start with a buffer/invis
+        dists = {k:v for k,v in dists.items() if is_node(k) or v[1]!=0}
+        # Filter out paths that end in a buffer/invis
+        # In case of a tie, select right-most endpoint
+        n1 = max(dists,key = lambda x: (is_node(x),dists[x][1],-dists[x][0].x),default=None)
+        # Filter out paths that end in a buffer/invis
+        if not is_node(n1):
+            n1 = None
+        n2 = None
+        path = []
+        # Re-create path
+        while n1 != n2:
+            if not n1 in dists:
+                break
+            path.append(n1)
+            n2 = n1
+            n1 = dists[n1][0]
+        return path
+
+    # Draw blocks for all longest paths
+    def add_best_blocks(self):
+        path = self.longest_path()
+        if len(path)<2:
+            return
+        self.add_block(*path)
+        return self.add_best_blocks()
+
     # Print out HDL
     # Needs to be cleaned
     def hdl(self,out=None):
@@ -296,6 +361,7 @@ class adder_graph(nx.MultiDiGraph):
         #module_defs=""
         head=""; body=""; block_instances="";
         module_defs=modules['grey']['verilog']
+        module_defs+=modules['pre_node']['verilog']
         block_defs=""
         endmodule="\nendmodule\n"
         ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
@@ -304,7 +370,7 @@ class adder_graph(nx.MultiDiGraph):
         head+="\tinput cin;\n"
         head+="\toutput [{0}:0] sum;\n".format(self.w-1)
         head+="\toutput cout;\n"
-        head+="\tpre_node pre_node_{1}_0 ( .a( a[{0}] ), .b( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
+        head+="\tpre_node pre_node_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
         cfinal=self.node_list[-1][-1].ins['gin'][0]
         head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
         ### CLEAN ABOVE PLEASE!!!!!
