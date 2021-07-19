@@ -35,8 +35,9 @@ black['logic'] = lambda gin,pin: [
                  pin[1]&pin[0]
                  ]
 
-black['parasitic_delay'] = 7.5/3
-black['logical_effort'] = 2
+black['pd'] = 7.5/3
+black['le'] = 5.0/3
+black['diag_le'] = 6.0/3
 
 modules['black']=black
 
@@ -69,8 +70,8 @@ grey['logic'] = lambda gin,pin: [
                 gin[1]|(pin&gin[0])
                 ]
 
-grey['parasitic_delay'] = 7.5/3
-grey['logical_effort'] = 2
+grey['pd'] = 7.5/3
+grey['le'] = 2
 
 modules['grey']=grey
 
@@ -104,8 +105,8 @@ rblk['logic'] = lambda gin,pin: [
                 pin[1]&pin[0]
                 ]
 
-rblk['parasitic_delay'] = 5/3
-rblk['logical_effort'] = 2
+rblk['pd'] = 5/3
+rblk['le'] = 2
 
 modules['rblk']=rblk
 
@@ -137,8 +138,8 @@ rgry['logic'] = lambda gin: [
                 gin[1]|gin[0]
                 ]
 
-rgry['parasitic_delay'] = 5/3
-rgry['logical_effort'] = 2
+rgry['pd'] = 5/3
+rgry['le'] = 2
 
 modules['rgry']=rgry
 
@@ -165,8 +166,8 @@ buffer_node['outs']=[('gout',1),('pout',1)]
 
 buffer_node['logic'] = lambda pin,gin: [pin,gin]
 
-buffer_node['parasitic_delay'] = 0
-buffer_node['logical_effort'] = 0
+buffer_node['pd'] = 0
+buffer_node['le'] = 0
 
 modules['buffer_node']=buffer_node
 
@@ -187,8 +188,8 @@ invis_node['outs']=[('gout',1),('pout',1)]
 
 invis_node['logic'] = lambda pin,gin: [pin,gin]
 
-invis_node['parasitic_delay'] = buffer_node['parasitic_delay']
-invis_node['logical_effort'] = buffer_node['logical_effort']
+invis_node['pd'] = buffer_node['pd']
+invis_node['le'] = buffer_node['le']
 
 modules['invis_node']=invis_node
 
@@ -220,8 +221,8 @@ pre_node['logic'] = lambda a,b: [
                    a&b
                    ]
 
-pre_node['parasitic_delay'] = 9/3
-pre_node['logical_effort'] = 9/3
+pre_node['pd'] = 9/3
+pre_node['le'] = 9/3
 
 modules['pre_node']=pre_node
 
@@ -272,8 +273,8 @@ xor_node['outs']=[('sum',1)]
 
 xor_node['logic'] = lambda pin,gin: [pin^gin]
  
-xor_node['parasitic_delay'] = 9/3
-xor_node['logical_effort'] = 9/3
+xor_node['pd'] = 9/3
+xor_node['le'] = 9/3
 
 modules['xor_node']=xor_node
 

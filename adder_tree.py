@@ -217,10 +217,10 @@ class adder_tree(graph):
         if top is None: return
 
         if 'pin' in n.ins and 'pout' in top.outs:
-            pos=0
+            pos=len(n.ins['pin'])-1
             self.add_edge(top,('pout',0),n,('pin',pos))
         if 'gin' in n.ins and 'gout' in top.outs:
-            pos=0
+            pos=len(n.ins['pin'])-1
             self.add_edge(top,('gout',0),n,('gin',pos))
 
         n.pg = n.pg|top.pg
@@ -232,10 +232,10 @@ class adder_tree(graph):
         if pre is None: return
 
         if 'pin' in n.ins and len(n.ins['pin'])>1:
-            pos=len(n.ins['pin'])-1
+            pos=0
             self.add_edge(pre,('pout',0),n,('pin',pos))
         if 'gin' in n.ins and len(n.ins['pin'])>1:
-            pos=len(n.ins['gin'])-1
+            pos=0
             self.add_edge(pre,('gout',0),n,('gin',pos))
 
         n.pg = n.pg|pre.pg
@@ -1017,8 +1017,11 @@ class adder_tree(graph):
     # using logical effort and coupling capacitance approximations
     def recalc_weights(self):
         for e in self.edges.data():
-            p = modules[e[0].m]['parasitic_delay']
-            g = modules[e[0].m]['logical_effort']
+            p = modules[e[1].m]['pd']
+            g = modules[e[1].m]['le']
+            diag_le = modules[e[1].m].get('diag_le',None)
+            if diag_le is not None and e[0].x!=e[1].x:
+                g = diag_le
             fanout = len(self.post(e[1]))+1
             tracks = 1
             e[2]['weight'] = p + g*(fanout+tracks)
@@ -1146,7 +1149,7 @@ class adder_tree(graph):
 #            for n in b:
 #                sg.add_node(pg.get_node(wrap(n))[0])
 #            pg.add_subgraph(sg)
-        block_colors = cycle(['red','seagreen2','darkorchid1','blue'])
+        block_colors = cycle(['seagreen2','red','darkorchid1','blue'])
         for block in blocks:
             color = next(block_colors)
             if block is None: continue

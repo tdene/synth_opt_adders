@@ -55,7 +55,7 @@ class adder_node():
     # Static helper function that checks whether a node is
     # not none, pre-processing, or post-processing
     def _in_tree(n):
-        return n is not None and n.m not in ['post_node','pre_node']
+        return n is not None and n.m not in ['post_node','pre_node','fake_pre']
 
     # The node object has dictionaries of input/output edges
     # These come in 4 possible flavors:
@@ -85,7 +85,7 @@ class adder_node():
         tmp.update(self.outs)
         for a in tmp:
             ret+=" ."+a+"( {"
-            ret+=','.join([adder_node._parse_net(x) for x in tmp[a]])
+            ret+=','.join(reversed([adder_node._parse_net(x) for x in tmp[a]]))
             ret+='} ),'
         ret=ret[:-1]+' );'
         return ret
@@ -279,7 +279,6 @@ class adder_graph(nx.MultiDiGraph):
         this_block = self.next_block
         for n in nodes:
             n.block = this_block
-            n.flatten()
         # Add block to blocks list
         new_block = set(nodes)
         if this_block==len(self.blocks)-1: self.blocks.append(None)
@@ -298,7 +297,6 @@ class adder_graph(nx.MultiDiGraph):
             raise ValueError("trying to remove non-existent block")
         for n in self.blocks[block]:
             n.block = None
-            n.flatten(False)
         self.blocks[block] = None
 
     # Remove all block from graph
@@ -314,7 +312,9 @@ class adder_graph(nx.MultiDiGraph):
     def longest_path(self):
         # Get ordered list of all nodes
         topo_order = nx.lexicographical_topological_sort(self)
-        topo_order = (x for x in topo_order if x.block is None)
+        topo_order = (x for x in topo_order if (x.block is None) \
+#                and (x.m not in ['post_node','pre_node','fake_pre']) \
+                )
         # Iterate through graph looking for longest paths
         dists = {}
         for n in topo_order:
@@ -326,18 +326,23 @@ class adder_graph(nx.MultiDiGraph):
             dists[n] = max(weight_list,key = lambda x: (x[1],x[0].x),default=(n,0))
         # Helper function used for filtering
         def is_node(n):
-            return adder_node._exists(n) and not adder_node._isbuf(n)
+#            return adder_node._exists(n) and not adder_node._isbuf(n)
+            return adder_node._exists(n)
         # Filter out paths that start with a buffer/invis
         dists = {k:v for k,v in dists.items() if is_node(k) or v[1]!=0}
         # Filter out paths that end in a buffer/invis
         # In case of a tie, select right-most endpoint
-        n1 = max(dists,key = lambda x: (is_node(x),dists[x][1],-dists[x][0].x),default=None)
+        n1 = max(dists,key = lambda x: (x!=dists[x][0],is_node(x),dists[x][1],-dists[x][0].x),default=None)
         # Filter out paths that end in a buffer/invis
-        if not is_node(n1):
-            n1 = None
+        if not is_node(n1): n1 = None
+        # Filter out single-element paths:
+        if n1==dists[n1][0]: n1 = None
+        if dists[n1][0] not in dists: n1 = None
+        # If no valid path, return None
+        if n1 is None: return None
+        # Re-create path
         n2 = None
         path = []
-        # Re-create path
         while n1 != n2:
             if not n1 in dists:
                 break
@@ -349,19 +354,21 @@ class adder_graph(nx.MultiDiGraph):
     # Draw blocks for all longest paths
     def add_best_blocks(self):
         path = self.longest_path()
-        if len(path)<2:
-            return
-        self.add_block(*path)
-        return self.add_best_blocks()
+        if path is not None:
+            self.add_block(*path)
+            return self.add_best_blocks()
 
     # Print out HDL
     # Needs to be cleaned
     def hdl(self,out=None):
+        def no_brack(x):
+            return x.replace('[','_').replace(']','')
         module_list=[]
         #module_defs=""
         head=""; body=""; block_instances="";
-        module_defs=modules['grey']['verilog']
-        module_defs+=modules['pre_node']['verilog']
+        module_defs=set()
+        module_defs.add('grey')
+        module_defs.add('pre_node')
         block_defs=""
         endmodule="\nendmodule\n"
         ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
@@ -370,26 +377,30 @@ class adder_graph(nx.MultiDiGraph):
         head+="\tinput cin;\n"
         head+="\toutput [{0}:0] sum;\n".format(self.w-1)
         head+="\toutput cout;\n"
+        head+="\twire"
+        for x in range(1,self.next_net):
+            head+=" n{0},".format(x)
+        head+=" g_lsb, p_lsb,"
+        for x in range(self.w):
+            head+=" g{0}, p{0},".format(x)
+        head = head[:-1]+";\n"
         head+="\tpre_node pre_node_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
         cfinal=self.node_list[-1][-1].ins['gin'][0]
         head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
         ### CLEAN ABOVE PLEASE!!!!!
         for a in self.node_list:
             for n in a:
+                if n.m in ['post_node']:
+                    n.ins['pin'][0]="$p{0}".format(n.x)
                 if n.block is not None:
                     continue
                 if n.m in ['buffer_node','invis_node']:
                     n.flatten()
-                if n.m in ['post_node']:
-                    tmp = n.ins['pin'][0]
-                    n.ins['pin'][0]="$p{0}".format(n.x)
-                    body+=n.hdl()+'\n'
-                    n.ins['pin'][0] = tmp
-                else:
-                    body+=n.hdl()+'\n'
+                #n.flatten()
+                body+=n.hdl()+'\n'
                 if n.m not in module_list:
                     module_list.append(n.m)
-                    module_defs+=modules[n.m]['verilog']
+                    module_defs.add(n.m)
 
         # Iterate over all blocks
         for b in range(len(self.blocks)):
@@ -416,7 +427,7 @@ class adder_graph(nx.MultiDiGraph):
             inst_b = "    block_{0} block_{0}_instance (".format(b)
             tmp=ins|outs
             # Add ins/outs to block instantiation with dot notation
-            for x in tmp: inst_b+=" .{0} ( {0} ),".format(x)
+            for x in tmp: inst_b+=" .{0} ( {1} ),".format(no_brack(x),x)
             inst_b=inst_b[:-1]+' );\n'
             # Add block instantiation to list of block_instances
             block_instances+=inst_b
@@ -424,27 +435,40 @@ class adder_graph(nx.MultiDiGraph):
             # Define block
             block_def="\nmodule block_{0}(".format(b)
             # List all ins/outs in module definition
-            for x in tmp: block_def+=' '+x+','
+            for x in tmp: block_def+=' '+no_brack(x)+','
             block_def = block_def[:-1]+');\n\n'
             # Declare all inputs and outputs
             block_def += "    input"
-            for x in ins: block_def+=" {0},".format(x)
+            for x in ins: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
 
             block_def += "    output"
-            for x in outs: block_def+=" {0},".format(x)
+            for x in outs: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
             block_def += '\n'
             for n in nodes:
-                block_def+=n.hdl()+'\n'
+                if n.m in ['post_node']:
+                    tmp = n.ins['pin'][0]
+                    n.ins['pin'][0]="$p{0}".format(n.x)
+                    n.flatten()
+                    block_def+=no_brack(n.hdl())+'\n'
+                    n.ins['pin'][0] = tmp
+                else:
+                    n.flatten()
+                    block_def+=no_brack(n.hdl())+'\n'
             # Write endmodule line
             block_def+=endmodule
             # Add block definition to list of block_defs
             block_defs+=block_def
 
         # end iterate over all blocks
-        ret=head+body+block_instances+endmodule+module_defs+block_defs
+        
+        # Turn module defs to text
+        module_def_text=""
+        for a in module_defs:
+            module_def_text+=modules[a]['verilog']
+        ret=head+body+block_instances+endmodule+module_def_text+block_defs
         if out is not None:
             with open(out,'w') as f:
                 print(ret,file=f)
