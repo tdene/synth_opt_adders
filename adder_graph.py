@@ -41,6 +41,9 @@ class adder_node():
         # A list of all nodes that directly or indirectly feed into this one
         self.upstream=set()
 
+        # All nodes start, by default, outside of any blocks
+        self.block=None
+
     # Static helper function that checks whether a node is not invis
     def _exists(n):
         return n is not None and n.m not in ['invis_node']
@@ -52,24 +55,26 @@ class adder_node():
     # Static helper function that checks whether a node is
     # not none, pre-processing, or post-processing
     def _in_tree(n):
-        return n is not None and n.m not in ['post_node','pre_node']
+        return n is not None and n.m not in ['post_node','pre_node','fake_pre']
 
     # The node object has dictionaries of input/output edges
-    # These come in 3 possible flavors:
-    # - None (unassigned net) -> parsed to 1'b0
+    # These come in 4 possible flavors:
+    # - None (unassigned net) -> parsed to n0
     # - Integer (assigned net) -> parsed to n`Integer
+    # - Hardcoded name ($net_name) -> parsed to net_name
     # - Hardcoded value (x'bx) -> kept as is
+    # ::: UPDATE ::: removing 4th functionality
     # This is a static method that performs this conversion
 
     def _parse_net(x):
         if x is None:
-            return "1'b0"
+            return "n0"
         if isinstance(x,int):
             return "n"+str(x)
         if "$" in x:
             return x.replace("$","")
-        if "'" in x:
-            return x
+#        if "'" in x:
+#            return x
         raise TypeError("net stored in node {0} is invalid".format(repr(x)))
 
     # Return single line of verilog consisting of module instantiation
@@ -80,7 +85,7 @@ class adder_node():
         tmp.update(self.outs)
         for a in tmp:
             ret+=" ."+a+"( {"
-            ret+=','.join([adder_node._parse_net(x) for x in tmp[a]])
+            ret+=','.join(reversed([adder_node._parse_net(x) for x in tmp[a]]))
             ret+='} ),'
         ret=ret[:-1]+' );'
         return ret
@@ -118,6 +123,13 @@ class adder_node():
     def __repr__(self):
         return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
 
+    # Define less-than by position in tree
+    def __lt__(self,value):
+        return (self.x,self.y)<(value.x,value.y)
+
+    # Define greater-than by position in tree
+    def __gt__(self,value):
+        return (self.x,self.y)>(value.x,value.y)
 
 # Defines a di-graph of adder nodes and edges
 # The basic internal structure of the graph is a 2-D array of nodes
@@ -133,9 +145,21 @@ class adder_graph(nx.MultiDiGraph):
         # Initialize graph to "width" of width
         self.node_list=[[None]*self.w]
 
+        # Procedurally-generated net names start with "n1"
         self.next_net = 1
 
+        # Procedurally-generated block names start with "block1"
+        self.next_block = 1
+        self.blocks = [None,None]
+
         super().__init__(self)
+
+    # Simplify self.node_list[y][x] to self[x,y]
+    def __getitem__(self,n):
+        # Auto-raise error if n is not iterable with the len call
+        if len(n)!=2:
+            raise ValueError("must input two numbers to access node in graph")
+        return self.node_list[n[1]][n[0]]
 
     # Pre-condtions:
     # 0 <= x < width
@@ -220,6 +244,10 @@ class adder_graph(nx.MultiDiGraph):
         if adder_node._isbuf(n1):
             edge_kwargs['tailport']='s'
 
+        # Initialize weight to 1
+        edge_kwargs['weight']=1
+
+        # Keep track of which nodes lie upstream
         n2.upstream.add((n1.x,n1.y))
         n2.upstream.update(n1.upstream)
 
@@ -235,42 +263,212 @@ class adder_graph(nx.MultiDiGraph):
         except nx.NetworkXError:
             return
 
-    # Simplify self.node_list[y][x] to self[x,y]
-    def __getitem__(self,n):
-        # Auto-raise error if n is not iterable with the len call
-        if len(n)!=2:
-            raise ValueError("must input two numbers to access node in graph")
-        return self.node_list[n[1]][n[0]]
+    # Create a new block
+    # Pre-condition:
+    # nodes is a list of nodes, all of which have attribute block = None
+    # Post-condition: adds new block, containing nodes
+    def add_block(self,*nodes):
+        if not all([n.block is None for n in nodes]):
+            raise ValueError("cannot add node to multiple blocks")
+        if len([n.y for n in nodes])!=len(set([n.y for n in nodes])):
+            raise ValueError("block cannot have multiple nodes on same level")
+        # If the list of nodes is empty, return None
+        if len(nodes)==0:
+            return None
+        # Set block attribute for all nodes
+        this_block = self.next_block
+        for n in nodes:
+            n.block = this_block
+        # Add block to blocks list
+        new_block = set(nodes)
+        if this_block==len(self.blocks)-1: self.blocks.append(None)
+        self.blocks[this_block]=new_block
 
+        # Find next available block ID
+        self.next_block = next(x for x in range(1,len(self.blocks)) if self.blocks[x] is None)
+
+        return this_block
+
+    # Remove a block
+    # Pre-condition: block is a valid block ID
+    # Post-condition: removes block
+    def remove_block(self,block):
+        if block>=len(self.blocks) or self.blocks[block] is None:
+            raise ValueError("trying to remove non-existent block")
+        for n in self.blocks[block]:
+            n.block = None
+        self.blocks[block] = None
+
+    # Remove all block from graph
+    def remove_all_blocks(self):
+        for b in range(len(self.blocks)):
+            if self.blocks[b] is not None:
+                self.remove_block(b)
+        self.next_block = 1
+        self.blocks = [None,None]
+
+    # Calculate longest path from a node down the graph
+    # Note: neither the start nor end point may be buffer / invis
+    def longest_path(self):
+        # Get ordered list of all nodes
+        topo_order = nx.lexicographical_topological_sort(self)
+        topo_order = (x for x in topo_order if (x.block is None) \
+#                and (x.m not in ['post_node','pre_node','fake_pre']) \
+                )
+        # Iterate through graph looking for longest paths
+        dists = {}
+        for n in topo_order:
+            # For each node, first get distances through all predecessors
+            weight_list = [(v,dists[v][1]+e[0]['weight']) \
+                    for v,e in self.pred[n].items() \
+                    if v.block is None]
+            # In case of a tie, select left-most beginpoint
+            dists[n] = max(weight_list,key = lambda x: (x[1],x[0].x),default=(n,0))
+        # Helper function used for filtering
+        def is_node(n):
+#            return adder_node._exists(n) and not adder_node._isbuf(n)
+            return adder_node._exists(n)
+        # Filter out paths that start with a buffer/invis
+        dists = {k:v for k,v in dists.items() if is_node(k) or v[1]!=0}
+        # Filter out paths that end in a buffer/invis
+        # In case of a tie, select right-most endpoint
+        n1 = max(dists,key = lambda x: (x!=dists[x][0],is_node(x),dists[x][1],-dists[x][0].x),default=None)
+        # Filter out paths that end in a buffer/invis
+        if not is_node(n1): n1 = None
+        # Filter out single-element paths:
+        if n1==dists[n1][0]: n1 = None
+        if dists[n1][0] not in dists: n1 = None
+        # If no valid path, return None
+        if n1 is None: return None
+        # Re-create path
+        n2 = None
+        path = []
+        while n1 != n2:
+            if not n1 in dists:
+                break
+            path.append(n1)
+            n2 = n1
+            n1 = dists[n1][0]
+        return path
+
+    # Draw blocks for all longest paths
+    def add_best_blocks(self):
+        path = self.longest_path()
+        if path is not None:
+            self.add_block(*path)
+            return self.add_best_blocks()
+
+    # Print out HDL
+    # Needs to be cleaned
     def hdl(self,out=None):
+        def no_brack(x):
+            return x.replace('[','_').replace(']','')
         module_list=[]
         #module_defs=""
-        module_defs=modules['grey']['verilog']
-        ret="\nmodule adder(cout, sum, a, b, cin);\n"
-        ret+="\tinput [{0}:0] a, b;\n".format(self.w-1)
-        ret+="\tinput cin;\n"
-        ret+="\toutput [{0}:0] sum;\n".format(self.w-1)
-        ret+="\toutput cout;\n"
-        ret+="\tpre_node pre_node_{1}_0 ( .a( a[{0}] ), .b( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
+        head=""; body=""; block_instances="";
+        module_defs=set()
+        module_defs.add('grey')
+        module_defs.add('pre_node')
+        block_defs=""
+        endmodule="\nendmodule\n"
+        ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
+        head="\nmodule adder(cout, sum, a, b, cin);\n"
+        head+="\tinput [{0}:0] a, b;\n".format(self.w-1)
+        head+="\tinput cin;\n"
+        head+="\toutput [{0}:0] sum;\n".format(self.w-1)
+        head+="\toutput cout;\n"
+        head+="\twire"
+        for x in range(1,self.next_net):
+            head+=" n{0},".format(x)
+        head+=" g_lsb, p_lsb,"
+        for x in range(self.w):
+            head+=" g{0}, p{0},".format(x)
+        head = head[:-1]+";\n"
+        head+="\tpre_node pre_node_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
         cfinal=self.node_list[-1][-1].ins['gin'][0]
-        ret+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        ### CLEAN ABOVE PLEASE!!!!!
         for a in self.node_list:
             for n in a:
-#                if n.m in ['post_node','buffer_node','invis_node']:
+                if n.m in ['post_node']:
+                    n.ins['pin'][0]="$p{0}".format(n.x)
+                if n.block is not None:
+                    continue
                 if n.m in ['buffer_node','invis_node']:
                     n.flatten()
+                #n.flatten()
+                body+=n.hdl()+'\n'
+                if n.m not in module_list:
+                    module_list.append(n.m)
+                    module_defs.add(n.m)
+
+        # Iterate over all blocks
+        for b in range(len(self.blocks)):
+            nodes = self.blocks[b]
+            # Skip empty blocks
+            if nodes is None: continue
+            # For each block
+            # Create list of inputs and outputs
+            ins = set()
+            outs = set()
+            # Iterate over all nodes in a block
+            for n in nodes:
+                # Add ins/outs to block ins/outs
+                for x in n.ins.values(): ins.update([adder_node._parse_net(y) for y in x])
+                for x in n.outs.values(): outs.update([adder_node._parse_net(y) for y in x])
+            # end iterate over all nodes in a block
+
+            # Should a signal be generated as an output by
+            # a node inside the block, it is clearly not a
+            # block input, and should not be in the header.
+            ins = ins - outs
+
+            # Instantiate block
+            inst_b = "    block_{0} block_{0}_instance (".format(b)
+            tmp=ins|outs
+            # Add ins/outs to block instantiation with dot notation
+            for x in tmp: inst_b+=" .{0} ( {1} ),".format(no_brack(x),x)
+            inst_b=inst_b[:-1]+' );\n'
+            # Add block instantiation to list of block_instances
+            block_instances+=inst_b
+
+            # Define block
+            block_def="\nmodule block_{0}(".format(b)
+            # List all ins/outs in module definition
+            for x in tmp: block_def+=' '+no_brack(x)+','
+            block_def = block_def[:-1]+');\n\n'
+            # Declare all inputs and outputs
+            block_def += "    input"
+            for x in ins: block_def+=" {0},".format(no_brack(x))
+            block_def = block_def[:-1]+";\n"
+
+            block_def += "    output"
+            for x in outs: block_def+=" {0},".format(no_brack(x))
+            block_def = block_def[:-1]+";\n"
+            # Put all nodes' hdl inside block definition
+            block_def += '\n'
+            for n in nodes:
                 if n.m in ['post_node']:
                     tmp = n.ins['pin'][0]
                     n.ins['pin'][0]="$p{0}".format(n.x)
-                    ret+=n.hdl()+'\n'
+                    n.flatten()
+                    block_def+=no_brack(n.hdl())+'\n'
                     n.ins['pin'][0] = tmp
                 else:
-                    ret+=n.hdl()+'\n'
-                if n.m not in module_list:
-                    module_list.append(n.m)
-                    module_defs+=modules[n.m]['verilog']
-        ret+="endmodule\n"
-        ret=ret+module_defs
+                    n.flatten()
+                    block_def+=no_brack(n.hdl())+'\n'
+            # Write endmodule line
+            block_def+=endmodule
+            # Add block definition to list of block_defs
+            block_defs+=block_def
+
+        # end iterate over all blocks
+        
+        # Turn module defs to text
+        module_def_text=""
+        for a in module_defs:
+            module_def_text+=modules[a]['verilog']
+        ret=head+body+block_instances+endmodule+module_def_text+block_defs
         if out is not None:
             with open(out,'w') as f:
                 print(ret,file=f)

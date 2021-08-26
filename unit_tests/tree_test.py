@@ -3,6 +3,8 @@
 import sys
 sys.path.append(".")
 
+import networkx as nx
+
 from adder_graph import adder_node as node
 from adder_tree import adder_tree as tree
 from util import lg
@@ -241,18 +243,30 @@ def sk_bk(n,hybrid=False):
     
 def test(n):
     g = tree(n,"sklansky")
-    print('hi')
     g.harris_step('FL',top_bit=4)
     g.harris_step('FL',top_bit=8)
     g.harris_step('FL',top_bit=16)
-    print('hi')
+    # Ladner-Fischer
     g.png('1.png')
-    g.harris_step('FL',top_bit=16)
-    g.FL(5)
-    g.png('2.png')
-    g.png('3.png')
+
+    g.FT(9,4)
+    g.FT(9,4)
     g.FT(11,4)
-    g.png('4.png')
+    g.FT(11,4)
+
+    g.FT(5,3)
+    g.FT(9,3)
+    g.FT(13,3)
+    # Harris
+    g.png('2.png')
+
+#    g.harris_step('FL',top_bit=16)
+#    g.FL(5)
+#    # Ladner-Fischer
+#    g.png('2.png')
+#    g.FT(11,4)
+#    # Han-Carlson
+#    g.png('4.png')
 
 #    g.harris_step('FL',top_bit=16)
 #    print('hi')
@@ -263,34 +277,96 @@ def test(n):
 
 #    g.harris_step('FL',lg(n)-1)
     g.check_tree()
+    g.recalc_weights()
+    g.add_best_blocks()
+    g.png('3.png')
+    g.hdl('16b_harris_good.v')
 
 def test2(n):
     g = tree(n,"kogge-stone")
+    g.png('1.png')
     g.TF(4,3)
     g.TF(6,3)
-    g.TF(2,2)
-    g.TF(4,2)
-    g.TF(6,2)
-    g.png('1.png')
-    exit()
+    g.png('2.png')
+    g.TF(2)
+    g.FL(2)
     g.FL(4)
     g.TF(4,4)
     g.FL(6)
     g.TF(6,4)
     g.FL(2)
-    g.png('2.png')
     g.LF(2)
     g.FT(6,4)
     g.LF(6)
     g.FT(4,4)
     g.LF(4)
-    g.png('3.png')
-    g.FT(6,2)
-    g.FT(4,2)
-    g.png('4.png')
     g.LF(2)
-    g.FT(2)
+    g.FT(2,2)
+    g.FT(4,2)
+    g.FT(6,2)
+    g.png('3.png')
+    g.FT(4,3)
+    g.FT(4,3)
+    g.FT(5,3)
+    g.FT(5,3)
+    g.FT(4,2)
+    g.FT(4,3)
+    g.FT(6,3)
+    g.png('4.png')
     g.check_tree()
+
+def hdl_test():
+    g = tree(8,"sklansky")
+    g.png('1.png')
+#    g.add_block(g[0,0],g[1,1],g[3,2],g[4,3])
+    g.add_best_blocks()
+    g.png('2.png')
+    g.hdl('test.v')
+
+def test3_bk(n):
+    g = tree(n,"sklansky")
+    g.harris_step('FL',top_bit=4)
+    g.harris_step('FL',top_bit=8)
+    g.harris_step('FL',top_bit=16)
+    g.harris_step('FL',top_bit=32)
+    g.harris_step('FL',5,top_bit=64)
+#    g.hdl('{0}b_brent-kung_flat.v'.format(n))
+#    exit()
+    g.hdl('{0}b_brent-kung_unflat.v'.format(n))
+    g = tree(n,"sklansky")
+    g.harris_step('FL',top_bit=4)
+    g.harris_step('FL',top_bit=8)
+    g.harris_step('FL',top_bit=16)
+    g.harris_step('FL',top_bit=32)
+    g.harris_step('FL',5,top_bit=64)
+    g.png('1.png')
+    g.recalc_weights()
+    g.add_best_blocks()
+    g.png('2.png')
+    g.hdl('{0}b_brent-kung_good.v'.format(n))
+
+def test3_sk(n):
+    g = tree(n,"sklansky")
+    #g.hdl('{0}b_sklansky_flat.v'.format(n))
+    #exit()
+    g.hdl('{0}b_sklansky_unflat.v'.format(n))
+    g = tree(n,"sklansky")
+    g.png('1.png')
+    g.recalc_weights()
+    g.add_best_blocks()
+    g.png('2.png')
+    g.hdl('{0}b_sklansky_good.v'.format(n))
+
+def test3_ks(n):
+    g = tree(n,"kogge-stone")
+    #g.hdl('{0}b_kogge-stone_flat.v'.format(n))
+    #exit()
+    g.hdl('{0}b_kogge-stone_unflat.v'.format(n))
+    g = tree(n,"kogge-stone")
+    g.png('1.png')
+    g.recalc_weights()
+    g.add_best_blocks()
+    g.png('2.png')
 
 #LFT()
 #knowles()
@@ -298,8 +374,10 @@ def test2(n):
 #ladnerfischer()
 #brentkung()
 #sklansky()
-#test(16)
-test2(8)
+test(16)
+#test2(8)
+#test3_ks(64)
+#hdl_test()
 
 #sk_bk(32,False)
 #sk_bk(64,False)

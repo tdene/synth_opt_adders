@@ -35,6 +35,10 @@ black['logic'] = lambda gin,pin: [
                  pin[1]&pin[0]
                  ]
 
+black['pd'] = 7.5/3
+black['le'] = 5.0/3
+black['diag_le'] = 6.0/3
+
 modules['black']=black
 
 ### Grey cells
@@ -65,6 +69,9 @@ grey['outs']=[('gout',1)]
 grey['logic'] = lambda gin,pin: [
                 gin[1]|(pin&gin[0])
                 ]
+
+grey['pd'] = 7.5/3
+grey['le'] = 2
 
 modules['grey']=grey
 
@@ -98,6 +105,9 @@ rblk['logic'] = lambda gin,pin: [
                 pin[1]&pin[0]
                 ]
 
+rblk['pd'] = 5/3
+rblk['le'] = 2
+
 modules['rblk']=rblk
 
 ### Reduced Grey cell
@@ -128,6 +138,9 @@ rgry['logic'] = lambda gin: [
                 gin[1]|gin[0]
                 ]
 
+rgry['pd'] = 5/3
+rgry['le'] = 2
+
 modules['rgry']=rgry
 
 ### Buffer nodes
@@ -153,6 +166,9 @@ buffer_node['outs']=[('gout',1),('pout',1)]
 
 buffer_node['logic'] = lambda pin,gin: [pin,gin]
 
+buffer_node['pd'] = 0
+buffer_node['le'] = 0
+
 modules['buffer_node']=buffer_node
 
 ### Invis nodes
@@ -172,19 +188,22 @@ invis_node['outs']=[('gout',1),('pout',1)]
 
 invis_node['logic'] = lambda pin,gin: [pin,gin]
 
+invis_node['pd'] = buffer_node['pd']
+invis_node['le'] = buffer_node['le']
+
 modules['invis_node']=invis_node
 
 ### Pre-processing node
 pre_node=dict()
 
 pre_node['verilog']="""
-module pre_node(a, b, pout, gout);
+module pre_node(a_in, b_in, pout, gout);
 
-    input a, b;
+    input a_in, b_in;
     output pout, gout;
 
-    assign pout=a^b;
-    assign gout=a&b;
+    assign pout=a_in^b_in;
+    assign gout=a_in&b_in;
 
 endmodule
 """
@@ -194,13 +213,16 @@ pre_node['fillcolor']='white'
 pre_node['label']='pre'
 pre_node['style']='dashed'
 
-pre_node['ins']=[('a',1),('b',1)]
+pre_node['ins']=[('a_in',1),('b_in',1)]
 pre_node['outs']=[('pout',1),('gout',1)]
 
 pre_node['logic'] = lambda a,b: [
                    a^b,
                    a&b
                    ]
+
+pre_node['pd'] = 9/3
+pre_node['le'] = 9/3
 
 modules['pre_node']=pre_node
 
@@ -250,6 +272,9 @@ xor_node['ins']=[('pin',1),('gin',1)]
 xor_node['outs']=[('sum',1)]
 
 xor_node['logic'] = lambda pin,gin: [pin^gin]
+ 
+xor_node['pd'] = 9/3
+xor_node['le'] = 9/3
 
 modules['xor_node']=xor_node
 
