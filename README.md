@@ -26,7 +26,7 @@ Despite the overall elegance and great usefulness of Harris's taxonomy, for exam
 
 What if there was a way to navigate the entire space of valid adder trees, incrementally and bit-targeted, using a minimal and circular, transform group?
 
-This repository seeks to implement this using transforms between the following three states \[L, T, F\]:
+This repository seeks to implement this using transforms between the following three states \[L, T, F\]: [4]
 
 <img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/L.png?raw=true" width="150"/>
 
@@ -97,6 +97,7 @@ file in a new window.
 ```
 g.png('1.png')
 ```
+<img src="./demo/1.png" width="1200"/>
 
 Next, we will turn this Sklansky adder into a Sklansky / Brent-Kung hybrid.
 This is done by taking "Harris steps" on the adder's less-significant half. As
@@ -105,6 +106,7 @@ an example, take one Harris step in the FL direction and view the output:
 g.harris_step('FL',1,top_bit=32//2)
 g.png('2.png')
 ```
+<img src="./demo/2.png" width="1200"/>
 
 You will notice that the bottom half of the prefix structure is now a
 Ladner-Fischer structure with maximum fan-out of 4. By taking several more
@@ -117,6 +119,7 @@ g.harris_step('FL',1,top_bit=32//4)
 g.harris_step('FL',1,top_bit=32//8)
 g.png('3.png')
 ```
+<img src="./demo/3.png" width="1200"/>
 
 Looking at "3.png", a hybrid Sklansky / Brent-Kung hybrid is easily
 recognizable. Let us now perform some point-targeted transforms. For example,
@@ -133,6 +136,7 @@ g.FL(17,5)
 g.FL(16,5)
 g.png('4.png')
 ```
+<img src="./demo/4.png" width="1200"/>
 
 We may also choose to turn some of the fan-out for wire-tracks. Note that in
 the current version of this code-base, this operation runs in O(n^2) time.
@@ -144,6 +148,7 @@ g.png('5.png')
 g.FT(13,6)
 g.png('6.png')
 ```
+<img src="./demo/6.png" width="1200"/>
 
 At any point in time, we may query the data structure in a multitude of ways.
 The next example queries what node is present at the coordinates (13,6), its
@@ -168,6 +173,7 @@ g.add_block(*worst_path_3)
 g.png('7.png')
 g.hdl('sample.v')
 ```
+<img src="./demo/7.png" width="1200"/>
 
 The final output image, "7.png", contains a visualization of the flattening
 performed by the last step. The file "sample.v" contains HDL for the design
@@ -185,3 +191,5 @@ optimization.
 [2] D. Harris, "A taxonomy of parallel prefix networks," The Thirty-Seventh Asilomar Conference on Signals, Systems & Computers, 2003, 2003, pp. 2213-2217 Vol.2
 
 [3] R. Zimmermann, "Non-Heuristic Optimization and Synthesis of Parallel-Prefix Adders", in Proc. Int. Workshop on Logic and Architecture Synthesis (IWLAS'96), Grenoble, France, Dec. 1996, pp. 123-132.
+
+[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space", unpublished
