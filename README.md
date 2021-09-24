@@ -192,4 +192,4 @@ optimization.
 
 [3] R. Zimmermann, "Non-Heuristic Optimization and Synthesis of Parallel-Prefix Adders", in Proc. Int. Workshop on Logic and Architecture Synthesis (IWLAS'96), Grenoble, France, Dec. 1996, pp. 123-132.
 
-[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space", unpublished
+[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space", International Conference on Computer Design, 2021 (in press)
