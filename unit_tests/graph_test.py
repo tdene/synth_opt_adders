@@ -1,14 +1,11 @@
 #!/bin/python3
 
-import sys
-sys.path.append(".")
-
-from adder_graph import adder_graph
-from adder_graph import adder_node as node
+from pptrees.prefix_graph import prefix_graph
+from pptrees.prefix_graph import prefix_node as node
 import networkx as nx
 import pydot
 
-g = adder_graph(4)
+g = prefix_graph(4)
 
 g.add_node(node(0,0,'buffer_node'),style='invis')
 g.add_node(node(1,0,'buffer_node'))

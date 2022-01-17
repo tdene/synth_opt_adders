@@ -1,27 +1,28 @@
-from modules import modules
-from adder_graph import adder_graph as graph
-from adder_graph import adder_node as node
-from util import lg
+from .modules import modules
+from .prefix_graph import prefix_graph as graph
+from .prefix_graph import prefix_node as node
+from .util import lg
 import networkx as nx
 import pydot
 from functools import reduce
 from itertools import cycle
+import webbrowser
 
-# Class that generates parallel prefix adder trees
+class prefix_tree(graph):
+    """Class that generates parallel prefix trees
+    
+    Trees are initialized to a serial structures (ripple-carry-like)
+    Trees can morph via any of three, reversible, transforms:
+    L->F, F->L, L->T, T->L, F->T, T->F
+    """
 
-# Trees are initialized to a serial structures (ripple-carry-like)
-# Trees can morph via any of three, reversible, transforms:
-# L->F, F->L, L->T, T->L, F->T, T->F
-
-# L <-> F was discussed in
-# R. Zimmermann, Binary Adder Architectures for Cell-Based VLSI and their Synthesis, PhD thesis, Swiss Federal Institute of Technology (ETH) Zurich, Hartung-Gorre Verlag, 1998
-#  J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
-
-class adder_tree(graph):
-
-    # Pre-condition: width is an integer
-    # Post-condition: initializes serial structure
     def __init__(self,width,network="rca"):
+        """Initializes a parallel prefix tree
+
+        Pre-conditions:
+            width is an integer
+            network is a valid initial network choice (defaults to rca)
+        """
         if not isinstance(width,int):
             raise TypeError("provided width must be an integer")
 
@@ -38,9 +39,7 @@ class adder_tree(graph):
                 n.outs['pout'][0]="$p{0}".format(a-1)
                 n.outs['gout'][0]="$g{0}".format(a-1)
 
-        # Initialize serial structure
-
-        # Initialize Sklansky
+        # Initialize to Sklansky
         if network=="sklansky":
             for a in range(1,self.w):
                 num_buf = 2**(a-1)
@@ -56,6 +55,7 @@ class adder_tree(graph):
                         self.add_node(node(b,a,'black'),pre=self[b+ctr-1,a-1])
                         ctr-=1
             self.dna="sklansky"
+        # Initialize to Kogge-Stone
         elif network=="kogge-stone":
             for a in range(1,self.w):
                 for b in range(self.w):
@@ -65,6 +65,7 @@ class adder_tree(graph):
                     else:
                         self.add_node(node(b,a,'buffer_node'))
             self.dna="kogge-stone"
+        # Initialize serial structure
         else:
             for a in range(1,self.w):
                 for b in range(self.w):
@@ -74,63 +75,72 @@ class adder_tree(graph):
                         self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
             self.dna="rca"
 
-        # Post-processing (in progress)
-
+        # Post-processing
         for a in range(self.w):
             n = self.add_node(node(a,self.w,'post_node'))
 
         self.clean()
 
     def _to_sklansky(self):
+        """Internal function; transforms an rca structure to Sklansky
+
+        Uses transforms, as opposed to __init__ which simply places nodes
+        """
         for a in range(1,n):
             if a & (a-1)==0: continue
             self.batch_transform('LF',a,n)
 
-    # Redefine __len__ to be the y-axis size of the tree logic
-    # since this definition proves to be useful in practice
     def __len__(self):
+        """Redefine the length property as the y-axis size of the tree"""
         return len(self.node_list)-2
 
-    # Pre-condition: n is a valid new node; pre is either None or a node in the graph
-    # Post-condition: adds node into graph and connects it correctly
     def add_node(self,n,pre=None):
+        """Adds a node to the tree, optionally with a pre-defined diagonal connection"
+
+        Pre-conditions:
+            n is a valid new node
+            pre is either None or a node in the graph
+        """
 
         if pre is not None and not isinstance(pre,node):
             raise TypeError("provided predecessor node must be a node")
 
-    # Calls on super-method
+        # Calls on super-method
         n = super().add_node(n)
 
-    # Keeps track of group propagates/generates
+        # Keeps track of group propagates/generates
         n.pg=0
-    # Initialize pg if node is P/G node
+        # Initialize pg if node is P/G node
         if n.m in ['pre_node','fake_pre']:
             n.pg=1<<n.x
 
-    # Connects up
+        # Connects up
         self._add_top(n)
-    # Connects diagonally
+        # Connects diagonally
         self._add_pre(n,pre)
-    # Connects down
+        # Connects down
         if self.bot(n) is not None:
             self._add_top(self.bot(n))
 
-    # If pre_node is added, HDL connect it to input pins
+        # If pre_node is added, HDL connect it to input pins
         if n.m in ['pre_node']:
             n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
             n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
         if n.m in ['fake_pre']:
             n.ins['cin'][0]='$cin'
 
-    # If post_node is added, HDL connect it to output pins
+        # If post_node is added, HDL connect it to output pins
         if n.m in ['post_node']:
             #n.ins['gin'][0]='$c{0}'.format(n.x)
             n.outs['sum'][0]='$sum[{0}]'.format(n.x)
 
         return n
 
-    # Recalculate the group P/G for a node
     def _recalc_pg(self,n):
+        """Recalculates the group P/G of a node
+
+        TO-DO: Rename P/G to a more general, addition-nonspecific, term.
+        """
         if n.m in ['pre_node','fake_pre']:
             return
 
@@ -150,72 +160,100 @@ class adder_tree(graph):
             n.upstream.add((pre.x,pre.y))
             n.upstream.update(pre.upstream)
 
-    # Pre-condition: a and b are both iterables
-    # Post-condition: return value is True/False
-
-    # Determine whether a combination of nodes (b)
-    # has the same group P/G as another combination (a)
-    # That is, if a PG is in b, then it has to be in a
-    # b -> a === (not b)|a
     def _is_pg_subset(self,a,b):
+        """Determines whether the P/G of b is a subset of the P/G of a
+
+        Pre-conditions:
+            a and b are both iterables
+        """
         # Turn a list of nodes into a list of pg
         a = [x.pg if x is not None else 0 for x in a]
         b = [x.pg if x is not None else 0 for x in b]
         # Merge lists of pg into single comprehensive list
         a = reduce(lambda x,y: x|y, a, 0)
         b = reduce(lambda x,y: x|y, b, 0)
+        # b -> a === (not b)|a
         ret = ~b|a
         # Return True if all bits are high
         return ret&(ret+1)==0
 
-    # Pre-condition: a is an iterable, b is an integer
-    # Post-condition: return value is True/False
+    def _is_pg_end_node(self,a,i):
+        """Determines whether the set of nodes, a, is P/G equivalent with the i'th end node
 
-    # Determine whether a combination of nodes can act
-    # as the b'th end node
-    def _is_pg_end_node(self,a,b):
+        Pre-conditions:
+            a is an iterable, b is an integer denoting a column
+        """
+        # Turn a list of nodes into a list of pg
         a = [x.pg if x is not None else 0 for x in a]
+        # Merge lists of pg into single comprehensive list
         a = reduce(lambda x,y: x|y, a, 0)
-        b = (1<<(b+1))-1
-        ret = ~b|a
+        # The i'th end node will have [i:0] P/G
+        i = (1<<(i+1))-1
+        # b -> a === (not b)|a
+        # TO-DO: Is this correct? Should we not be checking === instead of ->?
+        ret = ~i|a
+        # Return True if all bits are high
         return ret&(ret+1)==0
 
-    # Pre-condition: n is (x,y) coordinate, b is an iterable 
-    # Post-condition: return value is True/False
-
-    # Checks whether replacing a node in the graph, n,
-    # can be replaced by a list of changes, b, and still lead
-    # to a valid graph
     def _remains_pg_valid(self,n,b):
+        """Checks whether the node, b, can be equivalently replaced by a set of nodes
+
+        Pre-condition:
+            n is (x,y) coordinate tuple
+            b is an iterable
+        """
+        # TO-DO:
+        # This currently does F | F | T | F | T
+        # It should do T & T & T & T & T
+        # NEED TO FIX
+
+        # Assume result is False
         ret = False
+        # Iterate through all end-nodes
         for x in self.node_list[-1]:
+            # Save the list of nodes upstream of x
             tmp = x.upstream
+            # If n is not upstream of x, try the next end-node
             if n not in tmp: continue
+            # Make list of all nodes that are upstream of x,
+            # on a different column than n,
+            # but on the same row as n
+            # That is, all nodes that contribute to x without relying on n
             orig = [self[i] for i in x.upstream if i[0]!=n[0] and i[1]==n[1]]
+            # Add the set b to this list
             orig.extend(b)
+            # Check to see whether this new set,
+            # x's upstream without n but with b
+            # still leads to a valid tree
             tmp = self._is_pg_end_node(orig,x.x)
+            # What is this doing. What actually is this doing.
+            # This code is used nowhere
             a = [x.pg if x is not None else 0 for x in orig]
             a = reduce(lambda x,y: x|y, a, 0)
+            # Or's together all the results. This logic is wrong.
             ret = ret or self._is_pg_end_node(orig,x.x)
         return ret
     
-    # Traverse the graph downstream of a node
-    # applying fun to every node you meet
     def walk_downstream(self,n,fun=lambda x: x):
+        """Traverse the graph downstream of node n, applying fun to each node
+        """
+        # Need to go in two directions: vertical and diagonal
         bot = self.bot(n)
         post = self.post(n)
 
         fun(n)
+        # Iterate
         if bot is not None: self.walk_downstream(bot,fun)
         for x in post: self.walk_downstream(x,fun)
 
-    # Internal helper function to prevent re-writing of code
-    # Connects node to its upper neighbor
     def _add_top(self,n,pre=None):
+        """Internal function; connects node to its vertical predecessor"""
 
+        # Get top if it exists
         top = self.top(n)
         if top is None: return
 
+        # Connect to the last pin in the pin/gin arrays
         if 'pin' in n.ins and 'pout' in top.outs:
             pos=len(n.ins['pin'])-1
             self.add_edge(top,('pout',0),n,('pin',pos))
@@ -223,14 +261,16 @@ class adder_tree(graph):
             pos=len(n.ins['pin'])-1
             self.add_edge(top,('gout',0),n,('gin',pos))
 
+        # Update pg
         n.pg = n.pg|top.pg
 
-    # Internal helper function to prevent re-writing of code
-    # Connects node to a predecessor
     def _add_pre(self,n,pre):
+        """Internal function; connects node diagonally to a predecessor"""
 
+        # If the provided "pre" is None, do nothing
         if pre is None: return
 
+        # Connect to the first pin in the pin/gin arrays
         if 'pin' in n.ins and len(n.ins['pin'])>1:
             pos=0
             self.add_edge(pre,('pout',0),n,('pin',pos))
@@ -240,10 +280,15 @@ class adder_tree(graph):
 
         n.pg = n.pg|pre.pg
 
-    # Internal function to morph a node to another type
-    # no_warn and no_pre should NOT be set to True unless
-    # EXTREME care is taken
     def _morph_node(self,n,m,no_warn=False,no_pre=False):
+        """Internal function to morph a node to another type
+
+        no_warn and no_pre should NOT be set to True
+        unless EXTREME care is taken
+
+        In general, the existence and use of this function is a
+        severe moral hazard, and alternatives must be investigated.
+        """
         # Query current posts and pres
         post = self.post(n)
         pre = self.pre(n)
@@ -264,7 +309,7 @@ class adder_tree(graph):
                 if no_warn:
                     update_flag = True
                 else:
-                    raise TypeError("cannot morph node with pre to node without")
+                    raise TypeError("cannot morph node with pre to node without pre")
             else:
                 self._add_pre(new_n,pre)
 
@@ -280,9 +325,11 @@ class adder_tree(graph):
             self.walk_downstream(new_n,fun=self._recalc_pg)
         return new_n
 
-    # Shifts a node in a direction given by fun
-    # Can only shift nodes if there is nothing in the way
     def shift_node(self, n, fun=None, new_pre=None):
+        """Shifts a node in the direction specified by fun
+        
+        Can only shift nodes if there is nothing in the way.
+        """
 
         if fun==None:
             fun=self.top
@@ -337,100 +384,166 @@ class adder_tree(graph):
 
         return new_n
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the y-1 neighbor (P/G logic if already at the top)
     def top(self,n):
+        """Returns the y-1 neighbor of node n
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
         if n is None or n.y==0:
             return None
         return self[n.x,n.y-1]
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the next-highest non-invis neighbor
     def r_top(self,n):
+        """Returns the closest valid cell north of node n
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
         top = self.top(n)
         return top if (node._exists(top) or top is None) else self.r_top(top)
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the y+1 neighbor (stops before post-processing logic)
     def bot(self,n):
+        """Returns the y+1 neighbor of node n
+
+        Pre-condition: n is a valid node in the main part of the tree
+        Note: stops before reaching post-processing logic.
+        If used on the bottom row of main nodes, returns None.
+        """
         if n is None or n.y>len(self.node_list)-2:
             return None
         return self[n.x,n.y+1]
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the next-lowest non-invis neighbor
     def r_bot(self,n):
+        """Returns the closest valid cell south of node n
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
         bot = self.bot(n)
         return bot if (node._exists(bot) or bot is None) else self.r_bot(bot)
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the x-1 neighbor (stops before post-processing logic)
     def right(self,n):
+        """Returns the x-1 neighbor of node n
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
         if n is None or n.x==0:
             return None
         return self[n.x-1,n.y]
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the next-rightest non-invis + non-buffer neighbor
     def r_right(self,n,c=[]):
+        """Returns the closest valid cell east of node n
+
+        Pre-conditions:
+            n is a valid node in the main part of the tree
+            c is a list of "hypothetical" valid cells that do not
+                yet exist, but are treated as though they do
+        """
         right = self.right(n)
         if (node._exists(right) and not node._isbuf(right)) or \
         right is None or right in c:
             return right
         return self.r_right(right,c)
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the diagonal predecessor (or top(n) if n is a buffer)
     def pre(self,n):
-#        for x in self._possible_pres(n):
+        """Returns the diagonal predecessor of node n
+
+        If n is a buffer, this returns the vertical predecessor.
+        Or, it should, but the functionality appears to have been removed.
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
+        #for x in self._possible_pres(n):
         for x in self.node_list[n.y-1][:n.x]:
             if n in self.post(x): return x
         return None
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: goes up the chain of predecessors as far as it can
     def r_pre(self,n):
+        """Traverses as far up diagonally through predecessors as possible
+
+        Pre-condition: n is a valid node in the main part of the tree
+
+        NOTE: This function currently has no present, nor foreseeable, use.
+        Candidate for trimming.
+        """
         pre = self.pre(n)
         return n if pre is None else self.r_pre(pre)
 
-    # Pre-condition: n is a valid node in the main part of the tree (gray/black/buffer)
-    # Post-condition: returns the list of diagonal successors
     def post(self,n):
+        """Returns a list of diagonal successors for node n
+
+        If n is a buffer, this list is empty.
+        TO-DO: Investigate whether this functionality for buffers is intended.
+
+        Pre-condition: n is a valid node in the main part of the tree
+        """
         return [a for a in self.adj[n] if a.x>n.x]
 
-    # Helper function that checks whether n2 is below n1
-    # Same column, higher row, or second node straight-up does not exist
     def _is_below(self,n1,n2):
+        """Checks whether n2 is directly south of n1
+
+        NOTE: This function currently has no present, nor foreseeable, use.
+        Candidate for trimming.
+        """
         return (n2 is None) or (n1 is not None and n2.x==n1.x and n2.y>n1.y)
 
-    # Pre-condition: n is a valid node
-    # Post-condition: returns a list of all nodes it could connect to as a pre
     def _possible_pres(self,n,c=[],d=[]):
+        """Returns of list of all valid diagonal predecessors of node n
+
+        Pre-conditions:
+            n is a valid node in the main part of the tree
+            c is a list of "hypothetical" valid cells that do not
+                yet exist, but are treated as though they do
+            d is a list of "hypothetical" diagonal predecessors
+                of each respective cell listed by c
+        """
         # Figure out bounds so that wires don't cross illegaly
+            # First, find the left-most right neighbor of n
         post = self.r_right(n,c)
         if post in c:
+            # If this neighbor is hypothetical, its predecessor is in d
+            # This is the bound
             bound = d[c.index(post)]
         else:
+            # Otherwise, its predecessor is its predecessor
+            # This is the bound
             bound = None if post is None else self.pre(post)
+        # Convert bound from node to coordinate
         bound = 0 if bound is None else bound.x
         # Return all possible nodes in that range
         return self.node_list[n.y-1][bound:n.x]
 
-    # Helper function
-    # Pre-condition:
-    # We have a pair of nodes, a and b, such that pre(a) = b
-    # We want to disconnect a from b, which makes for a new pre(a)
-    # So we need to add a series of cells on top of a so that
-    # is_pg([top(a),pre(a)],[top(b),pre(b)])
-    # The very first term in that expression, top(a), can be further
-    # broken down into tops and pres
-    # Post-condition:
-    # Returns a tuple of lists of tops and pres that need be created
-    # Or None,None if the requirement is impossible
-    # Note that in the function call, a and pre are the new a and pre
+    # TO-DO: Improve run-time performance of this function
+    # One suggestion is to do a breadth-first, not depth-first, search
     def _valid_tops(self,a,a_bits,b,x,c=[],d=[],path=[],result=(None,None)):
+        """Finds cells that must be created if a is disconnected from pre(a) = b
 
+        The situation is the following. b is the diagonal predecessor of a.
+        However, we want to disconnect a from b.
+        Nodes must be added to preserve the tree's validity.
+        The possibility tree of nodes to be added is explored via a full recursion.
+
+        a is a node in the tree
+        b is its current diagonal predecessor
+        a_bits are the nodes that feed into a:
+            its current top
+            its new diagonal predecessor after the change (if any)
+        x is the closest node north of a that is empty (available)
+
+        c is a list of "hypothetical" cells that do not yet exist,
+            but could be added in to fix the tree.
+        d is a list of c's diagonal predecessor connections.
+        path is the path that a specific recursive branch has taken. 
+        result is the final output of a specific recursive branch
+
+        This function explores possibilities by recursing up through
+        possible branches. Each explored branch returns the smallest
+        list of necessary changes it finds. Thus, the overall method
+        returns one of the smallest tuples of changes needed.
+
+        """
         # If our current solution is worse than a pre-existing one, abort
+        # This cuts the search tree down significantly
+        # As soon as a valid result is found, any paths longer than it
+        # are not explored.
         if result[0] is not None and len(result[0])<len(c):
             return None,None
 
@@ -439,9 +552,9 @@ class adder_tree(graph):
             return c,d
 
         # If x is not part of the body,
-        # fork back up the recursion tree
+        # go back up the recursive stack
         if not node._in_tree(x):
-            # If we've reached the end, this fork is dead
+            # If we've reached the top of the stack, this fork is dead
             if len(path)==0: return None,None
             # Otherwise fork up
             return self._valid_tops(a,a_bits,b, \
@@ -449,20 +562,25 @@ class adder_tree(graph):
 
         # Forking down into the recursion tree
 
-        # Figure out x's pre, or attempted pre
+        # Figure out x's pre, or lack thereof
         pre = self.pre(x)
         # If x has no pre, try forking through possible pre's
         if pre is None and x not in c:
             # Iterate over all possible pre's
             possi = self._possible_pres(x,c,d)
-            #possi = sorted(possi, key = lambda x: x.m in ['buffer_node','invis_node'])
             for y in possi:
                 # Fork up through the prefix tree
                 tmp = self._valid_tops(a,a_bits,b,y,c+[x],d+[y],path+[x],result)
+                # Update the provisional result
+                # If this fork found no valid results, nothing happens
+                # If this fork found only longer results, nothing happens
                 if tmp[0] is not None: result = tmp;
         # If x has a pre, try forking thru the pre chain
         elif pre is not None:
             tmp = self._valid_tops(a,a_bits,b,pre,c,d,path+[x],result)
+            # Update the provisional result
+            # If this fork found no valid results, nothing happens
+            # If this fork found only longer results, nothing happens
             if tmp[0] is not None: result = tmp;
 
         # Either way, fork up through the top as well
@@ -472,12 +590,17 @@ class adder_tree(graph):
         # Return list of candidates
         return result
 
-    # Pre-condition: x,y are valid co-ordinates
-    # (if y is not provided, searches entire column from bottom-up)
-    # Post-condition: checks whether the given x,y node satisfies the transform's
-    # initial requirements; if so, returns the two transform pivots
-
     def _checkLF(self,x,y=None):
+        """Checks whether an LF transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -489,29 +612,38 @@ class adder_tree(graph):
                 a,b,c,d=self._checkLF(x,a)
                 if b is not None:
                     return a,b,c,d
-            return (None,None,None,None)
+            return (None,)*4
 
         # Main clause of the function
         a = self[x,y]
         # ∃ b = pre(a)
         b = self.pre(a)
         if not node._exists(b):
-            return (None,None,None,None)
         # ∄ top(a)
         top = self.top(a)
         if node._exists(top):
-            return (None,None,None,None)
+            return (None,)*4
 
         pre = self.top(b) if node._isbuf(b) else self.pre(b)
 
         c,d = self._valid_tops(a,(self.top(top),pre),b,self.top(top))
 
         if c is None:
-            return (None,None,None,None)
+            return (None,)*4
 
         return (a,b,c,d)
 
     def _checkFL(self,x,y=None):
+        """Checks whether an FL transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -558,6 +690,16 @@ class adder_tree(graph):
         return (None,None)
 
     def _checkTF(self,x,y=None):
+        """Checks whether a TF transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -596,6 +738,16 @@ class adder_tree(graph):
         return (a,b,c,d)
 
     def _checkFT(self,x,y=None):
+        """Checks whether an FT transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -635,6 +787,16 @@ class adder_tree(graph):
         return (a,b,c,d)
 
     def _checkLT(self,x,y=None):
+        """Checks whether an LT transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -662,6 +824,16 @@ class adder_tree(graph):
         return (a,b)
 
     def _checkTL(self,x,y=None): 
+        """Checks whether a TL transform can be applied on a node
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are satisfied,
+        the function returns the two transform pivots, a and b
+        as well as any cells it must add and their predecessors, c and d.
+        """
         if not isinstance(x,int) or (y is not None and not isinstance(y,int)):
             raise TypeError("x,y values provided to the internal-use-only check function are invalid!")
 
@@ -706,6 +878,17 @@ class adder_tree(graph):
         return (a,b)
 
     def LF(self,x,y=None,clean=True):
+        """Performs an LF transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b,c,d = self._checkLF(x,y)
         if b is None:
             return None
@@ -743,6 +926,17 @@ class adder_tree(graph):
         return a,b
 
     def FL(self,x,y=None,clean=True):
+        """Performs an FL transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b = self._checkFL(x,y)
         if b is None:
             return None
@@ -780,6 +974,17 @@ class adder_tree(graph):
         return a,b
 
     def TF(self,x,y=None,clean=True):
+        """Performs a TF transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b,c,d = self._checkTF(x,y)
         if b is None:
             return None
@@ -813,6 +1018,17 @@ class adder_tree(graph):
         return a,b
 
     def FT(self,x,y=None,clean=True):
+        """Performs an FT transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b,c,d = self._checkFT(x,y)
         if b is None:
             return None
@@ -842,6 +1058,17 @@ class adder_tree(graph):
         return a,b,c,d
 
     def LT(self,x,y=None,clean=True):
+        """Performs an LT transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b = self._checkLT(x,y=y)
         if b is None:
             return None
@@ -851,6 +1078,17 @@ class adder_tree(graph):
         #LF, followed by FT
 
     def TL(self,x,y=None,clean=True):
+        """Performs a TL transform on the specified node, if possible
+
+        The node is specified using its (x,y) co-ordinate
+        Withholding the y-coordinate will check the entire x-column
+        from bottom-up.
+
+        If the transform's initial requirements are not satisfied,
+        the function returns (None,None).
+        Otherwise, the function returns the co-ordinates of the main
+        pivot of the transform.
+        """
         a,b = self._checkTL(x,y)
         if b is None:
             return None
@@ -860,12 +1098,14 @@ class adder_tree(graph):
         #TF, followed by FL
 
     def batch_transform(self,transform,x1,x2,step=1):
+        """Performs a series of identical transforms as a batch"""
         for x in range(x1,x2,step):
             if not getattr(self,transform)(x):
                 err="batch transform {0} failed on {1}".format(transform,x)
                 raise ValueError(err)
 
     def harris_step(self,transform,steps=1,bot_bit=None,top_bit=None):
+        """Performs a sequence of transforms that lead to a Harris step"""
         if top_bit==None: top_bit=self.w
         if bot_bit==None: bot_bit=0
         if steps==0: return
@@ -884,14 +1124,13 @@ class adder_tree(graph):
 
         self.harris_step(transform,steps-1,bot_bit=bot_bit,top_bit=top_bit)
 
-    # Compresses, eliminates nodes using idempotence,
-    # and trims extraneous layers
     def clean(self):
+        """Compresses the graph and eliminates redundant nodes"""
         while self.reduce_idem() or self.compact(): pass
         self.trim_layers()
 
-    # Shifts all possible nodes up
     def compact(self):
+        """Shifts up all nodes it can"""
         # Note: don't change data structure while iterating over it
         changed = False
         for a in self:
@@ -917,9 +1156,11 @@ class adder_tree(graph):
         else:
             return 0
 
-    # Cancels out logically-equivalent nodes/edges
-    # As of commit 194923b83, this relies on node group P/G
     def reduce_idem(self):
+        """Eliminates redundant nodes
+        
+        As of commit 194923b83, this relies on node group P/G
+        """
         modified=None
         for a in self:
             # Filter out invis nodes
@@ -969,9 +1210,8 @@ class adder_tree(graph):
             return 1+self.reduce_idem()
         return 0
 
-    # If the last row of the tree is just buffers
-    # Shortens the tree by one layer
     def trim_layer(self):
+        """Trims the last row of the tree if it is empty"""
         # Check if last row is just buffers
         if any([ \
                (node._exists(self.top(x)) and not node._isbuf(self.top(x))) \
@@ -984,18 +1224,20 @@ class adder_tree(graph):
 
     # Adds an extra layer at the bottom of the tree
     def add_layer(self):
+        """Adds an extra layer at the bottom of the tree"""
         y=len(self.node_list)
         for a in range(self.w):
             self.add_node(node(a,y,'invis_node'))
         for x in self.node_list[-2]:
             self.shift_node(x,self.bot)
+        return True
 
-    # Shortens the tree by as many layers as it can
     def trim_layers(self):
+        """Repeatedly calls trim_layer until no more can be trimmed"""
         while(self.trim_layer()): pass
 
-    # Check tree for validity
     def check_tree(self):
+        """Check if tree is valid"""
         # Re-calculate the tree
         pre_processing = self.node_list[0]
         for n in pre_processing:
@@ -1013,9 +1255,14 @@ class adder_tree(graph):
                 print("\nTree check failed on bit {0}\n".format(i))
                 raise e
 
-    # Recalculate weights of all edges
-    # using logical effort and coupling capacitance approximations
+    # TO-DO: Provide way to adjust the approximation based on tech node
     def recalc_weights(self):
+        """Calculates the weights of all edges
+
+        This returns a rough approximation of their delay.
+        The calculation is performed using logical effort
+        and approximated coupling capacitance.
+        """
         for e in self.edges.data():
             p = modules[e[1].m]['pd']
             g = modules[e[1].m]['le']
@@ -1026,8 +1273,8 @@ class adder_tree(graph):
             tracks = 1
             e[2]['weight'] = p + g*(fanout+tracks)
 
-    # Prints a png
     def png(self,fname='out.png'):
+        """Creates a PNG of the prefix tree"""
 
         # Helper function to format node name for pyDot
         def wrap(s):
@@ -1195,6 +1442,7 @@ class adder_tree(graph):
                                    arrowhead="none",style="dashed",color=color,penwidth="3",
                                    headclip="false",tailclip="false"))
         pg.write_png(fname,prog='neato')
+        webbrowser.open_new(fname)
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")
