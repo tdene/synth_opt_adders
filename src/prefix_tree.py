@@ -619,6 +619,7 @@ class prefix_tree(graph):
         # ∃ b = pre(a)
         b = self.pre(a)
         if not node._exists(b):
+            return (None,)*4
         # ∄ top(a)
         top = self.top(a)
         if node._exists(top):

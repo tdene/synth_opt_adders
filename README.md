@@ -62,7 +62,7 @@ pip3 install . --user
 ## User Guide
 
 The bulk of this tool's source code is currently contained in two modules:
-[prefix_graph.py](prefix_graph.py) and [prefix_tree.py](prefix_tree.py).
+[prefix_graph.py](src/prefix_graph.py) and [prefix_tree.py](src/prefix_tree.py).
 
 Some examples of how to use the methods within these two modules can be found
 in [unit_tests/tree_test.py](unit_tests/tree_test.py).

@@ -79,7 +79,7 @@ class prefix_node():
         """Return single line of verilog consisting of module instantiation"""
 
         # Fill in the module instantiation
-        ret="    {3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
+        ret="	{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
         # Create list of all instance pins and copy in unformatted net IDs
         pins=self.ins.copy()
         pins.update(self.outs)
@@ -456,7 +456,7 @@ class prefix_graph(nx.MultiDiGraph):
             ins = ins - outs
 
             # Instantiate block
-            inst_b = "    block_{0} block_{0}_instance (".format(b)
+            inst_b = "	block_{0} block_{0}_instance (".format(b)
             tmp=ins|outs
             # Add ins/outs to block instantiation with dot notation
             for x in tmp: inst_b+=" .{0} ( {1} ),".format(no_brack(x),x)
@@ -470,11 +470,11 @@ class prefix_graph(nx.MultiDiGraph):
             for x in tmp: block_def+=' '+no_brack(x)+','
             block_def = block_def[:-1]+');\n\n'
             # Declare all inputs and outputs
-            block_def += "    input"
+            block_def += "	input"
             for x in ins: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
 
-            block_def += "    output"
+            block_def += "	output"
             for x in outs: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
