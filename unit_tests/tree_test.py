@@ -1,13 +1,10 @@
 #!/bin/python3
 
-import sys
-sys.path.append(".")
-
 import networkx as nx
 
-from adder_graph import adder_node as node
-from adder_tree import adder_tree as tree
-from util import lg
+from pptrees.prefix_graph import prefix_node as node
+from pptrees.prefix_tree import prefix_tree as tree
+from pptrees.util import lg
 
 n = 8
 

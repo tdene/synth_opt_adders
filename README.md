@@ -53,16 +53,16 @@ or
 git clone https://github.com/tdene/synth_opt_adders.git
 ```
 
-Once the repository is cloned, navigate to its locations and install the required Python packages:
+Once the repository is cloned, navigate to its top folder and install it as a local Python package:
 ```
 cd synth_opt_adders
-pip3 install --user -r requirements.txt
+pip3 install . --user 
 ```
 
 ## User Guide
 
 The bulk of this tool's source code is currently contained in two modules:
-[adder_graph.py](adder_graph.py) and [adder_tree.py](adder_tree.py).
+[prefix_graph.py](src/prefix_graph.py) and [prefix_tree.py](src/prefix_tree.py).
 
 Some examples of how to use the methods within these two modules can be found
 in [unit_tests/tree_test.py](unit_tests/tree_test.py).
@@ -80,9 +80,9 @@ python3
 
 First, import the classes and methods that will be used for this demo:
 ```
-from adder_graph import adder_node as node
-from adder_tree import adder_tree as tree
-from util import lg
+from pptrees.prefix_graph import prefix_node as node
+from pptrees.prefix_tree import prefix_tree as tree
+from pptrees.util import lg
 ```
 
 Next, initialize a prefix tree of width 32. For brevity, we will initialize
@@ -186,10 +186,10 @@ optimization.
 
 ## References
 
-[1]  J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
+[1] J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
 
 [2] D. Harris, "A taxonomy of parallel prefix networks," The Thirty-Seventh Asilomar Conference on Signals, Systems & Computers, 2003, 2003, pp. 2213-2217 Vol.2
 
 [3] R. Zimmermann, "Non-Heuristic Optimization and Synthesis of Parallel-Prefix Adders", in Proc. Int. Workshop on Logic and Architecture Synthesis (IWLAS'96), Grenoble, France, Dec. 1996, pp. 123-132.
 
-[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space", International Conference on Computer Design, 2021 (in press)
+[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space," 2021 IEEE 39th International Conference on Computer Design (ICCD), 2021, pp. 125-129, doi: 10.1109/ICCD53106.2021.00030.

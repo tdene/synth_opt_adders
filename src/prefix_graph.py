@@ -1,27 +1,30 @@
 import networkx as nx
-from modules import modules
+from .modules import modules
 
-# Defines a node in the adder graph
-class adder_node():
+class prefix_node():
+    """Defines a node in the prefix summation graph
 
-# Nodes have an x position (bit), y position (level),
-# the module they are representing (black, grey, etc),
-# and two dictionary of edges
-
-    # Pre-conditions:
-    # x, y are integers
-    # module is a valid module from modules
-    # flat is a flag that determine how HDL is output
-    # custom_module is an optional alternative for providing
-    # a module definition not included in modules
-
-    # Post-conditions:
-    # stores all these values into internal variables
-    # creates two dictionaries of input/output edges
+    Nodes have an x position (bit), y position (level),
+    the module they are representing (black, grey, etc),
+    and two dictionary of edges
+    """
 
     def __init__(self, x, y, module, flat=False, custom_module=None):
+        """Initializes a node in the prefix summation graph
+
+        Pre-conditions:
+        x, y are integers
+        module is a valid module from the modules list
+        flat is an optional flag to determine how HDL is output
+        custom_module is an optional alternative for providing
+            a module definition that is not included in modules
+
+        Post-conditions:
+        stores all these values into internal variables
+        creates two dictionaries of input/output edges
+        """
         if not (isinstance(x,int) and isinstance(y,int)):
-            raise TypeError("adder_node x,y must both be integers")
+            raise TypeError("prefix_node x,y must both be integers")
 
         if module not in modules and not isinstance(custom_module,dict):
             raise ValueError("trying to create node with invalid module")
@@ -44,105 +47,112 @@ class adder_node():
         # All nodes start, by default, outside of any blocks
         self.block=None
 
-    # Static helper function that checks whether a node is not invis
     def _exists(n):
+        """Static helper function that checks whether a node is not invis"""
         return n is not None and n.m not in ['invis_node']
 
-    # Static helper function that checks whether a node is a buffer
     def _isbuf(n):
+        """Static helper function that checks whether a node is a buffer"""
         return n is not None and n.m in ['buffer_node']
 
-    # Static helper function that checks whether a node is
-    # not none, pre-processing, or post-processing
     def _in_tree(n):
+        """Static helper function that checks whether a node is in the tree"""
         return n is not None and n.m not in ['post_node','pre_node','fake_pre']
 
-    # The node object has dictionaries of input/output edges
-    # These come in 4 possible flavors:
-    # - None (unassigned net) -> parsed to n0
-    # - Integer (assigned net) -> parsed to n`Integer
-    # - Hardcoded name ($net_name) -> parsed to net_name
-    # - Hardcoded value (x'bx) -> kept as is
-    # ::: UPDATE ::: removing 4th functionality
-    # This is a static method that performs this conversion
-
     def _parse_net(x):
+        """Static helper function that converts a net's ID to its name in HDL
+
+        These come in 3 possible flavors:
+            - None (unassigned net) -> parsed to n0
+            - Integer (assigned net) -> parsed to n`Integer
+            - Hardcoded name ($net_name) -> parsed to net_name
+        """
         if x is None:
             return "n0"
         if isinstance(x,int):
             return "n"+str(x)
         if "$" in x:
             return x.replace("$","")
-#        if "'" in x:
-#            return x
         raise TypeError("net stored in node {0} is invalid".format(repr(x)))
 
-    # Return single line of verilog consisting of module instantiation
-
     def _verilog(self):
-        ret="    {3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
-        tmp=self.ins.copy()
-        tmp.update(self.outs)
-        for a in tmp:
+        """Return single line of verilog consisting of module instantiation"""
+
+        # Fill in the module instantiation
+        ret="	{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
+        # Create list of all instance pins and copy in unformatted net IDs
+        pins=self.ins.copy()
+        pins.update(self.outs)
+        # Format net IDs and add them to module instantation line
+        for a in pins:
             ret+=" ."+a+"( {"
-            ret+=','.join(reversed([adder_node._parse_net(x) for x in tmp[a]]))
+            ret+=','.join(reversed([prefix_node._parse_net(x) for x in pins[a]]))
             ret+='} ),'
         ret=ret[:-1]+' );'
         return ret
 
-    # Return block of verilog consisting of module logic
-
     def _flat(self):
+        """Return block of verilog consisting of the module's logic"""
+
+        # Grab module's verilog definition without the header/footer
         ret='\n'.join([x for x in modules[self.m]['verilog'].split('\n')
                       if (x!='' and 'input' not in x
                           and 'output' not in x
                           and 'module' not in x)])+'\n'
-        tmp=self.ins.copy()
-        tmp.update(self.outs)
-        for a in tmp:
-            if len(tmp[a])==1:
-                net_name=adder_node._parse_net(tmp[a][0])
+        # Create list of all instance pins and copy in unformatted net IDs
+        pins=self.ins.copy()
+        pins.update(self.outs)
+        # Format net IDs and replace them into module's verilog
+        for a in pins:
+            if len(pins[a])==1:
+                net_name=prefix_node._parse_net(pins[a][0])
                 ret=ret.replace(a,net_name)
             else:
-                for b in range(len(tmp[a])):
-                    net_name=adder_node._parse_net(tmp[a][b])
+                for b in range(len(pins[a])):
+                    net_name=prefix_node._parse_net(pins[a][b])
                     ret=ret.replace("{0}[{1}]".format(a,b),net_name)
         return ret
 
-    # Determine which verilog representation str() will use
-
     def flatten(self,flag=True):
+        """Determine which verilog representation to output"""
         self.flat=flag
 
     def hdl(self):
+        """Return HDL representation of node"""
         return self._flat() if self.flat else self._verilog()
 
     def __str__(self):
+        """Currently returns same representation as __repr__"""
         return self.__repr__()
 
     def __repr__(self):
-        return "adder_node({0},{1},{2})".format(self.x,self.y,self.m)
+        """Basic representation of node that can partially recreate it"""
+        return "prefix_node({0},{1},{2})".format(self.x,self.y,self.m)
 
-    # Define less-than by position in tree
     def __lt__(self,value):
+        """Define less-than by position in tree"""
         return (self.x,self.y)<(value.x,value.y)
 
-    # Define greater-than by position in tree
     def __gt__(self,value):
+        """Define greater-than by position in tree"""
         return (self.x,self.y)>(value.x,value.y)
 
-# Defines a di-graph of adder nodes and edges
-# The basic internal structure of the graph is a 2-D array of nodes
-class adder_graph(nx.MultiDiGraph):
-
-    # Pre-condition: width is an integer
-    # Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
+class prefix_graph(nx.MultiDiGraph):
+    """Defines a di-graph of prefix nodes and edges
+    
+    The basic internal structure of the graph is a 2-D array of nodes
+    """
 
     def __init__(self, width):
+        """Initializes a prefix summation graph
+
+        Pre-condition: width is an integer
+        Post-conditions: creates a 2-D array of all nodes; runs nx.DiGraph's init
+        """
         if not isinstance(width,int):
-            raise TypeError("adder_graph width must be an integer")
+            raise TypeError("prefix_graph width must be an integer")
         self.w=width
-        # Initialize graph to "width" of width
+        # Initialize graph to have a width of width
         self.node_list=[[None]*self.w]
 
         # Procedurally-generated net names start with "n1"
@@ -154,30 +164,30 @@ class adder_graph(nx.MultiDiGraph):
 
         super().__init__(self)
 
-    # Simplify self.node_list[y][x] to self[x,y]
     def __getitem__(self,n):
+        """Syntactic sugar to allow self[x,y] instead of self.node_list[y][x]"""
         # Auto-raise error if n is not iterable with the len call
         if len(n)!=2:
             raise ValueError("must input two numbers to access node in graph")
         return self.node_list[n[1]][n[0]]
 
-    # Pre-condtions:
-    # 0 <= x < width
-    # 0 <= y <= len(self.node_list) [no skipping levels!!!]
-    # module is a valid module from modules
 
-    # Post-condition: adds node to graph and 2-D array of all nodes
     def add_node(self, n, style=None, label=None):
-        if not isinstance(n,adder_node):
-            raise TypeError("can only add adder_nodes to adder_graph")
+        """Adds a prefix_node to the prefix_graph
+        
+        Pre-condtions:
+        0 <= node.x < width
+        0 <= node.y <= len(self.node_list) [no skipping levels!!!]
+        Post-condition: adds node to graph and 2-D array of all nodes
+        """
+        if not isinstance(n,prefix_node):
+            raise TypeError("can only add prefix_nodes to prefix_graph")
         if not (n.x<self.w and n.x>=0):
             raise ValueError("cannot add a node with x beyond the width")
         if n.y<0:
             raise ValueError("cannot add a node with negative level")
         if n.y>len(self.node_list):
             raise ValueError("cannot skip levels when adding nodes")
-        if n.m not in modules:
-            raise ValueError("trying to add node with invalid module")
         if n in self:
             raise ValueError("trying to double-add a node to the graph")
         if n.y<len(self.node_list) and self[n.x,n.y]!=None:
@@ -186,6 +196,8 @@ class adder_graph(nx.MultiDiGraph):
             self.node_list.append([None]*self.w)
         self.node_list[n.y][n.x]=n
         
+        # Add node attributes to NetworkX parent graph class
+        # Some of these are used for GraphViz visualization
         n_kwargs = modules[n.m]
         n_kwargs['shape'] = n_kwargs.get('shape','square')
         n_kwargs['fillcolor'] = n_kwargs.get('fillcolor','white')
@@ -196,26 +208,28 @@ class adder_graph(nx.MultiDiGraph):
         super().add_node(n,**n_kwargs)
         return n
 
-    # Removes node from nodelist array as well as graph
-
     def remove_node(self, n):
+        """Removes node from graph as well as nodelist array"""
         if n==None:
             return
         self.node_list[n.y][n.x]=None
         super().remove_node(n)
         return n
 
-    # Pre-conditions:
-    # n1, n2, are 2-element integer arrays, [x,y] describing valid nodes
-    # n1, n2 are on adjacent levels [use buffers otherwise]
-    # pin1, pin2 are valid, unassigned, ports of n1, n2, respectively
-    # only one of (pin1, pin2) is an input, the other being an output
-    # specifically, to keep code simple, pin1 is output and pin2 is input
-
-    # Post-condition: adds edge between target nodes
     def add_edge(self, n1, pin1, n2, pin2):
+        """Adds an edge between two nodes in the graph
+
+        Pre-conditions:
+        n1, n2 are prefix_nodes in this prefix_graph
+        n1, n2 are on adjacent levels [use buffers otherwise]
+        pin1, pin2 are valid, unassigned, ports of n1, n2, respectively
+        only one of (pin1, pin2) is an input, the other being an output
+        specifically, to keep code simple, pin1 is output and pin2 is input
+
+        Post-condition: adds edge between target nodes
+        """
         p1,b1=pin1; p2,b2=pin2;
-        if not isinstance(n1,adder_node) or not isinstance(n2,adder_node):
+        if not isinstance(n1,prefix_node) or not isinstance(n2,prefix_node):
             raise TypeError("can only add edge between nodes")
         if abs(n1.y-n2.y)!=1:
             raise ValueError("cannot add an edge between non-adjacent levels")
@@ -225,23 +239,22 @@ class adder_graph(nx.MultiDiGraph):
             raise ValueError("cannot add an edge between invalid ports")
 
         # Assigns name to edge, based on order in which it was added
-        #edge_name = len(self.edges)
-        #edge_name = "${0}_{1}_{2}_{3}".format(p1,b1,n1.x,n1.y)
         edge_name = self.next_net
         self.next_net += 1
+        # If net is already named, use pre-existing name
         if not n1.outs[p1][b1] is None: edge_name = n1.outs[p1][b1]
         elif not n2.ins[p2][b2] is None: edge_name = n2.ins[p2][b2]
         n1.outs[p1][b1]=edge_name
         n2.ins[p2][b2]=edge_name
 
-        # Styles the edge
+        # Styles the edge for GraphViz visualization
         edge_kwargs={'arrowhead':'none',
                      'headport':'ne','tailport':'sw',
                      'ins':pin1,'outs':pin2}
         if n2.x==n1.x:
             edge_kwargs['headport']='n'
             edge_kwargs['tailport']='s'
-        if adder_node._isbuf(n1):
+        if prefix_node._isbuf(n1):
             edge_kwargs['tailport']='s'
 
         # Initialize weight to 1
@@ -253,25 +266,34 @@ class adder_graph(nx.MultiDiGraph):
 
         super().add_edge(n1,n2,**edge_kwargs)
 
-    # NetworkX has no way to remove all edges between 2 nodes in a MultiGraph?
-    # Keep removing until an Exception is thrown?
 
     def remove_all_edges(self,n1,n2):
+        """Removes all edges between two nodes
+
+        NetworkX has no way to remove all edges between 2 nodes in a
+        MultiGraph?  Keep removing until an Exception is thrown?
+        """
         try:
             self.remove_edge(n1,n2)
             return self.remove_all_edges(n1,n2)
         except nx.NetworkXError:
             return
 
-    # Create a new block
-    # Pre-condition:
-    # nodes is a list of nodes, all of which have attribute block = None
-    # Post-condition: adds new block, containing nodes
     def add_block(self,*nodes):
+        """Creates a new module block of nodes
+
+        This is a group of nodes that are flattened together
+        into a single monolithic module.
+
+        Pre-condition:
+        nodes is a list of nodes, all of which have attribute block = None
+        Post-condition: adds new module block, containing specific nodes
+        """
         if not all([n.block is None for n in nodes]):
             raise ValueError("cannot add node to multiple blocks")
         if len([n.y for n in nodes])!=len(set([n.y for n in nodes])):
             raise ValueError("block cannot have multiple nodes on same level")
+
         # If the list of nodes is empty, return None
         if len(nodes)==0:
             return None
@@ -285,31 +307,43 @@ class adder_graph(nx.MultiDiGraph):
         self.blocks[this_block]=new_block
 
         # Find next available block ID
+        # This can recycle pre-existing block IDs if they are no longer in use
+        # TO-DO: Consider removing this recycling, as it will rarely be useful
         self.next_block = next(x for x in range(1,len(self.blocks)) if self.blocks[x] is None)
 
         return this_block
 
-    # Remove a block
-    # Pre-condition: block is a valid block ID
-    # Post-condition: removes block
     def remove_block(self,block):
+        """Deletes a module block definition
+
+        This is a group of nodes that are flattened together
+        into a single monolithic module.
+
+        Pre-condition: block is a valid block ID
+        Post-condition: removes block
+        """
         if block>=len(self.blocks) or self.blocks[block] is None:
             raise ValueError("trying to remove non-existent block")
+        # Unsets block attribute for all nodes in block
         for n in self.blocks[block]:
             n.block = None
+        # Deletes block itself
         self.blocks[block] = None
 
-    # Remove all block from graph
     def remove_all_blocks(self):
+        """Deletes all module block definitions from graph"""
         for b in range(len(self.blocks)):
             if self.blocks[b] is not None:
                 self.remove_block(b)
         self.next_block = 1
         self.blocks = [None,None]
 
-    # Calculate longest path from a node down the graph
-    # Note: neither the start nor end point may be buffer / invis
     def longest_path(self):
+        """Calculate longest path from any node not in a block to the output
+
+        Note that neither the start nor end point may be a buffer
+        (why was this decision made? TO-DO: Re-evaluate this decision)
+        """
         # Get ordered list of all nodes
         topo_order = nx.lexicographical_topological_sort(self)
         topo_order = (x for x in topo_order if (x.block is None) \
@@ -325,9 +359,7 @@ class adder_graph(nx.MultiDiGraph):
             # In case of a tie, select left-most beginpoint
             dists[n] = max(weight_list,key = lambda x: (x[1],x[0].x),default=(n,0))
         # Helper function used for filtering
-        def is_node(n):
-#            return adder_node._exists(n) and not adder_node._isbuf(n)
-            return adder_node._exists(n)
+        is_node = lambda n: prefix_node._exists(n)
         # Filter out paths that start with a buffer/invis
         dists = {k:v for k,v in dists.items() if is_node(k) or v[1]!=0}
         # Filter out paths that end in a buffer/invis
@@ -351,16 +383,16 @@ class adder_graph(nx.MultiDiGraph):
             n1 = dists[n1][0]
         return path
 
-    # Draw blocks for all longest paths
     def add_best_blocks(self):
+        """Groups nodes belonging to each critical path inside blocks"""
         path = self.longest_path()
         if path is not None:
             self.add_block(*path)
             return self.add_best_blocks()
 
-    # Print out HDL
     # Needs to be cleaned
     def hdl(self,out=None):
+        """Outputs HDL representation of graph"""
         def no_brack(x):
             return x.replace('[','_').replace(']','')
         module_list=[]
@@ -372,7 +404,7 @@ class adder_graph(nx.MultiDiGraph):
         block_defs=""
         endmodule="\nendmodule\n"
         ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
-        head="\nmodule adder(cout, sum, a, b, cin);\n"
+        head="\nmodule prefix_tree(cout, sum, a, b, cin);\n"
         head+="\tinput [{0}:0] a, b;\n".format(self.w-1)
         head+="\tinput cin;\n"
         head+="\toutput [{0}:0] sum;\n".format(self.w-1)
@@ -414,8 +446,8 @@ class adder_graph(nx.MultiDiGraph):
             # Iterate over all nodes in a block
             for n in nodes:
                 # Add ins/outs to block ins/outs
-                for x in n.ins.values(): ins.update([adder_node._parse_net(y) for y in x])
-                for x in n.outs.values(): outs.update([adder_node._parse_net(y) for y in x])
+                for x in n.ins.values(): ins.update([prefix_node._parse_net(y) for y in x])
+                for x in n.outs.values(): outs.update([prefix_node._parse_net(y) for y in x])
             # end iterate over all nodes in a block
 
             # Should a signal be generated as an output by
@@ -424,7 +456,7 @@ class adder_graph(nx.MultiDiGraph):
             ins = ins - outs
 
             # Instantiate block
-            inst_b = "    block_{0} block_{0}_instance (".format(b)
+            inst_b = "	block_{0} block_{0}_instance (".format(b)
             tmp=ins|outs
             # Add ins/outs to block instantiation with dot notation
             for x in tmp: inst_b+=" .{0} ( {1} ),".format(no_brack(x),x)
@@ -438,11 +470,11 @@ class adder_graph(nx.MultiDiGraph):
             for x in tmp: block_def+=' '+no_brack(x)+','
             block_def = block_def[:-1]+');\n\n'
             # Declare all inputs and outputs
-            block_def += "    input"
+            block_def += "	input"
             for x in ins: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
 
-            block_def += "    output"
+            block_def += "	output"
             for x in outs: block_def+=" {0},".format(no_brack(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
