@@ -44,19 +44,9 @@ In order to use this repository, the following programs are required:
  * pip3 (`apt install python3-pip`)
  * GraphViz (`apt install graphviz`)
 
-Begin by cloning this repository, either through ssh or https:
+Then simply install this repository as a local Python package:
 ```
-git clone git@github.com:tdene/synth_opt_adders.git
-```
-or
-```
-git clone https://github.com/tdene/synth_opt_adders.git
-```
-
-Once the repository is cloned, navigate to its top folder and install it as a local Python package:
-```
-cd synth_opt_adders
-pip3 install . --user 
+pip3 install git+https://github.com/tdene/synth_opt_adders.git --user
 ```
 
 ## User Guide
