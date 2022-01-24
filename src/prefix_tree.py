@@ -40,7 +40,7 @@ class prefix_tree(graph):
                 n.outs['gout'][0]="$g{0}".format(a-1)
 
         # Initialize to Sklansky
-        if network=="sklansky":
+        if network=="sklansky" or network=="brent-kung":
             for a in range(1,self.w):
                 num_buf = 2**(a-1)
                 ctr = num_buf
@@ -73,13 +73,17 @@ class prefix_tree(graph):
                         self.add_node(node(b,a,'invis_node'))
                     else:
                         self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
-            self.dna="rca"
+            self.dna="ripple-carry"
 
         # Post-processing
         for a in range(self.w):
             n = self.add_node(node(a,self.w,'post_node'))
 
         self.clean()
+
+        if network=="brent-kung":
+            self.harris_step('FL',lg(self.w)-1)
+            self.dna="brent-kung"
 
     def _to_sklansky(self):
         """Internal function; transforms an rca structure to Sklansky
