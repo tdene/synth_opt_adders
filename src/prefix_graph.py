@@ -404,7 +404,7 @@ class prefix_graph(nx.MultiDiGraph):
         block_defs=""
         endmodule="\nendmodule\n"
         ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
-        head="\nmodule prefix_tree(cout, sum, a, b, cin);\n"
+        head="\nmodule adder(cout, sum, a, b, cin);\n"
         head+="\tinput [{0}:0] a, b;\n".format(self.w-1)
         head+="\tinput cin;\n"
         head+="\toutput [{0}:0] sum;\n".format(self.w-1)
