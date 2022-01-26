@@ -13,7 +13,7 @@ setup(
                 'License :: OSI Approved :: Apache Software License',
                 'Programming Language :: Python :: 3'],
     keywords=['hardware adders prefix'],
-    package_dir={'pptrees':'src'},
+    package_dir={'':'src'},
     packages=['pptrees'],
     long_description=open('README.md').read(),
     install_requires=[
