@@ -49,15 +49,15 @@ class prefix_node():
 
     def _exists(n):
         """Static helper function that checks whether a node is not invis"""
-        return n is not None and n.m not in ['invis_node']
+        return n is not None and modules[n.m]['exists']
 
     def _isbuf(n):
         """Static helper function that checks whether a node is a buffer"""
-        return n is not None and n.m in ['buffer_node']
+        return n is not None and modules[n.m]['buf']
 
     def _in_tree(n):
         """Static helper function that checks whether a node is in the tree"""
-        return n is not None and n.m not in ['post_node','pre_node','fake_pre']
+        return n is not None and modules[n.m]['type']=='main'
 
     def _parse_net(x):
         """Static helper function that converts a net's ID to its name in HDL
@@ -347,7 +347,7 @@ class prefix_graph(nx.MultiDiGraph):
         # Get ordered list of all nodes
         topo_order = nx.lexicographical_topological_sort(self)
         topo_order = (x for x in topo_order if (x.block is None) \
-#                and (x.m not in ['post_node','pre_node','fake_pre']) \
+#                and prefix_node._in_tree(x) \
                 )
         # Iterate through graph looking for longest paths
         dists = {}
@@ -399,8 +399,8 @@ class prefix_graph(nx.MultiDiGraph):
         #module_defs=""
         head=""; body=""; block_instances="";
         module_defs=set()
-        module_defs.add('grey')
-        module_defs.add('pre_node')
+        module_defs.add('ppa_grey')
+        module_defs.add('ppa_pre')
         block_defs=""
         endmodule="\nendmodule\n"
         ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
@@ -416,17 +416,17 @@ class prefix_graph(nx.MultiDiGraph):
         for x in range(self.w):
             head+=" g{0}, p{0},".format(x)
         head = head[:-1]+";\n"
-        head+="\tpre_node pre_node_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
+        head+="\tppa_pre ppa_pre_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
         cfinal=self.node_list[-1][-1].ins['gin'][0]
-        head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
+        head+="\tppa_grey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
         ### CLEAN ABOVE PLEASE!!!!!
         for a in self.node_list:
             for n in a:
-                if n.m in ['post_node']:
+                if modules[n.m]['type']=='post':
                     n.ins['pin'][0]="$p{0}".format(n.x)
                 if n.block is not None:
                     continue
-                if n.m in ['buffer_node','invis_node']:
+                if not prefix_node._exists(n):
                     n.flatten()
                 #n.flatten()
                 body+=n.hdl()+'\n'
@@ -480,7 +480,7 @@ class prefix_graph(nx.MultiDiGraph):
             # Put all nodes' hdl inside block definition
             block_def += '\n'
             for n in nodes:
-                if n.m in ['post_node']:
+                if modules[n.m]['type']=='post':
                     tmp = n.ins['pin'][0]
                     n.ins['pin'][0]="$p{0}".format(n.x)
                     n.flatten()

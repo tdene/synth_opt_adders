@@ -1,15 +1,14 @@
-
 # Note that nothing yet exists to check this file
 # for checkable errors, such as inputs/outputs
 # not matching the logical function
 
 modules={}
 
-### Black cells
-black=dict()
+### Black cell
+ppa_black=dict()
 
-black['verilog']="""
-module black(gin, pin, gout, pout);
+ppa_black['verilog']="""
+module ppa_black(gin, pin, gout, pout);
 
     input [1:0] gin, pin;
     output gout, pout;
@@ -20,32 +19,43 @@ module black(gin, pin, gout, pout);
 endmodule
 """
 
-black['shape']='square'
-black['fillcolor']='black'
+ppa_black['shape']='square'
+ppa_black['fillcolor']='black'
 
 # List of inputs represented by (name, bits) tuple
-black['ins']=[('gin',2),('pin',2)]
+ppa_black['ins']=[('gin',2),('pin',2)]
 
 # List of outputs represented by (name, bits) tuple
-black['outs']=[('gout',1),('pout',1)]
+ppa_black['outs']=[('gout',1),('pout',1)]
 
 # Returns function that executes the logic of the module
-black['logic'] = lambda gin,pin: [
+ppa_black['logic'] = lambda gin,pin: [
                  gin[1]|(pin[1]&gin[0]) ,
                  pin[1]&pin[0]
                  ]
 
-black['pd'] = 7.5/3
-black['le'] = 5.0/3
-black['diag_le'] = 6.0/3
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppa_black['type']='main'
 
-modules['black']=black
+# Is this cell a buffer?
+ppa_black['buf']=False
+
+# Is this just a fake, helper, cell?
+ppa_black['exists']=True
+
+# Logical effort
+ppa_black['pd'] = 7.5/3
+ppa_black['le'] = 5.0/3
+ppa_black['diag_le'] = 6.0/3
+
+modules['ppa_black']=ppa_black
 
 ### Grey cells
-grey=dict()
+ppa_grey=dict()
 
-grey['verilog']="""
-module grey(gin, pin, gout);
+ppa_grey['verilog']="""
+module ppa_grey(gin, pin, gout);
 
     input[1:0] gin;
     input pin;
@@ -56,30 +66,40 @@ module grey(gin, pin, gout);
 endmodule
 """
 
-grey['shape']='square'
-grey['fillcolor']='grey'
+ppa_grey['shape']='square'
+ppa_grey['fillcolor']='grey'
 
 # List of inputs represented by (name, bits) tuple
-grey['ins']=[('gin',2),('pin',1)]
+ppa_grey['ins']=[('gin',2),('pin',1)]
 
 # List of outputs represented by (name, bits) tuple
-grey['outs']=[('gout',1)]
+ppa_grey['outs']=[('gout',1)]
 
 # Returns function that executes the logic of the module
-grey['logic'] = lambda gin,pin: [
+ppa_grey['logic'] = lambda gin,pin: [
                 gin[1]|(pin&gin[0])
                 ]
 
-grey['pd'] = 7.5/3
-grey['le'] = 2
+ppa_grey['pd'] = 7.5/3
+ppa_grey['le'] = 2
 
-modules['grey']=grey
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppa_grey['type']='main'
+
+# Is this cell a buffer?
+ppa_grey['buf']=False
+
+# Is this just a fake, helper, cell?
+ppa_grey['exists']=True
+
+modules['ppa_grey']=ppa_grey
 
 ### Reduced Black cell
-rblk=dict()
+ppaL_black=dict()
 
-rblk['verilog']="""
-module rblk(hout, iout, gin, pin);
+ppaL_black['verilog']="""
+module ppaL_black(hout, iout, gin, pin);
 
     input [1:0] gin, pin;
     output hout, iout;
@@ -90,31 +110,41 @@ module rblk(hout, iout, gin, pin);
 endmodule
 """
 
-rblk['shape']='square'
-rblk['fillcolor']='black'
+ppaL_black['shape']='square'
+ppaL_black['fillcolor']='ppa_black'
 
 # List of inputs represented by (name, bits) tuple
-rblk['ins']=[('gin',2),('pin',2)]
+ppaL_black['ins']=[('gin',2),('pin',2)]
 
 # List of outputs represented by (name, bits) tuple
-rblk['outs']=[('hout',1),('iout',1)]
+ppaL_black['outs']=[('hout',1),('iout',1)]
 
 # Returns function that executes the logic of the module
-rblk['logic'] = lambda gin,pin: [
+ppaL_black['logic'] = lambda gin,pin: [
                 gin[1]|gin[0] ,
                 pin[1]&pin[0]
                 ]
 
-rblk['pd'] = 5/3
-rblk['le'] = 2
+ppaL_black['pd'] = 5/3
+ppaL_black['le'] = 2
 
-modules['rblk']=rblk
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppaL_black['type']='main'
+
+# Is this cell a buffer?
+ppaL_black['buf']=False
+
+# Is this just a fake, helper, cell?
+ppaL_black['exists']=True
+
+modules['ppaL_black']=ppaL_black
 
 ### Reduced Grey cell
-rgry=dict()
+ppaL_grey=dict()
 
-rgry['verilog']="""
-module rgry(hout, gin);
+ppaL_grey['verilog']="""
+module ppaL_grey(hout, gin);
 
     input[1:0] gin;
     output hout;
@@ -124,24 +154,34 @@ module rgry(hout, gin);
 endmodule
 """
 
-rgry['shape']='square'
-rgry['fillcolor']='grey'
+ppaL_grey['shape']='square'
+ppaL_grey['fillcolor']='ppa_grey'
 
 # List of inputs represented by (name, bits) tuple
-rgry['ins']=[('gin',2)]
+ppaL_grey['ins']=[('gin',2)]
 
 # List of outputs represented by (name, bits) tuple
-rgry['outs']=[('hout',1)]
+ppaL_grey['outs']=[('hout',1)]
 
 # Returns function that executes the logic of the module
-rgry['logic'] = lambda gin: [
+ppaL_grey['logic'] = lambda gin: [
                 gin[1]|gin[0]
                 ]
 
-rgry['pd'] = 5/3
-rgry['le'] = 2
+ppaL_grey['pd'] = 5/3
+ppaL_grey['le'] = 2
 
-modules['rgry']=rgry
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppaL_grey['type']='main'
+
+# Is this cell a buffer?
+ppaL_grey['buf']=False
+
+# Is this just a fake, helper, cell?
+ppaL_grey['exists']=True
+
+modules['ppaL_grey']=ppaL_grey
 
 ### Buffer nodes
 buffer_node=dict()
@@ -169,6 +209,16 @@ buffer_node['logic'] = lambda pin,gin: [pin,gin]
 buffer_node['pd'] = 0
 buffer_node['le'] = 0
 
+# What section of the tree is this cell in?
+# Pre, post, or main?
+buffer_node['type']='main'
+
+# Is this cell a buffer?
+buffer_node['buf']=True
+
+# Is this just a fake, helper, cell?
+buffer_node['exists']=True
+
 modules['buffer_node']=buffer_node
 
 ### Invis nodes
@@ -191,13 +241,23 @@ invis_node['logic'] = lambda pin,gin: [pin,gin]
 invis_node['pd'] = buffer_node['pd']
 invis_node['le'] = buffer_node['le']
 
+# What section of the tree is this cell in?
+# Pre, post, or main?
+invis_node['type']='main'
+
+# Is this cell a buffer?
+invis_node['buf']=True
+
+# Is this just a fake, helper, cell?
+invis_node['exists']=False
+
 modules['invis_node']=invis_node
 
 ### Pre-processing node
-pre_node=dict()
+ppa_pre=dict()
 
-pre_node['verilog']="""
-module pre_node(a_in, b_in, pout, gout);
+ppa_pre['verilog']="""
+module ppa_pre(a_in, b_in, pout, gout);
 
     input a_in, b_in;
     output pout, gout;
@@ -208,29 +268,39 @@ module pre_node(a_in, b_in, pout, gout);
 endmodule
 """
 
-pre_node['shape']='square'
-pre_node['fillcolor']='white'
-pre_node['label']='pre'
-pre_node['style']='dashed'
+ppa_pre['shape']='square'
+ppa_pre['fillcolor']='white'
+ppa_pre['label']='pre'
+ppa_pre['style']='dashed'
 
-pre_node['ins']=[('a_in',1),('b_in',1)]
-pre_node['outs']=[('pout',1),('gout',1)]
+ppa_pre['ins']=[('a_in',1),('b_in',1)]
+ppa_pre['outs']=[('pout',1),('gout',1)]
 
-pre_node['logic'] = lambda a,b: [
+ppa_pre['logic'] = lambda a,b: [
                    a^b,
                    a&b
                    ]
 
-pre_node['pd'] = 9/3
-pre_node['le'] = 9/3
+ppa_pre['pd'] = 9/3
+ppa_pre['le'] = 9/3
 
-modules['pre_node']=pre_node
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppa_pre['type']='pre'
+
+# Is this cell a buffer?
+ppa_pre['buf']=False
+
+# Is this just a fake, helper, cell?
+ppa_pre['exists']=True
+
+modules['ppa_pre']=ppa_pre
 
 ### Fake pre-processing node
-fake_pre=dict(pre_node)
+ppa_first_pre=dict(ppa_pre)
 
-fake_pre['verilog']="""
-module fake_pre(cin, pout, gout);
+ppa_first_pre['verilog']="""
+module ppa_first_pre(cin, pout, gout);
 
     input cin;
     output pout, gout;
@@ -241,11 +311,11 @@ module fake_pre(cin, pout, gout);
 endmodule
 """
 
-fake_pre['ins']=[('cin',1)]
+ppa_first_pre['ins']=[('cin',1)]
 
-fake_pre['logic'] = lambda cin: [0,cin]
+ppa_first_pre['logic'] = lambda cin: [0,cin]
 
-modules['fake_pre']=fake_pre
+modules['ppa_first_pre']=ppa_first_pre
 
 ### XOR node
 
@@ -280,12 +350,22 @@ modules['xor_node']=xor_node
 
 ### Post-processing node
 
-post_node=dict(xor_node)
+ppa_post=dict(xor_node)
 
-post_node['verilog']=post_node['verilog'].replace('xor_node','post_node')
-post_node['label']='post'
+ppa_post['verilog']=ppa_post['verilog'].replace('xor_node','ppa_post')
+ppa_post['label']='post'
 
-modules['post_node']=post_node
+# What section of the tree is this cell in?
+# Pre, post, or main?
+ppa_post['type']='post'
+
+# Is this cell a buffer?
+ppa_post['buf']=False
+
+# Is this just a fake, helper, cell?
+ppa_post['exists']=True
+
+modules['ppa_post']=ppa_post
 
 
 if __name__=="__main__":

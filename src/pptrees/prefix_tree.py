@@ -31,11 +31,11 @@ class prefix_tree(graph):
         # Initialize P/G nodes:
         for a in range(self.w):
             if a==0:
-                n = self.add_node(node(a,0,'fake_pre'))
+                n = self.add_node(node(a,0,'ppa_first_pre'))
                 n.outs['pout'][0]="$p_lsb"
                 n.outs['gout'][0]="$g_lsb"
             else:
-                n = self.add_node(node(a,0,'pre_node'))
+                n = self.add_node(node(a,0,'ppa_pre'))
                 n.outs['pout'][0]="$p{0}".format(a-1)
                 n.outs['gout'][0]="$g{0}".format(a-1)
 
@@ -52,7 +52,7 @@ class prefix_tree(graph):
                         self.add_node(node(b,a,'invis_node'))
                         ctr = num_buf-1
                     else:
-                        self.add_node(node(b,a,'black'),pre=self[b+ctr-1,a-1])
+                        self.add_node(node(b,a,'ppa_black'),pre=self[b+ctr-1,a-1])
                         ctr-=1
             self.dna="sklansky"
         # Initialize to Kogge-Stone
@@ -61,7 +61,7 @@ class prefix_tree(graph):
                 for b in range(self.w):
                     num_buf = 2**(a-1)
                     if b>num_buf-1:
-                        self.add_node(node(b,a,'black'),pre=self[b-num_buf,a-1])
+                        self.add_node(node(b,a,'ppa_black'),pre=self[b-num_buf,a-1])
                     else:
                         self.add_node(node(b,a,'buffer_node'))
             self.dna="kogge-stone"
@@ -72,12 +72,12 @@ class prefix_tree(graph):
                     if b!=a:
                         self.add_node(node(b,a,'invis_node'))
                     else:
-                        self.add_node(node(b,a,'black'),pre=self[b-1,a-1])
+                        self.add_node(node(b,a,'ppa_black'),pre=self[b-1,a-1])
             self.dna="ripple-carry"
 
         # Post-processing
         for a in range(self.w):
-            n = self.add_node(node(a,self.w,'post_node'))
+            n = self.add_node(node(a,self.w,'ppa_post'))
 
         self.clean()
 
@@ -115,7 +115,7 @@ class prefix_tree(graph):
         # Keeps track of group propagates/generates
         n.pg=0
         # Initialize pg if node is P/G node
-        if n.m in ['pre_node','fake_pre']:
+        if modules[n.m]['type']=='pre':
             n.pg=1<<n.x
 
         # Connects up
@@ -127,14 +127,15 @@ class prefix_tree(graph):
             self._add_top(self.bot(n))
 
         # If pre_node is added, HDL connect it to input pins
-        if n.m in ['pre_node']:
-            n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
-            n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
-        if n.m in ['fake_pre']:
-            n.ins['cin'][0]='$cin'
+        if modules[n.m]['type']=='pre':
+            if n.x==0:
+                n.ins['cin'][0]='$cin'
+            else:
+                n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
+                n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
 
         # If post_node is added, HDL connect it to output pins
-        if n.m in ['post_node']:
+        if modules[n.m]['type']=='post':
             #n.ins['gin'][0]='$c{0}'.format(n.x)
             n.outs['sum'][0]='$sum[{0}]'.format(n.x)
 
@@ -145,7 +146,7 @@ class prefix_tree(graph):
 
         TO-DO: Rename P/G to a more general, addition-nonspecific, term.
         """
-        if n.m in ['pre_node','fake_pre']:
+        if modules[n.m]['type']=='pre':
             return
 
         top = self.top(n)
@@ -672,7 +673,7 @@ class prefix_tree(graph):
             top = self.top(x)
         # ∃ b s.t pre(a)=pre(b),
             if self.pre(x)==pre or \
-               (top==pre and x.m in ['invis_node','buffer_node']):
+               (top==pre and node._isbuf(x)):
 
         # We have to account for post(a) remapping
         # ∀ post(a), is_pg([top(post),a],[top(post),b]) or ∄ top(post)
@@ -688,7 +689,7 @@ class prefix_tree(graph):
         bot = self.bot(a)
         # ∄ bot(a) or bot(a) = post-processing
         if b is not None and (not node._exists(bot) or \
-           bot.m in ['post_node'] or \
+           modules[bot.m]['type']=='post' or \
            node._isbuf(bot)):
             return (a,b)
 
@@ -903,7 +904,7 @@ class prefix_tree(graph):
         # create c=top(top(a)); pre(c) = top(top(b))
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
-            x=self._morph_node(x,'black')
+            x=self._morph_node(x,'ppa_black')
             if not node._exists(y):
                 y=self._morph_node(y,'buffer_node')
             self._add_pre(x,y)
@@ -954,7 +955,7 @@ class prefix_tree(graph):
         for x in post:
             top = self.top(x)
             if not self._is_pg_subset((top,b),(top,a)):
-                top = self._morph_node(top,'black')
+                top = self._morph_node(top,'ppa_black')
                 self._add_pre(top,self.top(a))
                 if not node._exists(self.top(a)):
                     self._morph_node(self.top(a),'buffer_node')
@@ -1009,7 +1010,7 @@ class prefix_tree(graph):
         d=[b]+d
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
-            x=self._morph_node(x,'black')
+            x=self._morph_node(x,'ppa_black')
             if not node._exists(y):
                 y=self._morph_node(y,'buffer_node')
             self._add_pre(x,y)
@@ -1049,7 +1050,7 @@ class prefix_tree(graph):
         d=[b]+d
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
-            x=self._morph_node(x,'black')
+            x=self._morph_node(x,'ppa_black')
             if not node._exists(y):
                 y=self._morph_node(y,'buffer_node')
             self._add_pre(x,y)
@@ -1255,7 +1256,7 @@ class prefix_tree(graph):
             # Return True if all bits are high
             try:
                 assert pg&(pg+1)==0
-                assert post_processing[i].m in ['post_node']
+                assert modules[post_processing[i].m]['type']=='post'
             except AssertionError as e:
                 print("\nTree check failed on bit {0}\n".format(i))
                 raise e
