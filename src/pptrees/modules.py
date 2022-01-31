@@ -10,11 +10,11 @@ ppa_black=dict()
 ppa_black['verilog']="""
 module ppa_black(gin, pin, gout, pout);
 
-    input [1:0] gin, pin;
-    output gout, pout;
+\tinput [1:0] gin, pin;
+\toutput gout, pout;
 
-    assign pout=pin[1]&pin[0];
-    assign gout=gin[1]|(pin[1]&gin[0]);
+\tassign pout=pin[1]&pin[0];
+\tassign gout=gin[1]|(pin[1]&gin[0]);
 
 endmodule
 """
@@ -57,11 +57,11 @@ ppa_grey=dict()
 ppa_grey['verilog']="""
 module ppa_grey(gin, pin, gout);
 
-    input[1:0] gin;
-    input pin;
-    output gout;
+\tinput[1:0] gin;
+\tinput pin;
+\toutput gout;
 
-    assign gout=gin[1]|(pin&gin[0]);
+\tassign gout=gin[1]|(pin&gin[0]);
 
 endmodule
 """
@@ -101,11 +101,11 @@ ppaL_black=dict()
 ppaL_black['verilog']="""
 module ppaL_black(hout, iout, gin, pin);
 
-    input [1:0] gin, pin;
-    output hout, iout;
+\tinput [1:0] gin, pin;
+\toutput hout, iout;
 
-    assign iout=pin[1]&pin[0];
-    assign hout=gin[1]|gin[0];
+\tassign iout=pin[1]&pin[0];
+\tassign hout=gin[1]|gin[0];
 
 endmodule
 """
@@ -146,10 +146,10 @@ ppaL_grey=dict()
 ppaL_grey['verilog']="""
 module ppaL_grey(hout, gin);
 
-    input[1:0] gin;
-    output hout;
+\tinput[1:0] gin;
+\toutput hout;
 
-    assign hout=gin[1]|gin[0];
+\tassign hout=gin[1]|gin[0];
 
 endmodule
 """
@@ -189,11 +189,11 @@ buffer_node=dict()
 buffer_node['verilog']="""
 module buffer_node(pin, gin, pout, gout);
 
-    input pin, gin;
-    output pout, gout;
+\tinput pin, gin;
+\toutput pout, gout;
 
-    assign pout=pin;
-    assign gout=gin;
+\tassign pout=pin;
+\tassign gout=gin;
 
 endmodule
 """
@@ -259,11 +259,11 @@ ppa_pre=dict()
 ppa_pre['verilog']="""
 module ppa_pre(a_in, b_in, pout, gout);
 
-    input a_in, b_in;
-    output pout, gout;
+\tinput a_in, b_in;
+\toutput pout, gout;
 
-    assign pout=a_in^b_in;
-    assign gout=a_in&b_in;
+\tassign pout=a_in^b_in;
+\tassign gout=a_in&b_in;
 
 endmodule
 """
@@ -302,11 +302,11 @@ ppa_first_pre=dict(ppa_pre)
 ppa_first_pre['verilog']="""
 module ppa_first_pre(cin, pout, gout);
 
-    input cin;
-    output pout, gout;
+\tinput cin;
+\toutput pout, gout;
 
-    assign pout=1'b0;
-    assign gout=cin;
+\tassign pout=1'b0;
+\tassign gout=cin;
 
 endmodule
 """
@@ -324,10 +324,10 @@ xor_node=dict()
 xor_node['verilog']="""
 module xor_node(pin, gin, sum);
 
-    input pin, gin;
-    output sum;
+\tinput pin, gin;
+\toutput sum;
 
-    assign sum=pin^gin;
+\tassign sum=pin^gin;
 
 endmodule
 """
