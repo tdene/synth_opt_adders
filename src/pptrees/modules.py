@@ -30,7 +30,7 @@ ppa_black['outs']=[('gout',1),('pout',1)]
 
 # Returns function that executes the logic of the module
 ppa_black['logic'] = lambda gin,pin: [
-                 gin[1]|(pin[1]&gin[0]) ,
+                 gin[1]|(pin[1]&gin[0]),
                  pin[1]&pin[0]
                  ]
 
@@ -121,7 +121,7 @@ ppaL_black['outs']=[('hout',1),('iout',1)]
 
 # Returns function that executes the logic of the module
 ppaL_black['logic'] = lambda gin,pin: [
-                gin[1]|gin[0] ,
+                gin[1]|gin[0],
                 pin[1]&pin[0]
                 ]
 
@@ -369,8 +369,4 @@ modules['ppa_post']=ppa_post
 
 
 if __name__=="__main__":
-
-# Note that nothing yet exists to check this file
-# for checkable errors, such as inputs/outputs
-# not matching the logical function
     raise RuntimeError("This file is importable, but not executable")
