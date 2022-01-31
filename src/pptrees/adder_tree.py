@@ -69,7 +69,7 @@ class adder_tree(prefix_tree):
         # Iterate over all pre-processing nodes
         for n in self.node_list[0]:
             preamble += n.hdl()+'\n'
-        used_modules.add(n.m)
+            used_modules.add(n.m)
 
         preamble += '\n'
 
@@ -79,7 +79,7 @@ class adder_tree(prefix_tree):
         for n in self.node_list[-1]:
             n.ins['pin'][0]="$p{0}".format(n.x)
             preamble += n.hdl()+'\n'
-        used_modules.add(n.m)
+            used_modules.add(n.m)
 
         preamble += '\n'
 
