@@ -1,5 +1,6 @@
 import networkx as nx
 from .modules import modules
+from .util import sub_brackets
 
 class prefix_node():
     """Defines a node in the prefix summation graph
@@ -49,15 +50,15 @@ class prefix_node():
 
     def _exists(n):
         """Static helper function that checks whether a node is not invis"""
-        return n is not None and n.m not in ['invis_node']
+        return n is not None and modules[n.m]['exists']
 
     def _isbuf(n):
         """Static helper function that checks whether a node is a buffer"""
-        return n is not None and n.m in ['buffer_node']
+        return n is not None and modules[n.m]['buf']
 
     def _in_tree(n):
         """Static helper function that checks whether a node is in the tree"""
-        return n is not None and n.m not in ['post_node','pre_node','fake_pre']
+        return n is not None and modules[n.m]['type']=='main'
 
     def _parse_net(x):
         """Static helper function that converts a net's ID to its name in HDL
@@ -96,9 +97,10 @@ class prefix_node():
 
         # Grab module's verilog definition without the header/footer
         ret='\n'.join([x for x in modules[self.m]['verilog'].split('\n')
-                      if (x!='' and 'input' not in x
+                      if (x!=''
+                          and 'input' not in x
                           and 'output' not in x
-                          and 'module' not in x)])+'\n'
+                          and 'module' not in x)])
         # Create list of all instance pins and copy in unformatted net IDs
         pins=self.ins.copy()
         pins.update(self.outs)
@@ -251,6 +253,7 @@ class prefix_graph(nx.MultiDiGraph):
         edge_kwargs={'arrowhead':'none',
                      'headport':'ne','tailport':'sw',
                      'ins':pin1,'outs':pin2}
+        edge_kwargs['edge_name']=edge_name
         if n2.x==n1.x:
             edge_kwargs['headport']='n'
             edge_kwargs['tailport']='s'
@@ -347,7 +350,7 @@ class prefix_graph(nx.MultiDiGraph):
         # Get ordered list of all nodes
         topo_order = nx.lexicographical_topological_sort(self)
         topo_order = (x for x in topo_order if (x.block is None) \
-#                and (x.m not in ['post_node','pre_node','fake_pre']) \
+#                and prefix_node._in_tree(x) \
                 )
         # Iterate through graph looking for longest paths
         dists = {}
@@ -390,49 +393,14 @@ class prefix_graph(nx.MultiDiGraph):
             self.add_block(*path)
             return self.add_best_blocks()
 
-    # Needs to be cleaned
-    def hdl(self,out=None):
-        """Outputs HDL representation of graph"""
-        def no_brack(x):
-            return x.replace('[','_').replace(']','')
-        module_list=[]
-        #module_defs=""
-        head=""; body=""; block_instances="";
-        module_defs=set()
-        module_defs.add('grey')
-        module_defs.add('pre_node')
-        block_defs=""
-        endmodule="\nendmodule\n"
-        ### CLEAN BELOW PLEASE!!!!!!!!!!!!!!!!
-        head="\nmodule adder(cout, sum, a, b, cin);\n"
-        head+="\tinput [{0}:0] a, b;\n".format(self.w-1)
-        head+="\tinput cin;\n"
-        head+="\toutput [{0}:0] sum;\n".format(self.w-1)
-        head+="\toutput cout;\n"
-        head+="\twire"
-        for x in range(1,self.next_net):
-            head+=" n{0},".format(x)
-        head+=" g_lsb, p_lsb,"
-        for x in range(self.w):
-            head+=" g{0}, p{0},".format(x)
-        head = head[:-1]+";\n"
-        head+="\tpre_node pre_node_{1}_0 ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );\n".format(self.w-1,self.w)
-        cfinal=self.node_list[-1][-1].ins['gin'][0]
-        head+="\tgrey grey_node_cout ( .gin ( {{g{0},n{1}}} ), .pin ( p{0} ), .gout ( cout ) );\n".format(self.w-1,cfinal)
-        ### CLEAN ABOVE PLEASE!!!!!
-        for a in self.node_list:
-            for n in a:
-                if n.m in ['post_node']:
-                    n.ins['pin'][0]="$p{0}".format(n.x)
-                if n.block is not None:
-                    continue
-                if n.m in ['buffer_node','invis_node']:
-                    n.flatten()
-                #n.flatten()
-                body+=n.hdl()+'\n'
-                if n.m not in module_list:
-                    module_list.append(n.m)
-                    module_defs.add(n.m)
+    def _hdl_blocks(self):
+        """Writes HDL of the graph's blocks
+        
+        Returns a tuple consisting of the HDL string,
+        and the block module definitions.
+        """
+
+        block_hdl = ""; block_defs = ""
 
         # Iterate over all blocks
         for b in range(len(self.blocks)):
@@ -459,52 +427,110 @@ class prefix_graph(nx.MultiDiGraph):
             inst_b = "	block_{0} block_{0}_instance (".format(b)
             tmp=ins|outs
             # Add ins/outs to block instantiation with dot notation
-            for x in tmp: inst_b+=" .{0} ( {1} ),".format(no_brack(x),x)
+            for x in tmp: inst_b+=" .{0} ( {1} ),".format(sub_brackets(x),x)
             inst_b=inst_b[:-1]+' );\n'
-            # Add block instantiation to list of block_instances
-            block_instances+=inst_b
+            # Add block instantiation to block HDL
+            block_hdl+=inst_b
 
             # Define block
             block_def="\nmodule block_{0}(".format(b)
             # List all ins/outs in module definition
-            for x in tmp: block_def+=' '+no_brack(x)+','
+            for x in tmp: block_def+=' '+sub_brackets(x)+','
             block_def = block_def[:-1]+');\n\n'
             # Declare all inputs and outputs
             block_def += "	input"
-            for x in ins: block_def+=" {0},".format(no_brack(x))
+            for x in ins: block_def+=" {0},".format(sub_brackets(x))
             block_def = block_def[:-1]+";\n"
 
             block_def += "	output"
-            for x in outs: block_def+=" {0},".format(no_brack(x))
+            for x in outs: block_def+=" {0},".format(sub_brackets(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
             block_def += '\n'
             for n in nodes:
-                if n.m in ['post_node']:
+                if modules[n.m]['type']=='post':
                     tmp = n.ins['pin'][0]
                     n.ins['pin'][0]="$p{0}".format(n.x)
                     n.flatten()
-                    block_def+=no_brack(n.hdl())+'\n'
+                    block_def+=sub_brackets(n.hdl())+'\n'
                     n.ins['pin'][0] = tmp
                 else:
                     n.flatten()
-                    block_def+=no_brack(n.hdl())+'\n'
-            # Write endmodule line
-            block_def+=endmodule
+                    block_def+=sub_brackets(n.hdl())+'\n'
+            # Write "\nendmodule\n" line
+            block_def+="\nendmodule\n"
             # Add block definition to list of block_defs
             block_defs+=block_def
 
         # end iterate over all blocks
+        return (block_hdl,block_defs)
         
+
+    def _hdl_preamble(self):
+        """Defines the preamble of the graph's HDL
+        
+        This abstract method is meant to be implemented by child classes.
+
+        Returns a tuple consisting of the HDL string,
+        and any modules used by the preamble.
+        """
+        return ("",set())
+
+    def hdl(self,out=None,full_flat=False):
+        """Outputs HDL representation of graph
+        
+        out is an optional file to write the HDL to
+        full_flat is an optional argument that can fully flatten the netlist
+        """
+        block_hdl=""; block_defs=""
+
+        # Pull in HDL preamble, as defined by child class 
+        hdl, module_defs = self._hdl_preamble()
+
+        # Iterate over all nodes in graph
+        for a in self.node_list:
+            for n in a:
+                # Skip pre/post nodes
+                if not prefix_node._in_tree(n):
+                    continue
+                # Skip nodes inside a block
+                if n.block is not None:
+                    continue
+                # Flatten invis nodes
+                if not prefix_node._exists(n):
+                    n.flatten()
+                # If full_flat, flatten all nodes
+                if full_flat:
+                    n.flatten()
+                # Add in HDL
+                hdl += n.hdl()+'\n'
+                # Mark the node's module as in-use
+                module_defs.add(n.m)
+            hdl += '\n'
+
+        # Pull in HDL of blocks
+        block_hdl, block_defs = self._hdl_blocks()
+
+        hdl += block_hdl
+
+        # End main module
+        hdl += "endmodule\n"
+
         # Turn module defs to text
-        module_def_text=""
+        module_def_text = ""
         for a in module_defs:
             module_def_text+=modules[a]['verilog']
-        ret=head+body+block_instances+endmodule+module_def_text+block_defs
+        # Add in block defs
+        module_def_text += block_defs
+
+        # Combine main module and module defs
+        hdl = hdl + module_def_text
+
+        # Write to file
         if out is not None:
             with open(out,'w') as f:
-                print(ret,file=f)
-        return ret
+                print(hdl,file=f)
+        return hdl
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")

@@ -1,5 +1,5 @@
 from pptrees.prefix_graph import prefix_node as node
-from pptrees.prefix_tree import prefix_tree as tree
+from pptrees.adder_tree import adder_tree as tree
 from pptrees.util import lg
 
 g = tree(32,"sklansky")
