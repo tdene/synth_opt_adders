@@ -13,8 +13,8 @@ module ppa_black(gin, pin, gout, pout);
 \tinput [1:0] gin, pin;
 \toutput gout, pout;
 
-\tand2(pout,pin[1],pin[0]);
-\tao21(gout,gin[0],pin[1],gin[1]);
+\tand2 U1(pout,pin[1],pin[0]);
+\tao21 U2(gout,gin[0],pin[1],gin[1]);
 
 endmodule
 """
@@ -61,7 +61,7 @@ module ppa_grey(gin, pin, gout);
 \tinput pin;
 \toutput gout;
 
-\tao21(gout,gin[0],pin.gin[1]);
+\tao21 U1(gout,gin[0],pin,gin[1]);
 
 endmodule
 """
@@ -104,8 +104,8 @@ module ppaL_black(hout, iout, gin, pin);
 \tinput [1:0] gin, pin;
 \toutput hout, iout;
 
-\tand2(iout,pin[0],pin[1]);
-\tor2(hout,gin[0],gin[1]);
+\tand2 U1(iout,pin[0],pin[1]);
+\tor2 U2(hout,gin[0],gin[1]);
 
 endmodule
 """
@@ -149,7 +149,7 @@ module ppaL_grey(hout, gin);
 \tinput[1:0] gin;
 \toutput hout;
 
-\tor2(hout,gin[0],gin[1]);
+\tor2 U1(hout,gin[0],gin[1]);
 
 endmodule
 """
@@ -192,8 +192,8 @@ module buffer_node(pin, gin, pout, gout);
 \tinput pin, gin;
 \toutput pout, gout;
 
-\tbuffer(pout,pin);
-\tbuffer(gout,gin);
+\tbuffer U1(pout,pin);
+\tbuffer U2(gout,gin);
 
 endmodule
 """
@@ -272,8 +272,8 @@ module ppa_pre(a_in, b_in, pout, gout);
 \tinput a_in, b_in;
 \toutput pout, gout;
 
-\txor2(pout,a_in,b_in);
-\tand2(gout,a_in,b_in);
+\txor2 U1(pout,a_in,b_in);
+\tand2 U2(gout,a_in,b_in);
 
 endmodule
 """
@@ -337,7 +337,7 @@ module ppa_post(pin, gin, sum);
 \tinput pin, gin;
 \toutput sum;
 
-\txor2(sum,pin,gin);
+\txor2 U1(sum,pin,gin);
 
 endmodule
 """
