@@ -1,5 +1,6 @@
 import networkx as nx
 import importlib_resources
+import os
 from .modules import modules
 from .util import sub_brackets
 
@@ -533,7 +534,8 @@ class prefix_graph(nx.MultiDiGraph):
                 print(hdl,file=f)
             # Write mapping to file
             map_hdl = (importlib_resources.files("pptrees") / "mappings" / (mapping+'.v')).read_text()
-            with open(mapping+"_map.v",'w') as f:
+            map_file = os.path.join(os.path.dirname(os.path.abspath(out)),mapping+"_map.v")
+            with open(map_file,'w') as f:
                 print(map_hdl,file=f)
 
         return hdl
