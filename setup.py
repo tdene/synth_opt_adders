@@ -15,10 +15,12 @@ setup(
     keywords=['hardware adders prefix'],
     package_dir={'':'src'},
     packages=['pptrees'],
+    package_data={'pptrees':['src/pptrees/mappings/*.v']},
     long_description=open('README.md').read(),
     install_requires=[
         "networkx",
         "pydot",
         "graphviz",
+        "importlib_resources"
     ],
 )

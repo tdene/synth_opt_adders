@@ -1,4 +1,5 @@
 import networkx as nx
+import importlib_resources
 from .modules import modules
 from .util import sub_brackets
 
@@ -476,7 +477,7 @@ class prefix_graph(nx.MultiDiGraph):
         """
         return ("",set())
 
-    def hdl(self,out=None,full_flat=False):
+    def hdl(self,out=None,mapping="behavioral",full_flat=False):
         """Outputs HDL representation of graph
         
         out is an optional file to write the HDL to
@@ -530,6 +531,11 @@ class prefix_graph(nx.MultiDiGraph):
         if out is not None:
             with open(out,'w') as f:
                 print(hdl,file=f)
+            # Write mapping to file
+            map_hdl = (importlib_resources.files("pptrees") / "mappings" / (mapping+'.v')).read_text()
+            with open(mapping+"_map.v",'w') as f:
+                print(map_hdl,file=f)
+
         return hdl
 
 if __name__=="__main__":
