@@ -1,6 +1,7 @@
 import networkx as nx
-import importlib_resources
+import importlib.resources
 import os
+import shutil
 from .modules import modules
 from .util import sub_brackets
 
@@ -532,11 +533,12 @@ class prefix_graph(nx.MultiDiGraph):
         if out is not None:
             with open(out,'w') as f:
                 print(hdl,file=f)
-            # Write mapping to file
-            map_hdl = (importlib_resources.files("pptrees") / "mappings" / (mapping+'.v')).read_text()
-            map_file = os.path.join(os.path.dirname(os.path.abspath(out)),mapping+"_map.v")
-            with open(map_file,'w') as f:
-                print(map_hdl,file=f)
+            # Copy mapping file from package to local directory
+            with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
+                pkg_map_file = pkg_map_dir / (mapping+'_map.v')
+            local_map_file = os.path.join(os.path.dirname(os.path.abspath(out)))
+            # Use shutil.copy to avoid loading file into memory
+            shutil.copy(pkg_map_file,local_map_file)
 
         return hdl
 
