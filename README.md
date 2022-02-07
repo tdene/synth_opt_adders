@@ -1,4 +1,4 @@
-# Prefix tree adder generation scripts
+# Prefix tree generation scripts
 
 ## Table of Contents
 

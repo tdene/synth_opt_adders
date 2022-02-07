@@ -1,4 +1,7 @@
 import networkx as nx
+import importlib.resources
+import os
+import shutil
 from .modules import modules
 from .util import sub_brackets
 
@@ -476,7 +479,7 @@ class prefix_graph(nx.MultiDiGraph):
         """
         return ("",set())
 
-    def hdl(self,out=None,full_flat=False):
+    def hdl(self,out=None,mapping="behavioral",full_flat=False):
         """Outputs HDL representation of graph
         
         out is an optional file to write the HDL to
@@ -530,6 +533,13 @@ class prefix_graph(nx.MultiDiGraph):
         if out is not None:
             with open(out,'w') as f:
                 print(hdl,file=f)
+            # Copy mapping file from package to local directory
+            with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
+                pkg_map_file = pkg_map_dir / (mapping+'_map.v')
+            local_map_file = os.path.join(os.path.dirname(os.path.abspath(out)))
+            # Use shutil.copy to avoid loading file into memory
+            shutil.copy(pkg_map_file,local_map_file)
+
         return hdl
 
 if __name__=="__main__":

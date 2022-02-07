@@ -13,8 +13,8 @@ module ppa_black(gin, pin, gout, pout);
 \tinput [1:0] gin, pin;
 \toutput gout, pout;
 
-\tassign pout=pin[1]&pin[0];
-\tassign gout=gin[1]|(pin[1]&gin[0]);
+\tand2 U1(pout,pin[1],pin[0]);
+\tao21 U2(gout,gin[0],pin[1],gin[1]);
 
 endmodule
 """
@@ -61,7 +61,7 @@ module ppa_grey(gin, pin, gout);
 \tinput pin;
 \toutput gout;
 
-\tassign gout=gin[1]|(pin&gin[0]);
+\tao21 U1(gout,gin[0],pin,gin[1]);
 
 endmodule
 """
@@ -104,8 +104,8 @@ module ppaL_black(hout, iout, gin, pin);
 \tinput [1:0] gin, pin;
 \toutput hout, iout;
 
-\tassign iout=pin[1]&pin[0];
-\tassign hout=gin[1]|gin[0];
+\tand2 U1(iout,pin[0],pin[1]);
+\tor2 U2(hout,gin[0],gin[1]);
 
 endmodule
 """
@@ -149,7 +149,7 @@ module ppaL_grey(hout, gin);
 \tinput[1:0] gin;
 \toutput hout;
 
-\tassign hout=gin[1]|gin[0];
+\tor2 U1(hout,gin[0],gin[1]);
 
 endmodule
 """
@@ -192,8 +192,8 @@ module buffer_node(pin, gin, pout, gout);
 \tinput pin, gin;
 \toutput pout, gout;
 
-\tassign pout=pin;
-\tassign gout=gin;
+\tbuffer U1(pout,pin);
+\tbuffer U2(gout,gin);
 
 endmodule
 """
@@ -224,7 +224,17 @@ modules['buffer_node']=buffer_node
 ### Invis nodes
 invis_node=dict()
 
-invis_node['verilog']=buffer_node['verilog'].replace('buffer','invis')
+invis_node['verilog']="""
+module invis_node(pin, gin, pout, gout);
+
+\tinput pin, gin;
+\toutput pout, gout;
+
+\tassign pout = pin;
+\tassign gout = gin;
+
+endmodule
+"""
 
 #invis_node['style']='invis'
 invis_node['shape']='point'
@@ -262,8 +272,8 @@ module ppa_pre(a_in, b_in, pout, gout);
 \tinput a_in, b_in;
 \toutput pout, gout;
 
-\tassign pout=a_in^b_in;
-\tassign gout=a_in&b_in;
+\txor2 U1(pout,a_in,b_in);
+\tand2 U2(gout,a_in,b_in);
 
 endmodule
 """
@@ -317,43 +327,34 @@ ppa_first_pre['logic'] = lambda cin: [0,cin]
 
 modules['ppa_first_pre']=ppa_first_pre
 
-### XOR node
+### Post-processing node
 
-xor_node=dict()
+ppa_post=dict()
 
-xor_node['verilog']="""
-module xor_node(pin, gin, sum);
+ppa_post['verilog']="""
+module ppa_post(pin, gin, sum);
 
 \tinput pin, gin;
 \toutput sum;
 
-\tassign sum=pin^gin;
+\txor2 U1(sum,pin,gin);
 
 endmodule
 """
 
-xor_node['shape']='invtrapezium'
-xor_node['fillcolor']='white'
-xor_node['style']='dashed'
-xor_node['label']='XOR'
-xor_node['fixedsize']='shape'
-
-xor_node['ins']=[('pin',1),('gin',1)]
-xor_node['outs']=[('sum',1)]
-
-xor_node['logic'] = lambda pin,gin: [pin^gin]
- 
-xor_node['pd'] = 9/3
-xor_node['le'] = 9/3
-
-modules['xor_node']=xor_node
-
-### Post-processing node
-
-ppa_post=dict(xor_node)
-
-ppa_post['verilog']=ppa_post['verilog'].replace('xor_node','ppa_post')
+ppa_post['shape']='invtrapezium'
+ppa_post['fillcolor']='white'
 ppa_post['label']='post'
+ppa_post['style']='dashed'
+ppa_post['fixedsize']='shape'
+
+ppa_post['ins']=[('pin',1),('gin',1)]
+ppa_post['outs']=[('sum',1)]
+
+ppa_post['logic'] = lambda pin,gin: [pin^gin]
+ 
+ppa_post['pd'] = 9/3
+ppa_post['le'] = 9/3
 
 # What section of the tree is this cell in?
 # Pre, post, or main?
