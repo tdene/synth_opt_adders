@@ -84,7 +84,7 @@ if (ROOT / "_theme").is_dir():
         'vcs_pageview_mode': 'blob',
     }
 else:
-    html_theme = "alabaster"
+    html_theme = "sphinx_rtd_theme"
 
 htmlhelp_basename = 'pptrees_doc'
 
