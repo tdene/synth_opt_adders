@@ -30,4 +30,4 @@ latex:
 #---
 
 clean:
-	$(RM) -rf build
+	$(RM) -rf _build
