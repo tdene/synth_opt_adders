@@ -1,1 +1,2 @@
 sphinx
+git+https://github.com/tdene/synth_opt_adders.git
