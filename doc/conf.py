@@ -80,7 +80,7 @@ if (ROOT / "_theme").is_dir():
     html_theme = "_theme"
     html_theme_options = {
         'logo_only': True,
-        'home_breadcrumbs': False,
+        'home_breadcrumbs': True,
         'vcs_pageview_mode': 'blob',
     }
 else:
