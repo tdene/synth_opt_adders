@@ -46,6 +46,7 @@ master_doc = 'index'
 
 project = 'Parallel prefix tree generation and exploration'
 author = 'Teodor-Dumitru Ene'
+copyright = 'Teodor-Dumitru Ene'
 
 version = "0.0.2"
 release = version  # The full version, including alpha/beta/rc tags.
