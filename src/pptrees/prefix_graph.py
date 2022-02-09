@@ -17,15 +17,15 @@ class prefix_node():
         """Initializes a node in the prefix summation graph
 
         Pre-conditions:
-        x, y are integers
-        module is a valid module from the modules list
-        flat is an optional flag to determine how HDL is output
-        custom_module is an optional alternative for providing
+            x, y are integers
+            module is a valid module from the modules list
+            flat is an optional flag to determine how HDL is output
+            custom_module is an optional alternative for providing
             a module definition that is not included in modules
 
         Post-conditions:
-        stores all these values into internal variables
-        creates two dictionaries of input/output edges
+            stores all these values into internal variables
+            creates two dictionaries of input/output edges
         """
         if not (isinstance(x,int) and isinstance(y,int)):
             raise TypeError("prefix_node x,y must both be integers")
