@@ -7,10 +7,14 @@ current state-of-the-art physical implementation tools to perform their own
 technology mapping.
 
 This folder contains map files that can be used to directly map logic onto
-standard cell libraries. Current implementation results in the `hdl` method of
-the `prefix_graph` class making a copy of the desired map file available in the
-same final folder as the main HDL file. An alternative implementation would be
-to concatenate the two files.
+standard cell libraries.<br>
+All map files included herein are manually generated.
+
+Current implementation results in the `hdl` method of the `prefix_graph` class
+making a copy of the desired map file available in the same final folder as the
+main HDL file.
+
+An alternative implementation would be to concatenate the two files.
 
 ## behavioral_map.v
 

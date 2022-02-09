@@ -1,6 +1,6 @@
 import networkx as nx
 import importlib.resources
-import os
+import pathlib
 import shutil
 from .modules import modules
 from .util import sub_brackets
@@ -485,6 +485,11 @@ class prefix_graph(nx.MultiDiGraph):
         out is an optional file to write the HDL to
         full_flat is an optional argument that can fully flatten the netlist
         """
+        if out is not None:
+            outdir = pathlib.Path(out).resolve().parent
+            if not outdir.exists():
+                raise FileNotFoundError("desired path for hdl output is invalid")
+
         block_hdl=""; block_defs=""
 
         # Pull in HDL preamble, as defined by child class 
@@ -531,14 +536,16 @@ class prefix_graph(nx.MultiDiGraph):
 
         # Write to file
         if out is not None:
+            
             with open(out,'w') as f:
                 print(hdl,file=f)
+
             # Copy mapping file from package to local directory
             with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
                 pkg_map_file = pkg_map_dir / (mapping+'_map.v')
-            local_map_file = os.path.join(os.path.dirname(os.path.abspath(out)))
-            # Use shutil.copy to avoid loading file into memory
-            shutil.copy(pkg_map_file,local_map_file)
+                local_map_file = outdir / (mapping+'_map.v')
+                # Use shutil.copy to avoid loading file into memory
+                shutil.copy(pkg_map_file,local_map_file)
 
         return hdl
 
