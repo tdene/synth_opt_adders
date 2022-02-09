@@ -46,6 +46,7 @@ master_doc = 'index'
 
 project = 'Parallel prefix tree generation and exploration'
 author = 'Teodor-Dumitru Ene'
+copyright = 'Teodor-Dumitru Ene'
 
 version = "0.0.2"
 release = version  # The full version, including alpha/beta/rc tags.
@@ -80,7 +81,7 @@ if (ROOT / "_theme").is_dir():
     html_theme = "_theme"
     html_theme_options = {
         'logo_only': True,
-        'home_breadcrumbs': False,
+        'home_breadcrumbs': True,
         'vcs_pageview_mode': 'blob',
     }
 else:
