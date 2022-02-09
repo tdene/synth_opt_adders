@@ -1,0 +1,16 @@
+name: 'doc'
+
+on:
+  push:
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: buildthedocs/btd@v0
+      with:
+        token: ${{ github.token }}
