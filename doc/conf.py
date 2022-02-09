@@ -19,8 +19,12 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinxcontrib.bibtex',
 ]
+
+bibtex_default_style = 'plain'
+bibtex_bibfiles = [str(ROOT / 'refs.bib')]
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
