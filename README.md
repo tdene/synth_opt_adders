@@ -1,3 +1,19 @@
+<p align="center">
+  <a title="tdene.github.io/synth_opt_adders" href="https://tdene.github.io/synth_opt_adders"><img src="https://img.shields.io/website?longCache=true&style=flat-square&label=tdene.github.io%2Fsynth_opt_adders&logo=GitHub&logoColor=fff&up_color=blueviolet&up_message=Read%20now%20%E2%9E%9A&url=https%3A%2F%2Ftdene.github.io%2Fsynth_opt_adders%2Findex.html"></a><!--
+  -->
+  <a title="Apache-2.0" href="https://github.com/tdene/synth_opt_adders/blob/main/LICENSE"><img src="https://img.shields.io/github/license/tdene/synth_opt_adders?longCache=true&style=flat-square&logo=Apache&label=Code"></a><!--
+  -->
+  <a title="'config' workflow Status"
+     href="https://github.com/VUnit/vunit/actions?query=workflow%3Aconfig"
+  ><img alt="'config' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&style=flat-square&label=config&logo=GitHub%20Actions&logoColor=fff"
+  /></a><!--
+  -->
+  <a title="'docs' workflow Status"
+     href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
+  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
+  /></a>
+</p>
+
 # Prefix tree generation scripts
 
 ## Table of Contents
