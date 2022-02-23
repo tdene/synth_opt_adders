@@ -1,7 +1,7 @@
 from .modules import modules
 from .prefix_graph import prefix_graph as graph
 from .prefix_graph import prefix_node as node
-from .util import lg
+from .util import lg, verso_pin
 import networkx as nx
 import pydot
 from functools import reduce
@@ -276,12 +276,11 @@ class prefix_tree(graph):
         if top is None: return
 
         # Connect to the last pin in the pin/gin arrays
-        if 'pin' in n.ins and 'pout' in top.outs:
-            pos=len(n.ins['pin'])-1
-            self.add_edge(top,('pout',0),n,('pin',pos))
-        if 'gin' in n.ins and 'gout' in top.outs:
-            pos=len(n.ins['pin'])-1
-            self.add_edge(top,('gout',0),n,('gin',pos))
+        for name,bits,_ in modules[n.m]['ins']:
+            match = next(x for x in modules[top.m]['outs'] if x[0]==verso_pin(name))
+            for b in range(match[1]):
+                b+=1; pos = match[1]-b
+                self.add_edge(top,(match[0],pos),n,(name,pos))
 
         # Update pg
         n.pg = n.pg|top.pg
@@ -293,12 +292,11 @@ class prefix_tree(graph):
         if pre is None: return
 
         # Connect to the first pin in the pin/gin arrays
-        if 'pin' in n.ins and len(n.ins['pin'])>1:
-            pos=0
-            self.add_edge(pre,('pout',0),n,('pin',pos))
-        if 'gin' in n.ins and len(n.ins['pin'])>1:
-            pos=0
-            self.add_edge(pre,('gout',0),n,('gin',pos))
+        for name,bits,_ in modules[n.m]['ins']:
+            match = next(x for x in modules[pre.m]['outs'] if x[0]==verso_pin(name))
+            for b in range(match[1]):
+                pos = b
+                self.add_edge(pre,(match[0],pos),n,(name,pos))
 
         n.pg = n.pg|pre.pg
 
