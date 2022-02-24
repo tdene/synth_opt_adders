@@ -48,7 +48,7 @@ class prefix_tree(graph):
             # If first pre node is different
             # For example, due to an adder's carry-in
             if a==0 and 'first_pre' in self.node_defs:
-                n = self.add_node(node(a,0,node_defs['first_pre']))
+                n = self.add_node(node(a,0,self.node_defs['first_pre']))
                 n.outs['pout'][0]="$p_lsb"
                 n.outs['gout'][0]="$g_lsb"
             else:
@@ -69,7 +69,11 @@ class prefix_tree(graph):
                         self.add_node(node(b,a,'invis_node'))
                         ctr = num_buf-1
                     else:
-                        self.add_node(node(b,a,self.node_defs['black']),pre=self[b+ctr-1,a-1])
+                        if a == lg(b)+1:
+                            node_color = "grey"
+                        else:
+                            node_color = "black"
+                        self.add_node(node(b,a,self.node_defs[node_color]),pre=self[b+ctr-1,a-1])
                         ctr-=1
             self.dna="sklansky"
         # Initialize to Kogge-Stone
@@ -78,7 +82,11 @@ class prefix_tree(graph):
                 for b in range(self.w):
                     num_buf = 2**(a-1)
                     if b>num_buf-1:
-                        self.add_node(node(b,a,self.node_defs['black']),pre=self[b-num_buf,a-1])
+                        if a == lg(b)+1:
+                            node_color = "grey"
+                        else:
+                            node_color = "black"
+                        self.add_node(node(b,a,self.node_defs[node_color]),pre=self[b-num_buf,a-1])
                     else:
                         self.add_node(node(b,a,'buffer_node'))
             self.dna="kogge-stone"
@@ -89,7 +97,7 @@ class prefix_tree(graph):
                     if b!=a:
                         self.add_node(node(b,a,'invis_node'))
                     else:
-                        self.add_node(node(b,a,self.node_defs['black']),pre=self[b-1,a-1])
+                        self.add_node(node(b,a,self.node_defs['grey']),pre=self[b-1,a-1])
             self.dna="ripple"
 
         # Post-processing
@@ -125,6 +133,8 @@ class prefix_tree(graph):
 
         if pre is not None and not isinstance(pre,node):
             raise TypeError("provided predecessor node must be a node")
+        if pre is not None and pre.m not in self.node_defs.values():
+            raise ValueError("provided predecessor node type must be defined for this tree")
 
         # Calls on super-method
         n = super().add_node(n)
@@ -144,15 +154,14 @@ class prefix_tree(graph):
             self._add_top(self.bot(n))
 
         # If pre_node is added, HDL connect it to input pins
-        if modules[n.m]['type']=='pre':
-            if n.x==0:
-                n.ins['cin'][0]='$cin'
-            else:
-                n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
-                n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
+        if n.m == self.node_defs['first_pre']:
+            n.ins['cin'][0]='$cin'
+        if n.m == self.node_defs['pre']:
+            n.ins['a_in'][0]='$a[{0}]'.format(n.x-1)
+            n.ins['b_in'][0]='$b[{0}]'.format(n.x-1)
 
         # If post_node is added, HDL connect it to output pins
-        if modules[n.m]['type']=='post':
+        if n.m == self.node_defs['post']:
             #n.ins['gin'][0]='$c{0}'.format(n.x)
             n.outs['sum'][0]='$sum[{0}]'.format(n.x)
 
@@ -162,6 +171,7 @@ class prefix_tree(graph):
         """Recalculates the group P/G of a node
 
         TO-DO: Rename P/G to a more general, addition-nonspecific, term.
+        TO-DO: First check if node actually exists in tree.
         """
         if modules[n.m]['type']=='pre':
             return
@@ -257,8 +267,7 @@ class prefix_tree(graph):
         return ret
     
     def walk_downstream(self,n,fun=lambda x: x):
-        """Traverse the graph downstream of node n, applying fun to each node
-        """
+        """Traverse the graph downstream of node n, applying fun to each node"""
         # Need to go in two directions: vertical and diagonal
         bot = self.bot(n)
         post = self.post(n)
@@ -275,12 +284,19 @@ class prefix_tree(graph):
         top = self.top(n)
         if top is None: return
 
-        # Connect to the last pin in the pin/gin arrays
-        for name,bits,_ in modules[n.m]['ins']:
-            match = next(x for x in modules[top.m]['outs'] if x[0]==verso_pin(name))
-            for b in range(match[1]):
-                b+=1; pos = match[1]-b
-                self.add_edge(top,(match[0],pos),n,(name,pos))
+        # Connect top to the last pins in the node's input list
+        for name,bits,num_diag in modules[n.m]['ins']:
+            # Check whether the top node has a matching out for our in
+            try:
+                name_m,bits_m = next(x for x in modules[top.m]['outs'] if x[0]==verso_pin(name))
+            # If not, just leave it unconnected and hope for the best?..
+            except StopIteration:
+                continue
+            # Connect pins down to the allowed number of diagonal pins
+            for b in range(bits-num_diag):
+                pos_n = bits - b - 1
+                pos_m = bits_m - b - 1
+                self.add_edge(top,(name_m,pos_m),n,(name,pos_n))
 
         # Update pg
         n.pg = n.pg|top.pg
@@ -291,10 +307,16 @@ class prefix_tree(graph):
         # If the provided "pre" is None, do nothing
         if pre is None: return
 
-        # Connect to the first pin in the pin/gin arrays
-        for name,bits,_ in modules[n.m]['ins']:
-            match = next(x for x in modules[pre.m]['outs'] if x[0]==verso_pin(name))
-            for b in range(match[1]):
+        # Connect pre to the first pins in the node's input list
+        for name,bits,num_diag in modules[n.m]['ins']:
+            # Check whether the pre node has a matching out for our in
+            try:
+                match = next(x for x in modules[pre.m]['outs'] if x[0]==verso_pin(name))
+            # If not, just leave it unconnected and hope for the best?..
+            except StopIteration:
+                continue
+            # Connect pins up to the allowed number of diagonal pins
+            for b in range(num_diag):
                 pos = b
                 self.add_edge(pre,(match[0],pos),n,(name,pos))
 
@@ -1020,9 +1042,13 @@ class prefix_tree(graph):
 
         # pre(a) = b, and any other additions necessary
         pre = self.remove_all_edges(pre,a)
+
+        if not node._exists(b):
+            b = self._morph_node(b,'buffer_node')
+        self._add_pre(a,b)
         self.walk_downstream(a,fun=self._recalc_pg)
-        c=[a]+c
-        d=[b]+d
+        
+        # any other additions necessary
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,self.node_defs['black'])
@@ -1060,9 +1086,13 @@ class prefix_tree(graph):
 
         # pre(a) = b, and any other additions necessary
         pre = self.remove_all_edges(pre,a)
+
+        if not node._exists(b):
+            b = self._morph_node(b,'buffer_node')
+        self._add_pre(a,b)
         self.walk_downstream(a,fun=self._recalc_pg)
-        c=[a]+c
-        d=[b]+d
+        
+        # any other additions necessary
         for x,y in zip(c,d):
             x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,self.node_defs['black'])
