@@ -8,7 +8,7 @@ module inverter
 
     assign Y = ~A;
 
-endmodule: inverter
+endmodule
 
 // Buffer
 module buffer
@@ -20,7 +20,7 @@ module buffer
 
     assign Y = A;
 
-endmodule: buffer
+endmodule
 
 // NAND2
 module nand2
@@ -32,7 +32,7 @@ module nand2
 
     assign Y = ~(A&B);
 
-endmodule: nand2
+endmodule
 
 // NOR2
 module nor2
@@ -44,7 +44,7 @@ module nor2
 
     assign Y = ~(A|B);
 
-endmodule: nor2
+endmodule
 
 // AND2
 module and2
@@ -56,7 +56,7 @@ module and2
 
     assign Y = A&B;
 
-endmodule: and2
+endmodule
 
 // OR2
 module or2
@@ -68,7 +68,7 @@ module or2
 
     assign Y = A|B;
 
-endmodule: or2
+endmodule
 
 // NAND3
 module nand3
@@ -80,7 +80,7 @@ module nand3
 
     assign Y = ~(A&B&C);
 
-endmodule: nand3
+endmodule
 
 // NOR3
 module nor3
@@ -92,7 +92,7 @@ module nor3
 
     assign Y = ~(A|B|C);
 
-endmodule: nor3
+endmodule
 
 // AND3
 module and3
@@ -104,7 +104,7 @@ module and3
 
     assign Y = A&B&C;
 
-endmodule: and3
+endmodule
 
 // OR3
 module or3
@@ -116,7 +116,7 @@ module or3
 
     assign Y = A|B|C;
 
-endmodule: or3
+endmodule
 
 // NAND4
 module nand4
@@ -128,7 +128,7 @@ module nand4
 
     assign Y = ~(A&B&C&D);
 
-endmodule: nand4
+endmodule
 
 // NOR4
 module nor4
@@ -140,7 +140,7 @@ module nor4
 
     assign Y = ~(A|B|C|D);
 
-endmodule: nor4
+endmodule
 
 // AND4
 module and4
@@ -152,7 +152,7 @@ module and4
 
     assign Y = A&B&C&D;
 
-endmodule: and4
+endmodule
 
 // OR4
 module or4
@@ -164,7 +164,7 @@ module or4
 
     assign Y = A|B|C|D;
 
-endmodule: or4
+endmodule
 
 // NAND2B
 module nand2b
@@ -176,7 +176,7 @@ module nand2b
 
     assign Y = ~(~A&B);
 
-endmodule: nand2b
+endmodule
 
 // NOR2B
 module nor2b
@@ -188,7 +188,7 @@ module nor2b
 
     assign Y = ~(~A|B);
 
-endmodule: nor2b
+endmodule
 
 // AO21
 module ao21
@@ -200,7 +200,7 @@ module ao21
 
     assign Y = (A0&A1)|B0;
 
-endmodule: ao21
+endmodule
 
 // OA21
 module oa21
@@ -212,7 +212,7 @@ module oa21
 
     assign Y = (A0|A1)&B0;
 
-endmodule: oa21
+endmodule
 
 // AOI21
 module aoi21
@@ -224,7 +224,7 @@ module aoi21
 
     assign Y = ~((A0&A1)|B0);
 
-endmodule: aoi21
+endmodule
 
 // OAI21
 module oai21
@@ -236,7 +236,7 @@ module oai21
 
     assign Y = ~((A0|A1)&B0);
 
-endmodule: oai21
+endmodule
 
 // AO22
 module ao22
@@ -248,7 +248,7 @@ module ao22
 
     assign Y = (A0&A1)|(B0&B1);
 
-endmodule: ao22
+endmodule
 
 // OA22
 module oa22
@@ -260,7 +260,7 @@ module oa22
 
     assign Y = (A0|A1)&(B0|B1);
 
-endmodule: oa22
+endmodule
 
 // AOI22
 module aoi22
@@ -272,7 +272,7 @@ module aoi22
 
     assign Y = ~((A0&A1)|(B0&B1));
 
-endmodule: aoi22
+endmodule
 
 // OAI22
 module oai22
@@ -284,7 +284,7 @@ module oai22
 
     assign Y = ~((A0|A1)&(B0|B1));
 
-endmodule: oai22
+endmodule
 
 // XOR2
 module xor2
@@ -296,7 +296,7 @@ module xor2
 
     assign Y = A^B;
 
-endmodule: xor2
+endmodule
 
 // XNOR2
 module xnor2
@@ -308,7 +308,7 @@ module xnor2
 
     assign Y = ~(A^B);
 
-endmodule: xnor2
+endmodule
 
 // MUX2
 module mux2
@@ -320,7 +320,7 @@ module mux2
 
     assign Y = S ? B : A;
 
-endmodule: mux2
+endmodule
 
 // MUX2I
 module muxi2
@@ -332,4 +332,4 @@ module muxi2
 
     assign Y = ~(S ? B : A);
 
-endmodule: muxi2
+endmodule
