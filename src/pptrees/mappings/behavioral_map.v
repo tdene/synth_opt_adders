@@ -8,7 +8,7 @@ module inverter
 
     assign Y = ~A;
 
-endmodule : inverter
+endmodule: inverter
 
 // Buffer
 module buffer
