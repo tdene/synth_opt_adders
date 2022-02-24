@@ -34,16 +34,16 @@ begin
 
 U1: and2
 \tport map (
-\t\tA => pin_0,
-\t\tB => pin_1,
+\t\tA => pin(0),
+\t\tB => pin(1),
 \t\tY => pout
 \t);
 
 U2: ao21
 \tport map (
-\t\tA0 => gin_0,
-\t\tA1 => pin_1,
-\t\tB0 => gin_1,
+\t\tA0 => gin(0),
+\t\tA1 => pin(1),
+\t\tB0 => gin(1),
 \t\tY => gout
 \t);
 
@@ -111,9 +111,9 @@ begin
 
 U1: ao21
 \tport map (
-\t\tA0 => gin_0,
+\t\tA0 => gin(0),
 \t\tA1 => pin,
-\t\tB0 => gin_1,
+\t\tB0 => gin(1),
 \t\tY => gout
 \t);
 
@@ -179,15 +179,15 @@ begin
 
 U1: and2
 \tport map (
-\t\tA => pin_0,
-\t\tB => pin_1,
+\t\tA => pin(0),
+\t\tB => pin(1),
 \t\tY => pout
 \t);
 
 U2: or2
 \tport map (
-\t\tA => gin_0,
-\t\tB => gin_1,
+\t\tA => gin(0),
+\t\tB => gin(1),
 \t\tY => gout
 \t);
 
@@ -252,8 +252,8 @@ begin
 
 U1: or2
 \tport map (
-\t\tA => gin_0,
-\t\tB => gin_1,
+\t\tA => gin(0),
+\t\tB => gin(1),
 \t\tY => gout
 \t);
 
