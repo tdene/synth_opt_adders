@@ -19,6 +19,37 @@ module ppa_black(gin, pin, gout, pout);
 endmodule
 """
 
+ppa_black['vhdl']="""
+entity ppa_black is
+\tport (
+\t\tgin : in std_logic_vector(1 downto 0);
+\t\tgout : out std_logic;
+\t\tpin : in std_logic_vector(1 downto 0);
+\t\tpout : out std_logic
+\t);
+end entity;
+
+architecture behavior of ppa_black is
+begin
+
+U1: and2
+\tport map (
+\t\tA => pin_0,
+\t\tB => pin_1,
+\t\tY => pout
+\t);
+
+U2: ao21
+\tport map (
+\t\tA0 => gin_0,
+\t\tA1 => pin_1,
+\t\tB0 => gin_1,
+\t\tY => gout
+\t);
+
+end architecture;
+"""
+
 ppa_black['shape']='square'
 ppa_black['fillcolor']='black'
 
@@ -66,6 +97,29 @@ module ppa_grey(gin, pin, gout);
 endmodule
 """
 
+ppa_grey['vhdl']="""
+entity ppa_grey is
+\tport (
+\t\tgin : in std_logic_vector(1 downto 0);
+\t\tgout : out std_logic;
+\t\tpin : in std_logic;
+\t);
+end entity;
+
+architecture behavior of ppa_grey is
+begin
+
+U1: ao21
+\tport map (
+\t\tA0 => gin_0,
+\t\tA1 => pin,
+\t\tB0 => gin_1,
+\t\tY => gout
+\t);
+
+end architecture;
+"""
+
 ppa_grey['shape']='square'
 ppa_grey['fillcolor']='grey'
 
@@ -99,19 +153,49 @@ modules['ppa_grey']=ppa_grey
 ppaL_black=dict()
 
 ppaL_black['verilog']="""
-module ppaL_black(hout, iout, gin, pin);
+module ppaL_black(gout, pout, gin, pin);
 
 \tinput [1:0] gin, pin;
-\toutput hout, iout;
+\toutput gout, pout;
 
-\tand2 U1(iout,pin[0],pin[1]);
-\tor2 U2(hout,gin[0],gin[1]);
+\tand2 U1(pout,pin[0],pin[1]);
+\tor2 U2(gout,gin[0],gin[1]);
 
 endmodule
 """
 
+ppaL_black['vhdl']="""
+entity ppaL_black is
+\tport (
+\t\tgin : in std_logic_vector(1 downto 0);
+\t\tgout : out std_logic;
+\t\tpin : in std_logic_vector(1 downto 0);
+\t\tpout : out std_logic
+\t);
+end entity;
+
+architecture behavior of ppaL_black is
+begin
+
+U1: and2
+\tport map (
+\t\tA => pin_0,
+\t\tB => pin_1,
+\t\tY => pout
+\t);
+
+U2: or2
+\tport map (
+\t\tA => gin_0,
+\t\tB => gin_1,
+\t\tY => gout
+\t);
+
+end architecture;
+"""
+
 ppaL_black['shape']='square'
-ppaL_black['fillcolor']='ppa_black'
+ppaL_black['fillcolor']='black'
 
 # List of inputs represented by (name, bits) tuple
 ppaL_black['ins']=[('gin',2),('pin',2)]
@@ -154,8 +238,30 @@ module ppaL_grey(hout, gin);
 endmodule
 """
 
+ppaL_grey['vhdl']="""
+entity ppaL_grey is
+\tport (
+\t\tgin : in std_logic_vector(1 downto 0);
+\t\tgout : out std_logic;
+\t\tpin : in std_logic;
+\t);
+end entity;
+
+architecture behavior of ppaL_grey is
+begin
+
+U1: or2
+\tport map (
+\t\tA => gin_0,
+\t\tB => gin_1,
+\t\tY => gout
+\t);
+
+end architecture;
+"""
+
 ppaL_grey['shape']='square'
-ppaL_grey['fillcolor']='ppa_grey'
+ppaL_grey['fillcolor']='grey'
 
 # List of inputs represented by (name, bits) tuple
 ppaL_grey['ins']=[('gin',2)]
@@ -198,6 +304,34 @@ module buffer_node(pin, gin, pout, gout);
 endmodule
 """
 
+buffer_node['vhdl']="""
+entity buffer_node is
+\tport (
+\t\tpin : in std_logic;
+\t\tpout : out std_logic;
+\t\tgin : in std_logic;
+\t\tgout : out std_logic;
+\t);
+end entity;
+
+architecture behavior of buffer_node is
+begin
+
+U1: buffer
+\tport map (
+\t\tA => pin,
+\t\tY => pout
+\t);
+
+U2: buffer
+\tport map (
+\t\tA => gin,
+\t\tY => gout
+\t);
+
+end architecture;
+"""
+
 buffer_node['shape']='invtriangle'
 buffer_node['fillcolor']='white'
 
@@ -234,6 +368,25 @@ module invis_node(pin, gin, pout, gout);
 \tassign gout = gin;
 
 endmodule
+"""
+
+invis_node['vhdl']="""
+entity invis_node is
+\tport (
+\t\tgin : in std_logic;
+\t\tgout : out std_logic;
+\t\tpin : in std_logic;
+\t\tpout : out std_logic;
+\t);
+end entity;
+
+architecture behavior of invis_node is
+begin
+
+\tpout <= pin;
+\tgout <= gin;
+
+end architecture;
 """
 
 #invis_node['style']='invis'
@@ -276,6 +429,36 @@ module ppa_pre(a_in, b_in, pout, gout);
 \tand2 U2(gout,a_in,b_in);
 
 endmodule
+"""
+
+ppa_pre['vhdl']="""
+entity ppa_pre is
+\tport (
+\t\ta_in : in std_logic;
+\t\tb_in : in std_logic;
+\t\tpout : out std_logic;
+\t\tgout : out std_logic;
+\t);
+end entity;
+
+architecture behavior of ppa_pre is
+begin
+
+U1: xor2
+\tport map (
+\t\tA => a_in,
+\t\tB => b_in,
+\t\tY => pout
+\t);
+
+U2: and2
+\tport map (
+\t\tA => a_in,
+\t\tB => b_in,
+\t\tY => gout
+\t);
+
+end architecture;
 """
 
 ppa_pre['shape']='square'
@@ -321,6 +504,24 @@ module ppa_first_pre(cin, pout, gout);
 endmodule
 """
 
+ppa_first_pre['vhdl']="""
+entity ppa_first_pre is
+\tport (
+\t\tcin : in std_logic;
+\t\tpout : out std_logic;
+\t\tgout : out std_logic;
+\t);
+end entity;
+
+architecture behavior of ppa_first_pre is
+begin
+
+\tpout <= '0';
+\tgout <= cin;
+
+end architecture;
+"""
+
 ppa_first_pre['ins']=[('cin',1)]
 
 ppa_first_pre['logic'] = lambda cin: [0,cin]
@@ -340,6 +541,28 @@ module ppa_post(pin, gin, sum);
 \txor2 U1(sum,pin,gin);
 
 endmodule
+"""
+
+ppa_post['vhdl']="""
+entity ppa_post is
+\tport (
+\t\tpin : in std_logic;
+\t\tgin : in std_logic;
+\t\tsum : out std_logic;
+\t);
+end entity;
+
+architecture behavior of ppa_post is
+begin
+
+U1: xor2
+\tport map (
+\t\tA => pin,
+\t\tB => gin,
+\t\tY => sum
+\t);
+
+end architecture;
 """
 
 ppa_post['shape']='invtrapezium'
