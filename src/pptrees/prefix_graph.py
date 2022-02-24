@@ -111,12 +111,13 @@ class prefix_node():
 
         # Format net IDs and add them to module instantation line
         for a in pins:
-            for b in range(len(pin[a])):
+            for b in range(len(pins[a])):
                 net_name = prefix_node._parse_net(pins[a][b])
                 ret+="\n\t\t\t{0}({1}) => {2},".format(a,b,net_name)
 
         # Close parenthesis
-        ret[:-1]+="\n\t\t);"
+        ret=ret[:-1]
+        ret+="\n\t\t);"
 
         return ret
 
@@ -135,9 +136,12 @@ class prefix_node():
         ret = ''
 
         for l in hdl_def:
-            if 'U' in l: in_std_cell = True
-            if in_std_cell == True: ret += l
-            if l[-1] == ';': in_std_cell = False
+            if 'assign' in l or '<=' in l:
+                ret+=l+'\n'
+            else:
+                if 'U' in l: in_std_cell = True
+                if in_std_cell == True: ret += l+'\n'
+                if l!='' and l[-1] == ';': in_std_cell = False
 
         # Create list of all instance pins and copy in unformatted net IDs
         pins=self.ins.copy()
@@ -153,7 +157,7 @@ class prefix_node():
                     net_name=prefix_node._parse_net(pins[a][b])
                     ret=ret.replace("{0}[{1}]".format(a,b),net_name)
 
-        return ret
+        return ret[:-1]
 
     def flatten(self,flag=True):
         """Determine which verilog representation to output"""
@@ -161,7 +165,7 @@ class prefix_node():
 
     def hdl(self,language="verilog"):
         """Return HDL representation of node"""
-        if self.flat: return self.flat()
+        if self.flat: return self._flat()
         if language == 'verilog': return self._verilog()
         if language == 'vhdl': return self._vhdl()
 

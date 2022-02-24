@@ -174,16 +174,16 @@ class adder_tree(prefix_tree):
             used_modules.add(n.m)
 
         preamble += '\n'
-
+        
         ### Add custom pre/post processing
-
+        
         # Additional pre node to handle cout
-	cout_pre = "\t{1}_cout: {1}\n"
-	cout_pre += "\t\tport map (\n"
-	cout_pre += "\t\t\ta_in => a({0}),\n"
-	cout_pre += "\t\t\tb_in => b({0}),\n"
-	cout_pre += "\t\t\tpout => p{0},\n"
-	cout_pre += "\t\t\tgout => g{0},\n"
+        cout_pre = "\t{1}_cout: {1}\n"
+        cout_pre += "\t\tport map (\n"
+        cout_pre += "\t\t\ta_in => a({0}),\n"
+        cout_pre += "\t\t\tb_in => b({0}),\n"
+        cout_pre += "\t\t\tpout => p{0},\n"
+        cout_pre += "\t\t\tgout => g{0},\n"
         cout_pre += "\t\t);\n"
         cout_pre = cout_pre.format(self.w-1,self.node_defs['pre'])
 
@@ -191,12 +191,12 @@ class adder_tree(prefix_tree):
         used_modules.add(self.node_defs['pre'])
 
         # Additional grey node to handle cout
-	cout_grey = "\t{2}_cout: {2}\n"
-	cout_grey += "\t\tport map (\n"
-	cout_grey += "\t\t\tgin(0) => {1},\n"
-	cout_grey += "\t\t\tgin(1) => g{0},\n"
-	cout_grey += "\t\t\tpin => p{0},\n"
-	cout_grey += "\t\t\tgout => cout,\n"
+        cout_grey = "\t{2}_cout: {2}\n"
+        cout_grey += "\t\tport map (\n"
+        cout_grey += "\t\t\tgin(0) => {1},\n"
+        cout_grey += "\t\t\tgin(1) => g{0},\n"
+        cout_grey += "\t\t\tpin => p{0},\n"
+        cout_grey += "\t\t\tgout => cout,\n"
         cout_grey += "\t\t);\n"
         cout_g = node._parse_net(self.node_list[-1][-1].ins['gin'][0])
         cout_grey = cout_grey.format(self.w-1,cout_g,self.node_defs['grey'])
