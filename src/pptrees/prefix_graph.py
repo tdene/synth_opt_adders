@@ -533,13 +533,36 @@ class prefix_graph(nx.MultiDiGraph):
         language specifies what language to output
         full_flat is an optional argument that can fully flatten the netlist
         """
+        # Check that output path is valid
         if out is not None:
             outdir = pathlib.Path(out).resolve().parent
             if not outdir.exists():
                 raise FileNotFoundError("desired path for hdl output is invalid")
 
+        # Check that language is supported
         if language not in ["verilog","vhdl"]:
             raise ValueError("unsupported hardware-descriptive language requested")
+
+        # Set language-specific variables
+        if language == "verilog":
+            end_string = "endmodule"
+            comment_string = "// start of tree row {0}\n"
+            file_suffix = ".v"
+        if language == "vhdl":
+            end_string = "end architecture"
+            comment_string = "-- start of tree row {0}\n"
+            file_suffix = ".vhd"
+
+        # Locate mapping file and check its existence
+        with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
+            pkg_map_file = pkg_map_dir / (mapping+'_map'+file_suffix)
+            local_map_file = outdir / (mapping+'_map'+file_suffix)
+
+            if not pkg_map_file.is_file():
+                raise ValueError("unsupported mapping requested")
+
+        # Copy mapping file from package to local directory
+            shutil.copy(pkg_map_file,local_map_file)
 
         block_hdl=""; block_defs=""
 
@@ -565,10 +588,7 @@ class prefix_graph(nx.MultiDiGraph):
                 hdl += n.hdl(language=language)+'\n'
                 # Mark the node's module as in-use
                 module_defs.add(n.m)
-            if language == "verilog":
-                hdl += "// start of tree row {0}\n".format(a[0].y+1)
-            if language == "vhdl":
-                hdl += "-- start of tree row {0}\n".format(a[0].y+1)
+            hdl += comment_string.format(a[0].y+1)
 
         # Pull in HDL of blocks
         block_hdl, block_defs = self._hdl_blocks(language=language)
@@ -576,10 +596,7 @@ class prefix_graph(nx.MultiDiGraph):
         hdl += block_hdl
 
         # End main module
-        if language == "verilog":
-            hdl += "endmodule"
-        if language == "vhdl":
-            hdl += "end architecture"
+        hdl += end_string
 
         # Turn module defs to text
         module_def_text = ""
@@ -596,13 +613,6 @@ class prefix_graph(nx.MultiDiGraph):
             
             with open(out,'w') as f:
                 print(hdl,file=f)
-
-            # Copy mapping file from package to local directory
-            with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
-                pkg_map_file = pkg_map_dir / (mapping+'_map.v')
-                local_map_file = outdir / (mapping+'_map.v')
-                # Use shutil.copy to avoid loading file into memory
-                shutil.copy(pkg_map_file,local_map_file)
 
         return hdl
 
