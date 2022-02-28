@@ -5,8 +5,8 @@ module adder(cout, sum, a, b, cin);
     output [15:0] sum;
     output cout;
 
-	wire p3, g3, g12, g14, p10, p14, p13, g6, g5, g11, g7, g_lsb, g10, p1, p12, g0, g8, p_lsb, g13, p7, p5, g2, p2, p11, g4, g1, p8, p9, p6, p4, g9, p0;
-	wire n1025, n1026, n1029, n1030, n1033, n1034, n1021, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n126, n127, n128, n129, n130, n1147, n1148, n133, n134, n1151, n1152, n137, n138, n1155, n1156, n141, n142, n1159, n145, n146, n1167, n1168, n149, n150, n147, n148, n153, n154, n155, n157, n158, n159, n160, n161, n162, n156, n1179, n165, n166, n1187, n1188, n169, n170, n1191, n1192, n173, n174, n1195, n1196, n177, n178, n1203, n1204, n181, n182, n1207, n1208, n185, n186, n189, n190, n193, n194, n195, n196, n197, n198, n199, n200, n201, n202, n203, n204, n205, n206, n1160, n207, n209, n210, n211, n212, n213, n214, n208, n217, n218, n219, n220, n221, n222, n223, n224, n1163, n1164, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1022;
+	wire g1, p2, p14, p12, g6, g14, p9, p10, p5, p13, p0, p4, p_lsb, g11, g2, g0, p1, g_lsb, g9, g7, g12, p6, p11, p8, g8, p7, g5, g13, p3, g4, g10, g3;
+	wire n1025, n204, n1026, n1029, n1030, n1033, n1034, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n127, n128, n129, n130, n126, n1147, n133, n134, n1151, n1152, n137, n138, n1155, n1156, n141, n142, n145, n146, n1148, n149, n150, n1167, n1168, n153, n154, n155, n157, n158, n159, n160, n161, n162, n156, n1179, n165, n166, n1187, n1188, n169, n170, n1191, n1192, n173, n174, n1195, n1196, n177, n178, n1203, n1204, n181, n182, n1207, n1208, n185, n186, n189, n190, n193, n194, n195, n196, n197, n198, n199, n1159, n201, n202, n200, n205, n206, n1160, n203, n209, n210, n211, n212, n213, n214, n207, n208, n217, n218, n219, n220, n221, n222, n223, n224, n1163, n1164, n147, n148, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1021, n1022;
 
 // start of pre-processing logic
 
@@ -254,37 +254,9 @@ module adder(cout, sum, a, b, cin);
 	assign n1421 = n1199;
 	assign n1422 = n1200;
 	assign n1429 = n1207;
-	assign n1430 = n1208;	block_1 block_1_instance ( .n51 ( n51 ), .g0 ( g0 ), .n208 ( n208 ), .n160 ( n160 ), .n1203 ( n1203 ), .n215 ( n215 ), .n1018 ( n1018 ), .n1017 ( n1017 ), .n104 ( n104 ), .sum_14 ( sum[14] ), .n58 ( n58 ), .n118 ( n118 ), .n52 ( n52 ), .g_lsb ( g_lsb ), .n216 ( n216 ), .n117 ( n117 ), .p_lsb ( p_lsb ), .n207 ( n207 ), .n1426 ( n1426 ), .n1425 ( n1425 ), .p14 ( p14 ), .n1199 ( n1199 ), .n57 ( n57 ), .n1025 ( n1025 ), .cin ( cin ), .p0 ( p0 ), .n103 ( n103 ), .n159 ( n159 ), .n1200 ( n1200 ), .n1204 ( n1204 ), .n1026 ( n1026 ) );
+	assign n1430 = n1208;
+	block_1 block_1_instance ( .n1203 ( n1203 ), .n52 ( n52 ), .g_lsb ( g_lsb ), .n57 ( n57 ), .n1426 ( n1426 ), .n1200 ( n1200 ), .n1199 ( n1199 ), .n160 ( n160 ), .n1017 ( n1017 ), .sum_14 ( sum[14] ), .n1204 ( n1204 ), .p0 ( p0 ), .n208 ( n208 ), .n51 ( n51 ), .n159 ( n159 ), .n58 ( n58 ), .n118 ( n118 ), .n215 ( n215 ), .p14 ( p14 ), .p_lsb ( p_lsb ), .n104 ( n104 ), .g0 ( g0 ), .cin ( cin ), .n117 ( n117 ), .n1025 ( n1025 ), .n1425 ( n1425 ), .n103 ( n103 ), .n207 ( n207 ), .n1026 ( n1026 ), .n1018 ( n1018 ), .n216 ( n216 ) );
 
-
-endmodule
-
-module ppa_grey(gin, pin, gout);
-
-	input[1:0] gin;
-	input pin;
-	output gout;
-
-	ao21 U1(gout,gin[0],pin,gin[1]);
-
-endmodule
-
-module ppa_first_pre(cin, pout, gout);
-
-	input cin;
-	output pout, gout;
-
-	assign pout=1'b0;
-	assign gout=cin;
-
-endmodule
-
-module ppa_post(pin, gin, sum);
-
-	input pin, gin;
-	output sum;
-
-	xor2 U1(sum,pin,gin);
 
 endmodule
 
@@ -295,6 +267,16 @@ module buffer_node(pin, gin, pout, gout);
 
 	buffer U1(pout,pin);
 	buffer U2(gout,gin);
+
+endmodule
+
+module ppa_grey(gin, pin, gout);
+
+	input[1:0] gin;
+	input pin;
+	output gout;
+
+	ao21 U1(gout,gin[0],pin,gin[1]);
 
 endmodule
 
@@ -318,26 +300,45 @@ module ppa_pre(a_in, b_in, pout, gout);
 
 endmodule
 
-module block_1( n51, g0, n208, n160, n1203, n215, n1018, n1017, n104, sum_14, n58, n118, n52, g_lsb, n216, n117, p_lsb, n207, n1426, n1425, p14, n1199, n57, n1025, cin, p0, n103, n159, n1200, n1204, n1026);
+module ppa_first_pre(cin, pout, gout);
 
-	input n117, g0, p14, n1203, n1025, n215, n57, cin, p0, n58, n118, n216, n1204, n1026;
-	output n51, p_lsb, n207, n1426, n208, n1199, n160, n1018, n103, n104, n1017, n1200, n159, sum_14, n52, g_lsb, n1425;
+	input cin;
+	output pout, gout;
 
-	and2 U1(n1425,n1203,n1199);
-	ao21 U2(n1426,n1200,n1203,n1204);
-	and2 U1(n103,n57,n51);
-	ao21 U2(n104,n52,n57,n58);
+	assign pout=1'b0;
+	assign gout=cin;
+
+endmodule
+
+module ppa_post(pin, gin, sum);
+
+	input pin, gin;
+	output sum;
+
+	xor2 U1(sum,pin,gin);
+
+endmodule
+
+module block_1( n1203, n52, g_lsb, n57, n1426, n1200, n1199, n160, n1017, sum_14, n1204, p0, n208, n51, n159, n58, n118, n215, p14, p_lsb, n104, g0, cin, n117, n1025, n1425, n103, n207, n1026, n1018, n216);
+
+	input n1203, n58, n57, n215, p14, n118, g0, cin, n117, n1025, n1026, n1204, p0, n216;
+	output n208, n52, n207, n51, g_lsb, n159, n1426, p_lsb, n104, n1200, n1425, n1199, n1017, n103, n160, sum_14, n1018;
 	and2 U1(n1017,n215,n207);
 	ao21 U2(n1018,n208,n215,n216);
+	and2 U1(n51,p0,p_lsb);
+	ao21 U2(n52,g_lsb,p0,g0);
+	and2 U1(n1425,n1203,n1199);
+	ao21 U2(n1426,n1200,n1203,n1204);
 	and2 U1(n1199,n1025,n1017);
 	ao21 U2(n1200,n1018,n1025,n1026);
 	assign p_lsb=1'b0;
 	assign g_lsb=cin;
+	and2 U1(n103,n57,n51);
+	ao21 U2(n104,n52,n57,n58);
 	buffer U1(n207,n159);
 	buffer U2(n208,n160);
 	and2 U1(n159,n117,n103);
 	ao21 U2(n160,n104,n117,n118);
 	xor2 U1(sum_14,p14,n1426);
-	and2 U1(n51,p0,p_lsb);
-	ao21 U2(n52,g_lsb,p0,g0);
+
 endmodule

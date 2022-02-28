@@ -446,7 +446,8 @@ class prefix_graph(nx.MultiDiGraph):
         and the block module definitions.
         """
 
-        block_hdl = ""; block_defs = ""
+        block_hdl = []
+        block_defs = []
 
         # Iterate over all blocks
         for b in range(len(self.blocks)):
@@ -476,10 +477,10 @@ class prefix_graph(nx.MultiDiGraph):
             for x in tmp: inst_b+=" .{0} ( {1} ),".format(sub_brackets(x),x)
             inst_b=inst_b[:-1]+' );\n'
             # Add block instantiation to block HDL
-            block_hdl+=inst_b
+            block_hdl.append(inst_b)
 
             # Define block
-            block_def="\nmodule block_{0}(".format(b)
+            block_def="\n\nmodule block_{0}(".format(b)
             # List all ins/outs in module definition
             for x in tmp: block_def+=' '+sub_brackets(x)+','
             block_def = block_def[:-1]+');\n\n'
@@ -492,7 +493,6 @@ class prefix_graph(nx.MultiDiGraph):
             for x in outs: block_def+=" {0},".format(sub_brackets(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
-            block_def += '\n'
             for n in nodes:
                 if modules[n.m]['type']=='post':
                     tmp = n.ins['pin'][0]
@@ -503,13 +503,13 @@ class prefix_graph(nx.MultiDiGraph):
                 else:
                     n.flatten()
                     block_def+=sub_brackets(n.hdl())+'\n'
-            # Write "\nendmodule\n" line
+            # Write end line
             if language == "verilog":
-                block_def += "endmodule"
+                block_def += "\nendmodule"
             elif language == "vhdl":
-                block_def += "end architecture"
+                block_def += "\nend architecture"
             # Add block definition to list of block_defs
-            block_defs+=block_def
+            block_defs.append(block_def)
 
         # end iterate over all blocks
         return (block_hdl,block_defs)
@@ -523,7 +523,7 @@ class prefix_graph(nx.MultiDiGraph):
         Returns a tuple consisting of the HDL string,
         and any modules used by the preamble.
         """
-        return ("",set())
+        return ([],set())
 
     def hdl(self,out=None,mapping="behavioral",language="verilog",full_flat=False):
         """Outputs HDL representation of graph
@@ -564,8 +564,6 @@ class prefix_graph(nx.MultiDiGraph):
         # Copy mapping file from package to local directory
             shutil.copy(pkg_map_file,local_map_file)
 
-        block_hdl=""; block_defs=""
-
         # Pull in HDL preamble, as defined by child class 
         hdl, module_defs = self._hdl_preamble(language=language)
 
@@ -590,27 +588,29 @@ class prefix_graph(nx.MultiDiGraph):
                 # Mark the node's module as in-use
             hdl.append(comment_string.format(a[0].y+1))
 
+        # Remove last two comment strings
         hdl = hdl[:-2]
-
-        hdl = '\n'.join(hdl)[1:]
 
         # Pull in HDL of blocks
         block_hdl, block_defs = self._hdl_blocks(language=language)
 
-        hdl += block_hdl
+        hdl.extend(block_hdl)
 
         # End main module
-        hdl += '\n\n' + end_string + '\n'
+        hdl.append('\n' + end_string + '\n')
+
+        # Format into string; remove first newline
+        hdl = '\n'.join(hdl)[1:]
 
         # Turn module defs to text
-        module_def_text = ""
-        for a in module_defs:
-            module_def_text+=modules[a][language]
-        # Add in block defs
-        module_def_text += block_defs
+        module_def_text = "".join([modules[x][language] for x in module_defs])
 
-        # Combine main module and module defs
-        hdl = hdl + module_def_text
+        # Combine main module and module defs; remove last newline
+        hdl += module_def_text[:-1]
+
+        # Add in block defs
+        block_defs_text = "".join(block_defs)
+        hdl += block_defs_text
 
         # Write to file
         if out is not None:
