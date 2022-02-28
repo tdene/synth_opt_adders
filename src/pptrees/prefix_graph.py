@@ -538,6 +538,9 @@ class prefix_graph(nx.MultiDiGraph):
             if not outdir.exists():
                 raise FileNotFoundError("desired path for hdl output is invalid")
 
+        if language not in ["verilog","vhdl"]:
+            raise ValueError("unsupported hardware-descriptive language requested")
+
         block_hdl=""; block_defs=""
 
         # Pull in HDL preamble, as defined by child class 
