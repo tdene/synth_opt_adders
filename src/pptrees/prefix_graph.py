@@ -165,7 +165,7 @@ class prefix_node():
 
     def hdl(self,language="verilog"):
         """Return HDL representation of node"""
-        if self.flat: return self._flat()
+        if self.flat: return self._flat(language=language)
         if language == 'verilog': return self._verilog()
         if language == 'vhdl': return self._vhdl()
 
