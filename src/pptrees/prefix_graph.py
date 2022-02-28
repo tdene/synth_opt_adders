@@ -546,11 +546,11 @@ class prefix_graph(nx.MultiDiGraph):
         # Set language-specific variables
         if language == "verilog":
             end_string = "endmodule"
-            comment_string = "\n// start of tree row {0}\n\n"
+            comment_string = "\n// start of tree row {0}\n"
             file_suffix = ".v"
         if language == "vhdl":
             end_string = "end architecture"
-            comment_string = "\n-- start of tree row {0}\n\n"
+            comment_string = "\n-- start of tree row {0}\n"
             file_suffix = ".vhd"
 
         # Locate mapping file and check its existence
@@ -586,9 +586,13 @@ class prefix_graph(nx.MultiDiGraph):
                 else:
                     module_defs.add(n.m)
                 # Add in HDL
-                hdl += n.hdl(language=language)+'\n'
+                hdl.append(n.hdl(language=language))
                 # Mark the node's module as in-use
-            hdl += comment_string.format(a[0].y+1)
+            hdl.append(comment_string.format(a[0].y+1))
+
+        hdl = hdl[:-2]
+
+        hdl = '\n'.join(hdl)[1:]
 
         # Pull in HDL of blocks
         block_hdl, block_defs = self._hdl_blocks(language=language)
@@ -596,7 +600,7 @@ class prefix_graph(nx.MultiDiGraph):
         hdl += block_hdl
 
         # End main module
-        hdl += end_string
+        hdl += '\n\n' + end_string + '\n'
 
         # Turn module defs to text
         module_def_text = ""

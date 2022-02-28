@@ -108,10 +108,6 @@ module adder(cout, sum, a, b, cin);
         preamble.append(cout_grey)
         used_modules.add(self.node_defs['grey'])
 
-        preamble.append('')
-
-        preamble = '\n'.join(preamble)
-
         return (preamble,used_modules)
 
     def _vhdl_preamble(self):
@@ -215,10 +211,6 @@ end entity;
 
         preamble.append(cout_grey)
         used_modules.add(self.node_defs['grey'])
-
-        preamble.append('')
-
-        preamble = '\n'.join(preamble)
 
         return (preamble,used_modules)
 
