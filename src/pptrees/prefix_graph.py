@@ -504,7 +504,10 @@ class prefix_graph(nx.MultiDiGraph):
                     n.flatten()
                     block_def+=sub_brackets(n.hdl())+'\n'
             # Write "\nendmodule\n" line
-            block_def+="\nendmodule\n"
+            if language == "verilog":
+                block_def += "endmodule"
+            elif language == "vhdl":
+                block_def += "end architecture"
             # Add block definition to list of block_defs
             block_defs+=block_def
 
@@ -567,7 +570,10 @@ class prefix_graph(nx.MultiDiGraph):
         hdl += block_hdl
 
         # End main module
-        hdl += "endmodule\n"
+        if language == "verilog":
+            hdl += "endmodule"
+        elif language == "vhdl":
+            hdl += "end architecture"
 
         # Turn module defs to text
         module_def_text = ""
