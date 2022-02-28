@@ -110,26 +110,28 @@ class adder_tree(prefix_tree):
     def _vhdl_preamble(self):
         """VHDL preamble for the adder's HDL"""
 
-        preamble = ""
+        preamble = []
         used_modules = set()
 
         # Library imports
-        preamble += "library ieee;\n"
-        preamble += "use ieee.std_logic_1164.all;\n"
-        preamble += "use ieee.numeric_std;\n\n"
-
+        preamble.append("""
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std;""")
         # Entity definition
-        preamble += "entity adder is\n"
-        preamble += "\tport (\n"
-        preamble += "\t\ta,b : in std_logic_vector({0} downto 0);\n".format(self.w-1)
-        preamble += "\t\tcin : in std_logic;\n"
-        preamble += "\t\tcout : out std_logic;\n"
-        preamble += "\t\tsum : out std_logic_vector({0} downto 0);\n".format(self.w-1)
-        preamble += "\t);\n"
-        preamble += "end entity;\n\n"
+        preamble.append("""
+entity adder is
+    port (
+	a,b : in std_logic_vector({0} downto 0);
+	cin : in std_logic;
+	cout : out std_logic;
+	sum : out std_logic_vector({0} downto 0);
+    );
+end entity;
+""".format(self.w-1))
 
         # Architecture definition
-        preamble += "architecture pptree of adder is\n"
+        preamble.append("architecture pptree of adder is")
 
         # Wire definitions
 
@@ -137,74 +139,78 @@ class adder_tree(prefix_tree):
         wire_set = set([e[2]['edge_name'] for e in self.edges(data=True)])
 
         # Special-named wires
-        wires1 = "\tsignal"
+        wires1 = ["\tsignal"]
 
         # Generic-named wires
-        wires2 = "\tsignal"
+        wires2 = ["\tsignal"]
 
         # Sort wires by their origin
         for x in wire_set:
             if isinstance(x,int):
-                wires2 += " {0},".format(node._parse_net(x))
+                wires2.append(" {0},".format(node._parse_net(x)))
             else:
-                wires1 += " {0},".format(node._parse_net(x))
-        wires1 = wires1[:-1] + " : std_logic;\n"
-        wires2 = wires2[:-1] + " : std_logic;\n"
+                wires1.append(" {0},".format(node._parse_net(x)))
+        wires1 = ''.join(wires1)[:-1] + " : std_logic;"
+        wires2 = ''.join(wires2)[:-1] + " : std_logic;"
 
         # Add both kinds of wires to architecture definition
-        preamble += wires1
-        preamble += wires2
-        preamble += '\nbegin\n\n'
+        preamble.append(wires1)
+        preamble.append(wires2)
+        preamble.append('\nbegin\n')
 
         ### Add normal pre-processing nodes
 
         # Iterate over all pre-processing nodes
         for n in self.node_list[0]:
-            preamble += n.hdl(language="vhdl")+'\n'
+            preamble.append(n.hdl(language="vhdl"))
             used_modules.add(n.m)
 
-        preamble += '\n'
+        preamble.append('')
 
         ### Add normal post-processing nodes
 
         # Iterate over all post-processing nodes
         for n in self.node_list[-1]:
             n.ins['pin'][0]="$p{0}".format(n.x)
-            preamble += n.hdl(language="vhdl")+'\n'
+            preamble.append(n.hdl(language="vhdl"))
             used_modules.add(n.m)
 
-        preamble += '\n'
+        preamble.append('')
         
         ### Add custom pre/post processing
         
         # Additional pre node to handle cout
-        cout_pre = "\t{1}_cout: {1}\n"
-        cout_pre += "\t\tport map (\n"
-        cout_pre += "\t\t\ta_in => a({0}),\n"
-        cout_pre += "\t\t\tb_in => b({0}),\n"
-        cout_pre += "\t\t\tpout => p{0},\n"
-        cout_pre += "\t\t\tgout => g{0},\n"
-        cout_pre += "\t\t);\n"
-        cout_pre = cout_pre.format(self.w-1,self.node_defs['pre'])
+        cout_pre = """
+    {1}_cout: {1}
+	port map (
+	    a_in => a({0}),
+	    b_in => b({0}),
+	    pout => p{0},
+	    gout => g{0}
+	);
+""".format(self.w-1,self.node_defs['pre'])
 
-        preamble += cout_pre
+        preamble.append(cout_pre)
         used_modules.add(self.node_defs['pre'])
 
         # Additional grey node to handle cout
-        cout_grey = "\t{2}_cout: {2}\n"
-        cout_grey += "\t\tport map (\n"
-        cout_grey += "\t\t\tgin(0) => {1},\n"
-        cout_grey += "\t\t\tgin(1) => g{0},\n"
-        cout_grey += "\t\t\tpin => p{0},\n"
-        cout_grey += "\t\t\tgout => cout,\n"
-        cout_grey += "\t\t);\n"
         cout_g = node._parse_net(self.node_list[-1][-1].ins['gin'][0])
-        cout_grey = cout_grey.format(self.w-1,cout_g,self.node_defs['grey'])
+        cout_grey = """
+    {2}_cout: {2}
+	port map (
+	    gin(0) => {1},
+	    gin(1) => g{0},
+	    pin => p{0},
+	    gout => cout,
+	);
+""".format(self.w-1,cout_g,self.node_defs['grey'])
 
-        preamble += cout_grey
+        preamble.append(cout_grey)
         used_modules.add(self.node_defs['grey'])
 
-        preamble += '\n'
+        preamble.append('')
+
+        preamble = '\n'.join(preamble)
 
         return (preamble,used_modules)
 
