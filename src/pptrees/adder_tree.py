@@ -156,10 +156,11 @@ end entity;
         # Add both kinds of wires to architecture definition
         preamble.append(wires1)
         preamble.append(wires2)
-        preamble.append('\nbegin\n')
+        preamble.append("\nbegin\n")
 
         ### Add normal pre-processing nodes
 
+        preamble.append("-- start of pre-processing logic\n")
         # Iterate over all pre-processing nodes
         for n in self.node_list[0]:
             preamble.append(n.hdl(language="vhdl"))
@@ -169,6 +170,7 @@ end entity;
 
         ### Add normal post-processing nodes
 
+        preamble.append("-- start of post-processing logic\n")
         # Iterate over all post-processing nodes
         for n in self.node_list[-1]:
             n.ins['pin'][0]="$p{0}".format(n.x)
@@ -179,6 +181,7 @@ end entity;
         
         ### Add custom pre/post processing
         
+        preamble.append("-- start of custom pre/post logic\n")
         # Additional pre node to handle cout
         cout_pre = """
     {1}_cout: {1}
@@ -187,8 +190,7 @@ end entity;
 	    b_in => b({0}),
 	    pout => p{0},
 	    gout => g{0}
-	);
-""".format(self.w-1,self.node_defs['pre'])
+        );""".format(self.w-1,self.node_defs['pre'])[1:]
 
         preamble.append(cout_pre)
         used_modules.add(self.node_defs['pre'])
@@ -202,12 +204,12 @@ end entity;
 	    gin(1) => g{0},
 	    pin => p{0},
 	    gout => cout,
-	);
-""".format(self.w-1,cout_g,self.node_defs['grey'])
+        );""".format(self.w-1,cout_g,self.node_defs['grey'])[1:]
 
         preamble.append(cout_grey)
         used_modules.add(self.node_defs['grey'])
 
+        preamble.append('')
         preamble.append('')
 
         preamble = '\n'.join(preamble)

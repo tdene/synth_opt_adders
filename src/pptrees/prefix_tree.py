@@ -1467,7 +1467,7 @@ class prefix_tree(graph):
                                    arrowhead="none",style="dashed",color=color,penwidth="3",
                                    headclip="false",tailclip="false"))
         pg.write_png(fname,prog='neato')
-        webbrowser.open_new(fname)
+#        webbrowser.open_new(fname)
 
 if __name__=="__main__":
     raise RuntimeError("This file is importable, but not executable")

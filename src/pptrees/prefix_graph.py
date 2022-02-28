@@ -565,7 +565,10 @@ class prefix_graph(nx.MultiDiGraph):
                 hdl += n.hdl(language=language)+'\n'
                 # Mark the node's module as in-use
                 module_defs.add(n.m)
-            hdl += '\n'
+            if language == "verilog":
+                hdl += "// start of tree row {0}\n".format(a[0].y+1)
+            if language == "vhdl":
+                hdl += "-- start of tree row {0}\n".format(a[0].y+1)
 
         # Pull in HDL of blocks
         block_hdl, block_defs = self._hdl_blocks(language=language)
@@ -575,7 +578,7 @@ class prefix_graph(nx.MultiDiGraph):
         # End main module
         if language == "verilog":
             hdl += "endmodule"
-        elif language == "vhdl":
+        if language == "vhdl":
             hdl += "end architecture"
 
         # Turn module defs to text
