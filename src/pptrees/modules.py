@@ -53,8 +53,8 @@ end architecture;
 ppa_black['shape']='square'
 ppa_black['fillcolor']='black'
 
-# List of inputs represented by (name, bits) tuple
-ppa_black['ins']=[('gin',2),('pin',2)]
+# List of inputs represented by (name, bits, diagonal_bits) tuple
+ppa_black['ins']=[('gin',2,1),('pin',2,1)]
 
 # List of outputs represented by (name, bits) tuple
 ppa_black['outs']=[('gout',1),('pout',1)]
@@ -123,8 +123,8 @@ end architecture;
 ppa_grey['shape']='square'
 ppa_grey['fillcolor']='grey'
 
-# List of inputs represented by (name, bits) tuple
-ppa_grey['ins']=[('gin',2),('pin',1)]
+# List of inputs represented by (name, bits, diagonal_bits) tuple
+ppa_grey['ins']=[('gin',2,1),('pin',1,1)]
 
 # List of outputs represented by (name, bits) tuple
 ppa_grey['outs']=[('gout',1)]
@@ -197,11 +197,11 @@ end architecture;
 ppaL_black['shape']='square'
 ppaL_black['fillcolor']='black'
 
-# List of inputs represented by (name, bits) tuple
-ppaL_black['ins']=[('gin',2),('pin',2)]
+# List of inputs represented by (name, bits, diagonal_bits) tuple
+ppaL_black['ins']=[('gin',2,1),('pin',2,1)]
 
 # List of outputs represented by (name, bits) tuple
-ppaL_black['outs']=[('hout',1),('iout',1)]
+ppaL_black['outs']=[('gout',1),('pout',1)]
 
 # Returns function that executes the logic of the module
 ppaL_black['logic'] = lambda gin,pin: [
@@ -228,12 +228,12 @@ modules['ppaL_black']=ppaL_black
 ppaL_grey=dict()
 
 ppaL_grey['verilog']="""
-module ppaL_grey(hout, gin);
+module ppaL_grey(gout, gin);
 
 \tinput[1:0] gin;
-\toutput hout;
+\toutput gout;
 
-\tor2 U1(hout,gin[0],gin[1]);
+\tor2 U1(gout,gin[0],gin[1]);
 
 endmodule
 """
@@ -263,11 +263,11 @@ end architecture;
 ppaL_grey['shape']='square'
 ppaL_grey['fillcolor']='grey'
 
-# List of inputs represented by (name, bits) tuple
-ppaL_grey['ins']=[('gin',2)]
+# List of inputs represented by (name, bits, diagonal_bits) tuple
+ppaL_grey['ins']=[('gin',2,1)]
 
 # List of outputs represented by (name, bits) tuple
-ppaL_grey['outs']=[('hout',1)]
+ppaL_grey['outs']=[('gout',1)]
 
 # Returns function that executes the logic of the module
 ppaL_grey['logic'] = lambda gin: [
@@ -335,7 +335,7 @@ end architecture;
 buffer_node['shape']='invtriangle'
 buffer_node['fillcolor']='white'
 
-buffer_node['ins']=[('gin',1),('pin',1)]
+buffer_node['ins']=[('gin',1,0),('pin',1,0)]
 buffer_node['outs']=[('gout',1),('pout',1)]
 
 buffer_node['logic'] = lambda pin,gin: [pin,gin]
@@ -396,7 +396,7 @@ invis_node['width']=0
 invis_node['height']=0
 invis_node['fillcolor']='black'
 
-invis_node['ins']=[('gin',1),('pin',1)]
+invis_node['ins']=[('gin',1,0),('pin',1,0)]
 invis_node['outs']=[('gout',1),('pout',1)]
 
 invis_node['logic'] = lambda pin,gin: [pin,gin]
@@ -466,7 +466,7 @@ ppa_pre['fillcolor']='white'
 ppa_pre['label']='pre'
 ppa_pre['style']='dashed'
 
-ppa_pre['ins']=[('a_in',1),('b_in',1)]
+ppa_pre['ins']=[('a_in',1,0),('b_in',1,0)]
 ppa_pre['outs']=[('pout',1),('gout',1)]
 
 ppa_pre['logic'] = lambda a,b: [
@@ -522,7 +522,7 @@ begin
 end architecture;
 """
 
-ppa_first_pre['ins']=[('cin',1)]
+ppa_first_pre['ins']=[('cin',1,0)]
 
 ppa_first_pre['logic'] = lambda cin: [0,cin]
 
@@ -571,7 +571,7 @@ ppa_post['label']='post'
 ppa_post['style']='dashed'
 ppa_post['fixedsize']='shape'
 
-ppa_post['ins']=[('pin',1),('gin',1)]
+ppa_post['ins']=[('gin',1,0),('pin',1,1)]
 ppa_post['outs']=[('sum',1)]
 
 ppa_post['logic'] = lambda pin,gin: [pin^gin]
