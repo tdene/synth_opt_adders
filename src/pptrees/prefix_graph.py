@@ -42,7 +42,7 @@ class prefix_node():
         self.x=x; self.y=y; self.m=module; self.flat=flat;
 
         # Create inputs and outputs dictionaries; initialize to None
-        self.ins={x:[None]*y for x,y in modules[self.m]['ins']}
+        self.ins={x:[None]*y for x,y,z in modules[self.m]['ins']}
         self.outs={x:[None]*y for x,y in modules[self.m]['outs']}
 
         # A list of all nodes that directly or indirectly feed into this one
