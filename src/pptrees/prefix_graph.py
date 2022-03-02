@@ -80,34 +80,74 @@ class prefix_node():
         raise TypeError("net stored in node {0} is invalid".format(repr(x)))
 
     def _verilog(self):
-        """Return single line of verilog consisting of module instantiation"""
+        """Return single line of Verilog consisting of module instantiation"""
 
         # Fill in the module instantiation
-        ret="	{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
+        ret="\t{3} {0}_{1}_{2} (".format(self.m,self.x,self.y,self.m)
+        
         # Create list of all instance pins and copy in unformatted net IDs
         pins=self.ins.copy()
         pins.update(self.outs)
+        
         # Format net IDs and add them to module instantation line
         for a in pins:
             ret+=" ."+a+"( {"
             ret+=','.join(reversed([prefix_node._parse_net(x) for x in pins[a]]))
             ret+='} ),'
         ret=ret[:-1]+' );'
+        
         return ret
 
-    def _flat(self):
-        """Return block of verilog consisting of the module's logic"""
+    def _vhdl(self):
+        """Return single line of VHDL consisting of module instantiation"""
 
-        # Grab module's verilog definition without the header/footer
-        ret='\n'.join([x for x in modules[self.m]['verilog'].split('\n')
-                      if (x!=''
-                          and 'input' not in x
-                          and 'output' not in x
-                          and 'module' not in x)])
+        # Fill in the module instantiation
+        ret="\t{0}_{1}_{2}: {3}\n".format(self.m,self.x,self.y,self.m)
+        ret+="\t\tport map ("
+
         # Create list of all instance pins and copy in unformatted net IDs
         pins=self.ins.copy()
         pins.update(self.outs)
-        # Format net IDs and replace them into module's verilog
+
+        # Format net IDs and add them to module instantation line
+        for a in pins:
+            for b in range(len(pins[a])):
+                net_name = prefix_node._parse_net(pins[a][b])
+                ret+="\n\t\t\t{0}({1}) => {2},".format(a,b,net_name)
+
+        # Close parenthesis
+        ret=ret[:-1]
+        ret+="\n\t\t);"
+
+        return ret
+
+    def _flat(self,language="verilog"):
+        """Return HDL consisting of the module's logic"""
+
+        ### Grab only instantiated cells from the HDL definiton
+
+        # Iterate over each line in the HDL definition
+        hdl_def = modules[self.m][language].splitlines()
+
+        # Flag whether we're currently looking at a cell
+        in_std_cell = False
+
+        # Store the filtered HDL in a string
+        ret = ''
+
+        for l in hdl_def:
+            if 'assign' in l or '<=' in l:
+                ret+=l+'\n'
+            else:
+                if 'U' in l: in_std_cell = True
+                if in_std_cell == True: ret += l+'\n'
+                if l!='' and l[-1] == ';': in_std_cell = False
+
+        # Create list of all instance pins and copy in unformatted net IDs
+        pins=self.ins.copy()
+        pins.update(self.outs)
+
+        # Format net IDs and replace them into module's HDL
         for a in pins:
             if len(pins[a])==1:
                 net_name=prefix_node._parse_net(pins[a][0])
@@ -116,15 +156,18 @@ class prefix_node():
                 for b in range(len(pins[a])):
                     net_name=prefix_node._parse_net(pins[a][b])
                     ret=ret.replace("{0}[{1}]".format(a,b),net_name)
-        return ret
+
+        return ret[:-1]
 
     def flatten(self,flag=True):
         """Determine which verilog representation to output"""
         self.flat=flag
 
-    def hdl(self):
+    def hdl(self,language="verilog"):
         """Return HDL representation of node"""
-        return self._flat() if self.flat else self._verilog()
+        if self.flat: return self._flat(language=language)
+        if language == 'verilog': return self._verilog()
+        if language == 'vhdl': return self._vhdl()
 
     def __str__(self):
         """Currently returns same representation as __repr__"""
@@ -396,14 +439,15 @@ class prefix_graph(nx.MultiDiGraph):
             self.add_block(*path)
             return self.add_best_blocks()
 
-    def _hdl_blocks(self):
+    def _hdl_blocks(self,language='verilog'):
         """Writes HDL of the graph's blocks
         
         Returns a tuple consisting of the HDL string,
         and the block module definitions.
         """
 
-        block_hdl = ""; block_defs = ""
+        block_hdl = []
+        block_defs = []
 
         # Iterate over all blocks
         for b in range(len(self.blocks)):
@@ -433,10 +477,10 @@ class prefix_graph(nx.MultiDiGraph):
             for x in tmp: inst_b+=" .{0} ( {1} ),".format(sub_brackets(x),x)
             inst_b=inst_b[:-1]+' );\n'
             # Add block instantiation to block HDL
-            block_hdl+=inst_b
+            block_hdl.append(inst_b)
 
             # Define block
-            block_def="\nmodule block_{0}(".format(b)
+            block_def="\n\nmodule block_{0}(".format(b)
             # List all ins/outs in module definition
             for x in tmp: block_def+=' '+sub_brackets(x)+','
             block_def = block_def[:-1]+');\n\n'
@@ -449,7 +493,6 @@ class prefix_graph(nx.MultiDiGraph):
             for x in outs: block_def+=" {0},".format(sub_brackets(x))
             block_def = block_def[:-1]+";\n"
             # Put all nodes' hdl inside block definition
-            block_def += '\n'
             for n in nodes:
                 if modules[n.m]['type']=='post':
                     tmp = n.ins['pin'][0]
@@ -460,16 +503,19 @@ class prefix_graph(nx.MultiDiGraph):
                 else:
                     n.flatten()
                     block_def+=sub_brackets(n.hdl())+'\n'
-            # Write "\nendmodule\n" line
-            block_def+="\nendmodule\n"
+            # Write end line
+            if language == "verilog":
+                block_def += "\nendmodule"
+            elif language == "vhdl":
+                block_def += "\nend architecture"
             # Add block definition to list of block_defs
-            block_defs+=block_def
+            block_defs.append(block_def)
 
         # end iterate over all blocks
         return (block_hdl,block_defs)
         
 
-    def _hdl_preamble(self):
+    def _hdl_preamble(self,language='verilog'):
         """Defines the preamble of the graph's HDL
         
         This abstract method is meant to be implemented by child classes.
@@ -477,23 +523,49 @@ class prefix_graph(nx.MultiDiGraph):
         Returns a tuple consisting of the HDL string,
         and any modules used by the preamble.
         """
-        return ("",set())
+        return ([],set())
 
-    def hdl(self,out=None,mapping="behavioral",full_flat=False):
+    def hdl(self,out=None,mapping="behavioral",language="verilog",full_flat=False):
         """Outputs HDL representation of graph
         
-        out is an optional file to write the HDL to
+        out is an optional file to write the HDL into
+        mapping specifies what cell-set to map the logic into
+        language specifies what language to output
         full_flat is an optional argument that can fully flatten the netlist
         """
+        # Check that output path is valid
         if out is not None:
             outdir = pathlib.Path(out).resolve().parent
             if not outdir.exists():
                 raise FileNotFoundError("desired path for hdl output is invalid")
 
-        block_hdl=""; block_defs=""
+        # Check that language is supported
+        if language not in ["verilog","vhdl"]:
+            raise ValueError("unsupported hardware-descriptive language requested")
+
+        # Set language-specific variables
+        if language == "verilog":
+            end_string = "endmodule"
+            comment_string = "\n// start of tree row {0}\n"
+            file_suffix = ".v"
+        if language == "vhdl":
+            end_string = "end architecture"
+            comment_string = "\n-- start of tree row {0}\n"
+            file_suffix = ".vhd"
+
+        # Locate mapping file and check its existence
+        with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
+            pkg_map_file = pkg_map_dir / (mapping+'_map'+file_suffix)
+            local_map_file = outdir / (mapping+'_map'+file_suffix)
+
+            if not pkg_map_file.is_file():
+                raise ValueError("unsupported mapping requested")
+
+        # Copy mapping file from package to local directory
+            shutil.copy(pkg_map_file,local_map_file)
 
         # Pull in HDL preamble, as defined by child class 
-        hdl, module_defs = self._hdl_preamble()
+        hdl, module_defs = self._hdl_preamble(language=language)
 
         # Iterate over all nodes in graph
         for a in self.node_list:
@@ -505,47 +577,46 @@ class prefix_graph(nx.MultiDiGraph):
                 if n.block is not None:
                     continue
                 # Flatten invis nodes
-                if not prefix_node._exists(n):
-                    n.flatten()
                 # If full_flat, flatten all nodes
-                if full_flat:
+                if not prefix_node._exists(n) or full_flat:
                     n.flatten()
+                # If node is not flattened, it needs to be defined
+                else:
+                    module_defs.add(n.m)
                 # Add in HDL
-                hdl += n.hdl()+'\n'
+                hdl.append(n.hdl(language=language))
                 # Mark the node's module as in-use
-                module_defs.add(n.m)
-            hdl += '\n'
+            hdl.append(comment_string.format(a[0].y+1))
+
+        # Remove last two comment strings
+        hdl = hdl[:-2]
 
         # Pull in HDL of blocks
-        block_hdl, block_defs = self._hdl_blocks()
+        block_hdl, block_defs = self._hdl_blocks(language=language)
 
-        hdl += block_hdl
+        hdl.extend(block_hdl)
 
         # End main module
-        hdl += "endmodule\n"
+        hdl.append('\n' + end_string + '\n')
+
+        # Format into string; remove first newline
+        hdl = '\n'.join(hdl)[1:]
 
         # Turn module defs to text
-        module_def_text = ""
-        for a in module_defs:
-            module_def_text+=modules[a]['verilog']
-        # Add in block defs
-        module_def_text += block_defs
+        module_def_text = "".join([modules[x][language] for x in module_defs])
 
-        # Combine main module and module defs
-        hdl = hdl + module_def_text
+        # Combine main module and module defs; remove last newline
+        hdl += module_def_text[:-1]
+
+        # Add in block defs
+        block_defs_text = "".join(block_defs)
+        hdl += block_defs_text
 
         # Write to file
         if out is not None:
             
             with open(out,'w') as f:
                 print(hdl,file=f)
-
-            # Copy mapping file from package to local directory
-            with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
-                pkg_map_file = pkg_map_dir / (mapping+'_map.v')
-                local_map_file = outdir / (mapping+'_map.v')
-                # Use shutil.copy to avoid loading file into memory
-                shutil.copy(pkg_map_file,local_map_file)
 
         return hdl
 

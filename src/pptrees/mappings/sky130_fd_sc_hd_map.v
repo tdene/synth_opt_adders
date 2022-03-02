@@ -8,7 +8,7 @@ module inverter
 
     sky130_fd_sc_hd__inv_1 inverter(.Y(Y), .A(A));
 
-endmodule : inverter
+endmodule
 
 // Buffer
 module buffer
@@ -20,7 +20,7 @@ module buffer
 
     sky130_fd_sc_hd__buf_1 buffer(.X(Y), .A(A));
 
-endmodule: buffer
+endmodule
 
 // NAND2
 module nand2
@@ -32,7 +32,7 @@ module nand2
 
     sky130_fd_sc_hd__nand2_1 nand2(.Y(Y), .A(A), .B(B));
 
-endmodule: nand2
+endmodule
 
 // NOR2
 module nor2
@@ -44,7 +44,7 @@ module nor2
 
     sky130_fd_sc_hd__nor2_1 nor2(.Y(Y), .A(A), .B(B));
 
-endmodule: nor2
+endmodule
 
 // AND2
 module and2
@@ -56,7 +56,7 @@ module and2
 
     sky130_fd_sc_hd__and2_1 and2(.X(Y), .A(A), .B(B));
 
-endmodule: and2
+endmodule
 
 // OR2
 module or2
@@ -68,7 +68,7 @@ module or2
 
     sky130_fd_sc_hd__or2_1 or2(.X(Y), .A(A), .B(B));
 
-endmodule: or2
+endmodule
 
 // NAND3
 module nand3
@@ -80,7 +80,7 @@ module nand3
 
     sky130_fd_sc_hd__nand3_1 nand3(.Y(Y), .A(A), .B(B), .C(C));
 
-endmodule: nand3
+endmodule
 
 // NOR3
 module nor3
@@ -92,7 +92,7 @@ module nor3
 
     sky130_fd_sc_hd__nor3_1 nor3(.Y(Y), .A(A), .B(B), .C(C));
 
-endmodule: nor3
+endmodule
 
 // AND3
 module and3
@@ -104,7 +104,7 @@ module and3
 
     sky130_fd_sc_hd__and3_1 and3(.X(Y), .A(A), .B(B), .C(C));
 
-endmodule: and3
+endmodule
 
 // OR3
 module or3
@@ -116,7 +116,7 @@ module or3
 
     sky130_fd_sc_hd__or3_1 or3(.X(Y), .A(A), .B(B), .C(C));
 
-endmodule: or3
+endmodule
 
 // NAND4
 module nand4
@@ -128,7 +128,7 @@ module nand4
 
     sky130_fd_sc_hd__nand4_1 nand4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
 
-endmodule: nand4
+endmodule
 
 // NOR4
 module nor4
@@ -140,7 +140,7 @@ module nor4
 
     sky130_fd_sc_hd__nor4_1 nor4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
 
-endmodule: nor4
+endmodule
 
 // AND4
 module and4
@@ -152,7 +152,7 @@ module and4
 
     sky130_fd_sc_hd__and4_1 and4(.X(Y), .A(A), .B(B), .C(C), .D(D));
 
-endmodule: and4
+endmodule
 
 // OR4
 module or4
@@ -164,7 +164,7 @@ module or4
 
     sky130_fd_sc_hd__or4_1 or4(.X(Y), .A(A), .B(B), .C(C), .D(D));
 
-endmodule: or4
+endmodule
 
 // NAND2B
 module nand2b
@@ -176,7 +176,7 @@ module nand2b
 
     sky130_fd_sc_hd__nand2b_1 nand2b(.Y(Y), .A_N(A), .B(B));
 
-endmodule: nand2b
+endmodule
 
 // NOR2B
 module nor2b
@@ -188,7 +188,7 @@ module nor2b
 
     sky130_fd_sc_hd__nor2b_1 nor2b(.Y(Y), .A(B), .B_N(A));
 
-endmodule: nor2b
+endmodule
 
 // AO21
 module ao21
@@ -200,7 +200,7 @@ module ao21
 
     sky130_fd_sc_hd__a21o_1 ao21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
 
-endmodule: ao21
+endmodule
 
 // OA21
 module oa21
@@ -212,7 +212,7 @@ module oa21
 
     sky130_fd_sc_hd__o21a_1 oa21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
 
-endmodule: oa21
+endmodule
 
 // AOI21
 module aoi21
@@ -224,7 +224,7 @@ module aoi21
 
     sky130_fd_sc_hd__a21oi_1 aoi21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
 
-endmodule: aoi21
+endmodule
 
 // OAI21
 module oai21
@@ -236,7 +236,7 @@ module oai21
 
     sky130_fd_sc_hd__o21ai_1 oai21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
 
-endmodule: oai21
+endmodule
 
 // AO22
 module ao22
@@ -248,7 +248,7 @@ module ao22
 
     sky130_fd_sc_hd__a22o_1 ao22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
-endmodule: ao22
+endmodule
 
 // OA22
 module oa22
@@ -260,7 +260,7 @@ module oa22
 
     sky130_fd_sc_hd__o22a_1 oa22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
-endmodule: oa22
+endmodule
 
 // AOI22
 module aoi22
@@ -272,7 +272,7 @@ module aoi22
 
     sky130_fd_sc_hd__a22oi_1 aoi22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
-endmodule: aoi22
+endmodule
 
 // OAI22
 module oai22
@@ -284,7 +284,7 @@ module oai22
 
     sky130_fd_sc_hd__o22ai_1 oai22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
-endmodule: oai22
+endmodule
 
 // XOR2
 module xor2
@@ -296,7 +296,7 @@ module xor2
 
     sky130_fd_sc_hd__xor2_1 xor2(.X(Y), .A(A), .B(B));
 
-endmodule: xor2
+endmodule
 
 // XNOR2
 module xnor2
@@ -308,7 +308,7 @@ module xnor2
 
     sky130_fd_sc_hd__xnor2_1 xnor2(.Y(Y), .A(A), .B(B));
 
-endmodule: xnor2
+endmodule
 
 // MUX2
 module mux2
@@ -320,7 +320,7 @@ module mux2
 
     sky130_fd_sc_hd__mux2_1 mux2(.X(Y), .S(S), .A0(A), .A1(B));
 
-endmodule: mux2
+endmodule
 
 // MUX2I
 module muxi2
@@ -332,4 +332,4 @@ module muxi2
 
     sky130_fd_sc_hd__mux2i_1 muxi2(.Y(Y), .S(S), .A0(A), .A1(B));
 
-endmodule: muxi2
+endmodule
