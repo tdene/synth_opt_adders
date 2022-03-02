@@ -3,17 +3,17 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std;
 
 entity adder is
-    port (
-	a,b : in std_logic_vector(15 downto 0);
-	cin : in std_logic;
-	cout : out std_logic;
-	sum : out std_logic_vector(15 downto 0)
-    );
+	port (
+		a,b : in std_logic_vector(15 downto 0);
+		cin : in std_logic;
+		cout : out std_logic;
+		sum : out std_logic_vector(15 downto 0)
+	);
 end entity;
 
 architecture pptree of adder is
-	signal p0, p5, g4, g0, g8, g14, g11, g7, p8, p3, p_lsb, g_lsb, p1, g12, p10, p4, p2, p13, g1, p6, g10, g9, g5, p12, g13, p9, g2, g6, p11, p7, g3, p14 : std_logic;
-	signal n1025, n1026, n204, n1029, n1030, n1033, n1034, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n127, n128, n129, n130, n126, n133, n134, n1151, n137, n138, n1147, n1155, n141, n142, n1159, n1148, n145, n146, n1167, n1168, n149, n150, n147, n148, n153, n154, n155, n156, n157, n158, n159, n160, n161, n162, n1179, n165, n166, n169, n170, n1152, n1187, n173, n174, n1191, n1192, n177, n178, n1195, n1196, n181, n182, n1207, n1208, n185, n186, n1156, n1203, n189, n190, n193, n194, n195, n196, n197, n198, n199, n201, n202, n200, n203, n205, n206, n1160, n209, n210, n211, n212, n213, n214, n207, n208, n217, n218, n219, n220, n221, n223, n224, n222, n1163, n1164, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1188, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n1204, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1021, n1022 : std_logic;
+	signal g2, p11, g5, p10, g10, p4, g4, g12, g0, p5, p3, p_lsb, p9, g7, g3, p2, p14, g11, g13, g_lsb, p1, p6, p8, p12, g1, g14, p7, g6, g9, g8, p13 : std_logic;
+	signal n1025, n1028, n1030, n1032, n1033, n1035, n1038, n1040, n1042, n1043, n1051, n1065, n48, n49, n50, n51, n1076, n53, n55, n56, n57, n58, n59, n60, n63, n64, n1089, n67, n68, n69, n70, n71, n72, n75, n76, n1101, n79, n80, n81, n82, n83, n84, n87, n88, n91, n92, n93, n94, n95, n96, n97, n1116, n99, n101, n103, n105, n106, n107, n108, n109, n110, n111, n112, n113, n114, n1130, n117, n118, n1141, n121, n122, n125, n126, n129, n130, n131, n132, n133, n135, n136, n137, n138, n139, n140, n141, n143, n145, n147, n149, n151, n153, n155, n157, n158, n159, n160, n161, n163, n164, n165, n167, n169, n171, n172, n173, n174, n175, n176, n177, n178, n179, n180, n699, n709, n716, n725, n728, n731, n734, n736, n739, n741, n744, n746, n748, n750, n752, n754, n756, n758, n760, n767, n774, n784, n794, n812, n826, n839, n844, n845, n847, n848, n851, n853, n854, n856, n859, n861, n864, n863, n866, n869, n871, n874, n876, n879, n881, n883, n884, n892, n905, n915, n925, n936, n947, n955, n969, n984, n998, n1003, n1004, n1006, n1007, n1009, n1010, n1015, n1012, n1013, n1017, n1018, n1020, n1022, n1023 : std_logic;
 
 begin
 
@@ -135,624 +135,570 @@ begin
 
 	ppa_post_0_8: ppa_post
 		port map (
+			gin(0) => n1004,
 			pin(0) => p0,
-			gin(0) => n1370,
 			sum(0) => sum[0]
 		);
 	ppa_post_1_8: ppa_post
 		port map (
+			gin(0) => n1007,
 			pin(0) => p1,
-			gin(0) => n1374,
 			sum(0) => sum[1]
 		);
 	ppa_post_2_8: ppa_post
 		port map (
+			gin(0) => n1010,
 			pin(0) => p2,
-			gin(0) => n1378,
 			sum(0) => sum[2]
 		);
 	ppa_post_3_8: ppa_post
 		port map (
+			gin(0) => n1013,
 			pin(0) => p3,
-			gin(0) => n1382,
 			sum(0) => sum[3]
 		);
 	ppa_post_4_8: ppa_post
 		port map (
+			gin(0) => n1015,
 			pin(0) => p4,
-			gin(0) => n1386,
 			sum(0) => sum[4]
 		);
 	ppa_post_5_8: ppa_post
 		port map (
+			gin(0) => n1018,
 			pin(0) => p5,
-			gin(0) => n1390,
 			sum(0) => sum[5]
 		);
 	ppa_post_6_8: ppa_post
 		port map (
+			gin(0) => n1020,
 			pin(0) => p6,
-			gin(0) => n1394,
 			sum(0) => sum[6]
 		);
 	ppa_post_7_8: ppa_post
 		port map (
+			gin(0) => n1023,
 			pin(0) => p7,
-			gin(0) => n1398,
 			sum(0) => sum[7]
 		);
 	ppa_post_8_8: ppa_post
 		port map (
+			gin(0) => n1025,
 			pin(0) => p8,
-			gin(0) => n1402,
 			sum(0) => sum[8]
 		);
 	ppa_post_9_8: ppa_post
 		port map (
+			gin(0) => n1028,
 			pin(0) => p9,
-			gin(0) => n1406,
 			sum(0) => sum[9]
 		);
 	ppa_post_10_8: ppa_post
 		port map (
+			gin(0) => n1030,
 			pin(0) => p10,
-			gin(0) => n1410,
 			sum(0) => sum[10]
 		);
 	ppa_post_11_8: ppa_post
 		port map (
+			gin(0) => n1033,
 			pin(0) => p11,
-			gin(0) => n1414,
 			sum(0) => sum[11]
 		);
 	ppa_post_12_8: ppa_post
 		port map (
+			gin(0) => n1035,
 			pin(0) => p12,
-			gin(0) => n1418,
 			sum(0) => sum[12]
 		);
 	ppa_post_13_8: ppa_post
 		port map (
+			gin(0) => n1038,
 			pin(0) => p13,
-			gin(0) => n1422,
 			sum(0) => sum[13]
 		);
 	ppa_post_14_8: ppa_post
 		port map (
+			gin(0) => n1040,
 			pin(0) => p14,
-			gin(0) => n1426,
 			sum(0) => sum[14]
 		);
 	ppa_post_15_8: ppa_post
 		port map (
+			gin(0) => n1043,
 			pin(0) => p15,
-			gin(0) => n1430,
 			sum(0) => sum[15]
 		);
 
 -- start of custom pre/post logic
 
-    ppa_pre_cout: ppa_pre
-	port map (
-	    a_in => a(15),
-	    b_in => b(15),
-	    pout => p15,
-	    gout => g15
-        );
-    ppa_grey_cout: ppa_grey
-	port map (
-	    gin(0) => n1430,
-	    gin(1) => g15,
-	    pin => p15,
-	    gout => cout
-        );
+	ppa_pre_cout: ppa_pre
+		port map (
+			a_in => a(15),
+			b_in => b(15),
+			pout => p15,
+			gout => g15
+		);
+	ppa_grey_cout: ppa_grey
+		port map (
+			gin(0) => n1043,
+			gin(1) => g15,
+			pin => p15,
+			gout => cout
+		);
 
 -- start of tree row 1
 
 	n49 <= p_lsb;
-	n50 <= g_lsb;
-	ppa_black_1_1: ppa_black
+	n48 <= g_lsb;
+	ppa_grey_1_1: ppa_grey
 		port map (
 			gin(0) => g_lsb,
 			gin(1) => g0,
 			pin(0) => p_lsb,
-			pin(1) => p0,
-			gout(0) => n52,
-			pout(0) => n51
+			gout(0) => n50
 		);
-	n53 <= p1;
-	n54 <= g1;
+	n699 <= p1;
+	n51 <= g1;
 	ppa_black_3_1: ppa_black
 		port map (
 			gin(0) => g1,
 			gin(1) => g2,
 			pin(0) => p1,
 			pin(1) => p2,
-			gout(0) => n58,
-			pout(0) => n57
+			gout(0) => n53,
+			pout(0) => n0
 		);
-	n61 <= p3;
-	n62 <= g3;
+	n56 <= p3;
+	n55 <= g3;
 	ppa_black_5_1: ppa_black
 		port map (
 			gin(0) => g3,
 			gin(1) => g4,
 			pin(0) => p3,
 			pin(1) => p4,
-			gout(0) => n64,
-			pout(0) => n63
+			gout(0) => n57,
+			pout(0) => n58
 		);
-	n65 <= p5;
-	n66 <= g5;
+	n60 <= p5;
+	n59 <= g5;
 	ppa_black_7_1: ppa_black
 		port map (
 			gin(0) => g5,
 			gin(1) => g6,
 			pin(0) => p5,
 			pin(1) => p6,
-			gout(0) => n70,
-			pout(0) => n69
+			gout(0) => n63,
+			pout(0) => n64
 		);
-	n73 <= p7;
-	n74 <= g7;
+	n68 <= p7;
+	n67 <= g7;
 	ppa_black_9_1: ppa_black
 		port map (
 			gin(0) => g7,
 			gin(1) => g8,
 			pin(0) => p7,
 			pin(1) => p8,
-			gout(0) => n76,
-			pout(0) => n75
+			gout(0) => n69,
+			pout(0) => n70
 		);
-	n77 <= p9;
-	n78 <= g9;
+	n72 <= p9;
+	n71 <= g9;
 	ppa_black_11_1: ppa_black
 		port map (
 			gin(0) => g9,
 			gin(1) => g10,
 			pin(0) => p9,
 			pin(1) => p10,
-			gout(0) => n82,
-			pout(0) => n81
+			gout(0) => n75,
+			pout(0) => n76
 		);
-	n85 <= p11;
-	n86 <= g11;
+	n80 <= p11;
+	n79 <= g11;
 	ppa_black_13_1: ppa_black
 		port map (
 			gin(0) => g11,
 			gin(1) => g12,
 			pin(0) => p11,
 			pin(1) => p12,
-			gout(0) => n88,
-			pout(0) => n87
+			gout(0) => n81,
+			pout(0) => n82
 		);
-	n89 <= p13;
-	n90 <= g13;
+	n84 <= p13;
+	n83 <= g13;
 	ppa_black_15_1: ppa_black
 		port map (
 			gin(0) => g13,
 			gin(1) => g14,
 			pin(0) => p13,
 			pin(1) => p14,
-			gout(0) => n94,
-			pout(0) => n93
+			gout(0) => n87,
+			pout(0) => n88
 		);
 
 -- start of tree row 2
 
-	n97 <= n49;
-	n98 <= n50;
-	n99 <= n51;
-	n100 <= n52;
-	n101 <= n53;
-	n102 <= n54;
-	ppa_black_3_2: ppa_black
+	n92 <= n49;
+	n91 <= n48;
+	n94 <= n0;
+	n93 <= n50;
+	n812 <= n699;
+	n95 <= n51;
+	ppa_grey_3_2: ppa_grey
 		port map (
-			gin(0) => n52,
-			gin(1) => n58,
-			pin(0) => n51,
-			pin(1) => n57,
-			gout(0) => n104,
-			pout(0) => n103
+			gin(0) => n50,
+			gin(1) => n53,
+			pin(0) => n0,
+			gout(0) => n96
 		);
-	n105 <= n61;
-	n106 <= n62;
-	n109 <= n63;
-	n110 <= n64;
-	n113 <= n65;
-	n114 <= n66;
+	n709 <= n56;
+	n97 <= n55;
+	n936 <= n58;
+	n99 <= n57;
+	n716 <= n60;
+	n101 <= n59;
 	ppa_black_7_2: ppa_black
 		port map (
-			gin(0) => n64,
-			gin(1) => n70,
-			pin(0) => n63,
-			pin(1) => n69,
-			gout(0) => n118,
-			pout(0) => n117
+			gin(0) => n57,
+			gin(1) => n63,
+			pin(0) => n58,
+			pin(1) => n64,
+			gout(0) => n103,
+			pout(0) => n0
 		);
-	n121 <= n73;
-	n122 <= n74;
-	n123 <= n75;
-	n124 <= n76;
-	n125 <= n77;
-	n126 <= n78;
+	n106 <= n68;
+	n105 <= n67;
+	n108 <= n70;
+	n107 <= n69;
+	n110 <= n72;
+	n109 <= n71;
 	ppa_black_11_2: ppa_black
 		port map (
-			gin(0) => n76,
-			gin(1) => n82,
-			pin(0) => n75,
-			pin(1) => n81,
-			gout(0) => n128,
-			pout(0) => n127
+			gin(0) => n69,
+			gin(1) => n75,
+			pin(0) => n70,
+			pin(1) => n76,
+			gout(0) => n111,
+			pout(0) => n112
 		);
-	n129 <= n85;
-	n130 <= n86;
-	n133 <= n87;
-	n134 <= n88;
-	n137 <= n89;
-	n138 <= n90;
+	n114 <= n80;
+	n113 <= n79;
+	n118 <= n82;
+	n117 <= n81;
+	n122 <= n84;
+	n121 <= n83;
 	ppa_black_15_2: ppa_black
 		port map (
-			gin(0) => n88,
-			gin(1) => n94,
-			pin(0) => n87,
-			pin(1) => n93,
-			gout(0) => n142,
-			pout(0) => n141
+			gin(0) => n81,
+			gin(1) => n87,
+			pin(0) => n82,
+			pin(1) => n88,
+			gout(0) => n125,
+			pout(0) => n126
 		);
 
 -- start of tree row 3
 
-	n145 <= n97;
-	n146 <= n98;
-	n147 <= n99;
-	n148 <= n100;
-	n149 <= n101;
-	n150 <= n102;
-	n151 <= n103;
-	n152 <= n104;
-	n153 <= n105;
-	n154 <= n106;
-	n155 <= n109;
-	n156 <= n110;
-	n157 <= n113;
-	n158 <= n114;
-	ppa_black_7_3: ppa_black
+	n130 <= n92;
+	n129 <= n91;
+	n132 <= n94;
+	n131 <= n93;
+	n969 <= n812;
+	n133 <= n95;
+	n136 <= n0;
+	n135 <= n96;
+	n826 <= n709;
+	n137 <= n97;
+	n1101 <= n936;
+	n138 <= n99;
+	n839 <= n716;
+	n139 <= n101;
+	ppa_grey_7_3: ppa_grey
 		port map (
-			gin(0) => n104,
-			gin(1) => n118,
-			pin(0) => n103,
-			pin(1) => n117,
-			gout(0) => n160,
-			pout(0) => n159
+			gin(0) => n96,
+			gin(1) => n103,
+			pin(0) => n0,
+			gout(0) => n140
 		);
-	n161 <= n121;
-	n162 <= n122;
-	n165 <= n123;
-	n166 <= n124;
-	n169 <= n125;
-	n170 <= n126;
-	n173 <= n127;
-	n174 <= n128;
-	n177 <= n129;
-	n178 <= n130;
-	n181 <= n133;
-	n182 <= n134;
-	n185 <= n137;
-	n186 <= n138;
+	n767 <= n106;
+	n141 <= n105;
+	n947 <= n108;
+	n143 <= n107;
+	n774 <= n110;
+	n145 <= n109;
+	n1141 <= n112;
+	n147 <= n111;
+	n784 <= n114;
+	n149 <= n113;
+	n955 <= n118;
+	n151 <= n117;
+	n794 <= n122;
+	n153 <= n121;
 	ppa_black_15_3: ppa_black
 		port map (
-			gin(0) => n128,
-			gin(1) => n142,
-			pin(0) => n127,
-			pin(1) => n141,
-			gout(0) => n190,
-			pout(0) => n189
+			gin(0) => n111,
+			gin(1) => n125,
+			pin(0) => n112,
+			pin(1) => n126,
+			gout(0) => n155,
+			pout(0) => n0
 		);
 
 -- start of tree row 4
 
-	n193 <= n145;
-	n194 <= n146;
+	n158 <= n130;
+	n157 <= n129;
 	buffer_node_1_4: buffer_node
 		port map (
-			gin(0) => n148,
-			pin(0) => n147,
-			gout(0) => n196,
-			pout(0) => n195
+			gin(0) => n131,
+			pin(0) => n132,
+			gout(0) => n159,
+			pout(0) => n160
 		);
-	n197 <= n149;
-	n198 <= n150;
+	n0 <= n969;
+	n161 <= n133;
 	buffer_node_3_4: buffer_node
 		port map (
-			gin(0) => n152,
-			pin(0) => n151,
-			gout(0) => n200,
-			pout(0) => n199
+			gin(0) => n135,
+			pin(0) => n136,
+			gout(0) => n163,
+			pout(0) => n164
 		);
-	n201 <= n153;
-	n202 <= n154;
-	n203 <= n155;
-	n204 <= n156;
-	n205 <= n157;
-	n206 <= n158;
+	n984 <= n826;
+	n165 <= n137;
+	n0 <= n1101;
+	n167 <= n138;
+	n998 <= n839;
+	n169 <= n139;
 	buffer_node_7_4: buffer_node
 		port map (
-			gin(0) => n160,
-			pin(0) => n159,
-			gout(0) => n208,
-			pout(0) => n207
+			gin(0) => n140,
+			pin(0) => n0,
+			gout(0) => n171,
+			pout(0) => n172
 		);
-	n209 <= n161;
-	n210 <= n162;
-	n211 <= n165;
-	n212 <= n166;
-	n213 <= n169;
-	n214 <= n170;
-	n215 <= n173;
-	n216 <= n174;
-	n217 <= n177;
-	n218 <= n178;
-	n219 <= n181;
-	n220 <= n182;
-	n221 <= n185;
-	n222 <= n186;
-	ppa_black_15_4: ppa_black
+	n892 <= n767;
+	n173 <= n141;
+	n1116 <= n947;
+	n174 <= n143;
+	n905 <= n774;
+	n175 <= n145;
+	n0 <= n1141;
+	n176 <= n147;
+	n915 <= n784;
+	n177 <= n149;
+	n1130 <= n955;
+	n178 <= n151;
+	n925 <= n794;
+	n179 <= n153;
+	ppa_grey_15_4: ppa_grey
 		port map (
-			gin(0) => n160,
-			gin(1) => n190,
-			pin(0) => n159,
-			pin(1) => n189,
-			gout(0) => n224,
-			pout(0) => n223
+			gin(0) => n140,
+			gin(1) => n155,
+			pin(0) => n0,
+			gout(0) => n180
 		);
 
 -- start of tree row 5
 
-	n973 <= n193;
-	n974 <= n194;
-	n977 <= n195;
-	n978 <= n196;
-	ppa_black_2_5: ppa_black
+	n844 <= n158;
+	n725 <= n157;
+	n847 <= n160;
+	n728 <= n159;
+	ppa_grey_2_5: ppa_grey
 		port map (
-			gin(0) => n196,
-			gin(1) => n198,
-			pin(0) => n195,
-			pin(1) => n197,
-			gout(0) => n982,
-			pout(0) => n981
+			gin(0) => n159,
+			gin(1) => n161,
+			pin(0) => n160,
+			gout(0) => n731
 		);
 	buffer_node_3_5: buffer_node
 		port map (
-			gin(0) => n200,
-			pin(0) => n199,
-			gout(0) => n986,
-			pout(0) => n985
+			gin(0) => n163,
+			pin(0) => n164,
+			gout(0) => n734,
+			pout(0) => n853
 		);
-	n989 <= n201;
-	n990 <= n202;
-	ppa_black_5_5: ppa_black
+	n0 <= n984;
+	n736 <= n165;
+	ppa_grey_5_5: ppa_grey
 		port map (
-			gin(0) => n200,
-			gin(1) => n204,
-			pin(0) => n199,
-			pin(1) => n203,
-			gout(0) => n994,
-			pout(0) => n993
+			gin(0) => n163,
+			gin(1) => n167,
+			pin(0) => n164,
+			gout(0) => n739
 		);
-	n997 <= n205;
-	n998 <= n206;
+	n0 <= n998;
+	n741 <= n169;
 	buffer_node_7_5: buffer_node
 		port map (
-			gin(0) => n208,
-			pin(0) => n207,
-			gout(0) => n1002,
-			pout(0) => n1001
+			gin(0) => n171,
+			pin(0) => n172,
+			gout(0) => n744,
+			pout(0) => n863
 		);
-	n1005 <= n209;
-	n1006 <= n210;
-	n1009 <= n211;
-	n1010 <= n212;
-	n1013 <= n213;
-	n1014 <= n214;
-	ppa_black_11_5: ppa_black
+	n1051 <= n892;
+	n746 <= n173;
+	n0 <= n1116;
+	n748 <= n174;
+	n1065 <= n905;
+	n750 <= n175;
+	ppa_grey_11_5: ppa_grey
 		port map (
-			gin(0) => n208,
-			gin(1) => n216,
-			pin(0) => n207,
-			pin(1) => n215,
-			gout(0) => n1018,
-			pout(0) => n1017
+			gin(0) => n171,
+			gin(1) => n176,
+			pin(0) => n172,
+			gout(0) => n752
 		);
-	n1021 <= n217;
-	n1022 <= n218;
-	n1025 <= n219;
-	n1026 <= n220;
-	n1029 <= n221;
-	n1030 <= n222;
-	n1033 <= n223;
-	n1034 <= n224;
+	n1076 <= n915;
+	n754 <= n177;
+	n0 <= n1130;
+	n756 <= n178;
+	n1089 <= n925;
+	n758 <= n179;
+	n883 <= n0;
+	n760 <= n180;
 
 -- start of tree row 6
 
-	n1147 <= n973;
-	n1148 <= n974;
-	n1151 <= n977;
-	n1152 <= n978;
-	n1155 <= n981;
-	n1156 <= n982;
-	n1159 <= n985;
-	n1160 <= n986;
-	ppa_black_4_6: ppa_black
+	n1003 <= n844;
+	n845 <= n725;
+	n1006 <= n847;
+	n848 <= n728;
+	n1009 <= n850;
+	n851 <= n731;
+	n1012 <= n853;
+	n854 <= n734;
+	ppa_grey_4_6: ppa_grey
 		port map (
-			gin(0) => n986,
-			gin(1) => n990,
-			pin(0) => n985,
-			pin(1) => n989,
-			gout(0) => n1164,
-			pout(0) => n1163
+			gin(0) => n734,
+			gin(1) => n736,
+			pin(0) => n853,
+			gout(0) => n856
 		);
-	n1167 <= n993;
-	n1168 <= n994;
-	ppa_black_6_6: ppa_black
+	n1017 <= n858;
+	n859 <= n739;
+	ppa_grey_6_6: ppa_grey
 		port map (
-			gin(0) => n994,
-			gin(1) => n998,
-			pin(0) => n993,
-			pin(1) => n997,
-			gout(0) => n1172,
-			pout(0) => n1171
+			gin(0) => n739,
+			gin(1) => n741,
+			pin(0) => n858,
+			gout(0) => n861
 		);
 	buffer_node_7_6: buffer_node
 		port map (
-			gin(0) => n1002,
-			pin(0) => n1001,
-			gout(0) => n1176,
-			pout(0) => n1175
+			gin(0) => n744,
+			pin(0) => n863,
+			gout(0) => n864,
+			pout(0) => n1022
 		);
-	n1179 <= n1005;
-	n1180 <= n1006;
-	ppa_black_9_6: ppa_black
+	n0 <= n1051;
+	n866 <= n746;
+	ppa_grey_9_6: ppa_grey
 		port map (
-			gin(0) => n1002,
-			gin(1) => n1010,
-			pin(0) => n1001,
-			pin(1) => n1009,
-			gout(0) => n1184,
-			pout(0) => n1183
+			gin(0) => n744,
+			gin(1) => n748,
+			pin(0) => n863,
+			gout(0) => n869
 		);
-	n1187 <= n1013;
-	n1188 <= n1014;
+	n0 <= n1065;
+	n871 <= n750;
 	buffer_node_11_6: buffer_node
 		port map (
-			gin(0) => n1018,
-			pin(0) => n1017,
-			gout(0) => n1192,
-			pout(0) => n1191
+			gin(0) => n752,
+			pin(0) => n873,
+			gout(0) => n874,
+			pout(0) => n1032
 		);
-	n1195 <= n1021;
-	n1196 <= n1022;
-	ppa_black_13_6: ppa_black
+	n0 <= n1076;
+	n876 <= n754;
+	ppa_grey_13_6: ppa_grey
 		port map (
-			gin(0) => n1018,
-			gin(1) => n1026,
-			pin(0) => n1017,
-			pin(1) => n1025,
-			gout(0) => n1200,
-			pout(0) => n1199
+			gin(0) => n752,
+			gin(1) => n756,
+			pin(0) => n873,
+			gout(0) => n879
 		);
-	n1203 <= n1029;
-	n1204 <= n1030;
-	n1207 <= n1033;
-	n1208 <= n1034;
+	n0 <= n1089;
+	n881 <= n758;
+	n1042 <= n883;
+	n884 <= n760;
 
 -- start of tree row 7
 
-	n1369 <= n1147;
-	n1370 <= n1148;
-	n1373 <= n1151;
-	n1374 <= n1152;
-	n1377 <= n1155;
-	n1378 <= n1156;
-	n1381 <= n1159;
-	n1382 <= n1160;
-	n1385 <= n1163;
-	n1386 <= n1164;
-	n1389 <= n1167;
-	n1390 <= n1168;
-	n1393 <= n1171;
-	n1394 <= n1172;
-	n1397 <= n1175;
-	n1398 <= n1176;
-	ppa_black_8_7: ppa_black
+	n0 <= n1003;
+	n1004 <= n845;
+	n0 <= n1006;
+	n1007 <= n848;
+	n0 <= n1009;
+	n1010 <= n851;
+	n0 <= n1012;
+	n1013 <= n854;
+	n0 <= n0;
+	n1015 <= n856;
+	n0 <= n1017;
+	n1018 <= n859;
+	n0 <= n0;
+	n1020 <= n861;
+	n0 <= n1022;
+	n1023 <= n864;
+	ppa_grey_8_7: ppa_grey
 		port map (
-			gin(0) => n1176,
-			gin(1) => n1180,
-			pin(0) => n1175,
-			pin(1) => n1179,
-			gout(0) => n1402,
-			pout(0) => n1401
+			gin(0) => n864,
+			gin(1) => n866,
+			pin(0) => n1022,
+			gout(0) => n1025
 		);
-	n1405 <= n1183;
-	n1406 <= n1184;
-	ppa_black_10_7: ppa_black
+	n0 <= n1027;
+	n1028 <= n869;
+	ppa_grey_10_7: ppa_grey
 		port map (
-			gin(0) => n1184,
-			gin(1) => n1188,
-			pin(0) => n1183,
-			pin(1) => n1187,
-			gout(0) => n1410,
-			pout(0) => n1409
+			gin(0) => n869,
+			gin(1) => n871,
+			pin(0) => n1027,
+			gout(0) => n1030
 		);
-	n1413 <= n1191;
-	n1414 <= n1192;
-	ppa_black_12_7: ppa_black
+	n0 <= n1032;
+	n1033 <= n874;
+	ppa_grey_12_7: ppa_grey
 		port map (
-			gin(0) => n1192,
-			gin(1) => n1196,
-			pin(0) => n1191,
-			pin(1) => n1195,
-			gout(0) => n1418,
-			pout(0) => n1417
+			gin(0) => n874,
+			gin(1) => n876,
+			pin(0) => n1032,
+			gout(0) => n1035
 		);
-	n1421 <= n1199;
-	n1422 <= n1200;
-	ppa_black_14_7: ppa_black
+	n0 <= n1037;
+	n1038 <= n879;
+	ppa_grey_14_7: ppa_grey
 		port map (
-			gin(0) => n1200,
-			gin(1) => n1204,
-			pin(0) => n1199,
-			pin(1) => n1203,
-			gout(0) => n1426,
-			pout(0) => n1425
+			gin(0) => n879,
+			gin(1) => n881,
+			pin(0) => n1037,
+			gout(0) => n1040
 		);
-	n1429 <= n1207;
-	n1430 <= n1208;
+	n0 <= n1042;
+	n1043 <= n884;
 
 end architecture
 
-entity ppa_black is
+entity ppa_grey is
 	port (
 		gin : in std_logic_vector(1 downto 0);
 		gout : out std_logic;
-		pin : in std_logic_vector(1 downto 0);
-		pout : out std_logic
+		pin : in std_logic
 	);
 end entity;
 
-architecture behavior of ppa_black is
+architecture behavior of ppa_grey is
 begin
 
-U1: and2
-	port map (
-		A => pin(0),
-		B => pin(1),
-		Y => pout
-	);
-
-U2: ao21
+U1: ao21
 	port map (
 		A0 => gin(0),
-		A1 => pin(1),
+		A1 => pin,
 		B0 => gin(1),
 		Y => gout
 	);
-
-end architecture;
-
-entity ppa_first_pre is
-	port (
-		cin : in std_logic;
-		pout : out std_logic;
-		gout : out std_logic
-	);
-end entity;
-
-architecture behavior of ppa_first_pre is
-begin
-
-	pout <= '0';
-	gout <= cin;
 
 end architecture;
 
@@ -779,6 +725,51 @@ U2: and2
 	port map (
 		A => a_in,
 		B => b_in,
+		Y => gout
+	);
+
+end architecture;
+
+entity ppa_first_pre is
+	port (
+		cin : in std_logic;
+		pout : out std_logic;
+		gout : out std_logic
+	);
+end entity;
+
+architecture behavior of ppa_first_pre is
+begin
+
+	pout <= '0';
+	gout <= cin;
+
+end architecture;
+
+entity ppa_black is
+	port (
+		gin : in std_logic_vector(1 downto 0);
+		gout : out std_logic;
+		pin : in std_logic_vector(1 downto 0);
+		pout : out std_logic
+	);
+end entity;
+
+architecture behavior of ppa_black is
+begin
+
+U1: and2
+	port map (
+		A => pin(0),
+		B => pin(1),
+		Y => pout
+	);
+
+U2: ao21
+	port map (
+		A0 => gin(0),
+		A1 => pin(1),
+		B0 => gin(1),
 		Y => gout
 	);
 
@@ -826,27 +817,6 @@ U1: xor2
 		A => pin,
 		B => gin,
 		Y => sum
-	);
-
-end architecture;
-
-entity ppa_grey is
-	port (
-		gin : in std_logic_vector(1 downto 0);
-		gout : out std_logic;
-		pin : in std_logic
-	);
-end entity;
-
-architecture behavior of ppa_grey is
-begin
-
-U1: ao21
-	port map (
-		A0 => gin(0),
-		A1 => pin,
-		B0 => gin(1),
-		Y => gout
 	);
 
 end architecture;

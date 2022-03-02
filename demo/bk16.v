@@ -1,12 +1,12 @@
 module adder(cout, sum, a, b, cin);
 
-    input [15:0] a, b;
-    input cin;
-    output [15:0] sum;
-    output cout;
+	input [15:0] a, b;
+	input cin;
+	output [15:0] sum;
+	output cout;
 
-	wire p0, p5, g4, g0, g8, g14, g11, g7, p8, p3, p_lsb, g_lsb, p1, g12, p10, p4, p2, p13, g1, p6, g10, g9, g5, p12, g13, p9, g2, g6, p11, p7, g3, p14;
-	wire n1025, n1026, n204, n1029, n1030, n1033, n1034, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n127, n128, n129, n130, n126, n133, n134, n1151, n137, n138, n1147, n1155, n141, n142, n1159, n1148, n145, n146, n1167, n1168, n149, n150, n147, n148, n153, n154, n155, n156, n157, n158, n159, n160, n161, n162, n1179, n165, n166, n169, n170, n1152, n1187, n173, n174, n1191, n1192, n177, n178, n1195, n1196, n181, n182, n1207, n1208, n185, n186, n1156, n1203, n189, n190, n193, n194, n195, n196, n197, n198, n199, n201, n202, n200, n203, n205, n206, n1160, n209, n210, n211, n212, n213, n214, n207, n208, n217, n218, n219, n220, n221, n223, n224, n222, n1163, n1164, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1188, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n1204, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1021, n1022;
+	wire g2, p11, g5, p10, g10, p4, g4, g12, g0, p5, p3, p_lsb, p9, g7, g3, p2, p14, g11, g13, g_lsb, p1, p6, p8, p12, g1, g14, p7, g6, g9, g8, p13;
+	wire n1025, n1028, n1030, n1032, n1033, n1035, n1038, n1040, n1042, n1043, n1051, n1065, n48, n49, n50, n51, n1076, n53, n55, n56, n57, n58, n59, n60, n63, n64, n1089, n67, n68, n69, n70, n71, n72, n75, n76, n1101, n79, n80, n81, n82, n83, n84, n87, n88, n91, n92, n93, n94, n95, n96, n97, n1116, n99, n101, n103, n105, n106, n107, n108, n109, n110, n111, n112, n113, n114, n1130, n117, n118, n1141, n121, n122, n125, n126, n129, n130, n131, n132, n133, n135, n136, n137, n138, n139, n140, n141, n143, n145, n147, n149, n151, n153, n155, n157, n158, n159, n160, n161, n163, n164, n165, n167, n169, n171, n172, n173, n174, n175, n176, n177, n178, n179, n180, n699, n709, n716, n725, n728, n731, n734, n736, n739, n741, n744, n746, n748, n750, n752, n754, n756, n758, n760, n767, n774, n784, n794, n812, n826, n839, n844, n845, n847, n848, n851, n853, n854, n856, n859, n861, n864, n863, n866, n869, n871, n874, n876, n879, n881, n883, n884, n892, n905, n915, n925, n936, n947, n955, n969, n984, n998, n1003, n1004, n1006, n1007, n1009, n1010, n1015, n1012, n1013, n1017, n1018, n1020, n1022, n1023;
 
 // start of pre-processing logic
 
@@ -29,244 +29,254 @@ module adder(cout, sum, a, b, cin);
 
 // start of post-processing logic
 
-	ppa_post ppa_post_0_8 ( .pin( {p0} ), .gin( {n1370} ), .sum( {sum[0]} ) );
-	ppa_post ppa_post_1_8 ( .pin( {p1} ), .gin( {n1374} ), .sum( {sum[1]} ) );
-	ppa_post ppa_post_2_8 ( .pin( {p2} ), .gin( {n1378} ), .sum( {sum[2]} ) );
-	ppa_post ppa_post_3_8 ( .pin( {p3} ), .gin( {n1382} ), .sum( {sum[3]} ) );
-	ppa_post ppa_post_4_8 ( .pin( {p4} ), .gin( {n1386} ), .sum( {sum[4]} ) );
-	ppa_post ppa_post_5_8 ( .pin( {p5} ), .gin( {n1390} ), .sum( {sum[5]} ) );
-	ppa_post ppa_post_6_8 ( .pin( {p6} ), .gin( {n1394} ), .sum( {sum[6]} ) );
-	ppa_post ppa_post_7_8 ( .pin( {p7} ), .gin( {n1398} ), .sum( {sum[7]} ) );
-	ppa_post ppa_post_8_8 ( .pin( {p8} ), .gin( {n1402} ), .sum( {sum[8]} ) );
-	ppa_post ppa_post_9_8 ( .pin( {p9} ), .gin( {n1406} ), .sum( {sum[9]} ) );
-	ppa_post ppa_post_10_8 ( .pin( {p10} ), .gin( {n1410} ), .sum( {sum[10]} ) );
-	ppa_post ppa_post_11_8 ( .pin( {p11} ), .gin( {n1414} ), .sum( {sum[11]} ) );
-	ppa_post ppa_post_12_8 ( .pin( {p12} ), .gin( {n1418} ), .sum( {sum[12]} ) );
-	ppa_post ppa_post_13_8 ( .pin( {p13} ), .gin( {n1422} ), .sum( {sum[13]} ) );
-	ppa_post ppa_post_14_8 ( .pin( {p14} ), .gin( {n1426} ), .sum( {sum[14]} ) );
-	ppa_post ppa_post_15_8 ( .pin( {p15} ), .gin( {n1430} ), .sum( {sum[15]} ) );
+	ppa_post ppa_post_0_8 ( .gin( {n1004} ), .pin( {p0} ), .sum( {sum[0]} ) );
+	ppa_post ppa_post_1_8 ( .gin( {n1007} ), .pin( {p1} ), .sum( {sum[1]} ) );
+	ppa_post ppa_post_2_8 ( .gin( {n1010} ), .pin( {p2} ), .sum( {sum[2]} ) );
+	ppa_post ppa_post_3_8 ( .gin( {n1013} ), .pin( {p3} ), .sum( {sum[3]} ) );
+	ppa_post ppa_post_4_8 ( .gin( {n1015} ), .pin( {p4} ), .sum( {sum[4]} ) );
+	ppa_post ppa_post_5_8 ( .gin( {n1018} ), .pin( {p5} ), .sum( {sum[5]} ) );
+	ppa_post ppa_post_6_8 ( .gin( {n1020} ), .pin( {p6} ), .sum( {sum[6]} ) );
+	ppa_post ppa_post_7_8 ( .gin( {n1023} ), .pin( {p7} ), .sum( {sum[7]} ) );
+	ppa_post ppa_post_8_8 ( .gin( {n1025} ), .pin( {p8} ), .sum( {sum[8]} ) );
+	ppa_post ppa_post_9_8 ( .gin( {n1028} ), .pin( {p9} ), .sum( {sum[9]} ) );
+	ppa_post ppa_post_10_8 ( .gin( {n1030} ), .pin( {p10} ), .sum( {sum[10]} ) );
+	ppa_post ppa_post_11_8 ( .gin( {n1033} ), .pin( {p11} ), .sum( {sum[11]} ) );
+	ppa_post ppa_post_12_8 ( .gin( {n1035} ), .pin( {p12} ), .sum( {sum[12]} ) );
+	ppa_post ppa_post_13_8 ( .gin( {n1038} ), .pin( {p13} ), .sum( {sum[13]} ) );
+	ppa_post ppa_post_14_8 ( .gin( {n1040} ), .pin( {p14} ), .sum( {sum[14]} ) );
+	ppa_post ppa_post_15_8 ( .gin( {n1043} ), .pin( {p15} ), .sum( {sum[15]} ) );
 
 // start of custom pre/post logic
 
-    ppa_pre ppa_pre_cout ( .a_in( a[15] ), .b_in( b[15] ), .pout ( p15 ), .gout ( g15 ) );
-    ppa_grey ppa_grey_cout ( .gin ( {g15,n1430} ), .pin ( p15 ), .gout ( cout ) );
+	ppa_pre ppa_pre_cout ( .a_in( a[15] ), .b_in( b[15] ), .pout ( p15 ), .gout ( g15 ) );
+	ppa_grey ppa_grey_cout ( .gin ( {g15,n1043} ), .pin ( p15 ), .gout ( cout ) );
 
 // start of tree row 1
 
 	assign n49 = p_lsb;
-	assign n50 = g_lsb;
-	assign n53 = p1;
-	assign n54 = g1;
-	ppa_black ppa_black_3_1 ( .gin( {g2,g1} ), .pin( {p2,p1} ), .gout( {n58} ), .pout( {n57} ) );
-	assign n61 = p3;
-	assign n62 = g3;
-	ppa_black ppa_black_5_1 ( .gin( {g4,g3} ), .pin( {p4,p3} ), .gout( {n64} ), .pout( {n63} ) );
-	assign n65 = p5;
-	assign n66 = g5;
-	ppa_black ppa_black_7_1 ( .gin( {g6,g5} ), .pin( {p6,p5} ), .gout( {n70} ), .pout( {n69} ) );
-	assign n73 = p7;
-	assign n74 = g7;
-	ppa_black ppa_black_9_1 ( .gin( {g8,g7} ), .pin( {p8,p7} ), .gout( {n76} ), .pout( {n75} ) );
-	assign n77 = p9;
-	assign n78 = g9;
-	ppa_black ppa_black_11_1 ( .gin( {g10,g9} ), .pin( {p10,p9} ), .gout( {n82} ), .pout( {n81} ) );
-	assign n85 = p11;
-	assign n86 = g11;
-	ppa_black ppa_black_13_1 ( .gin( {g12,g11} ), .pin( {p12,p11} ), .gout( {n88} ), .pout( {n87} ) );
-	assign n89 = p13;
-	assign n90 = g13;
-	ppa_black ppa_black_15_1 ( .gin( {g14,g13} ), .pin( {p14,p13} ), .gout( {n94} ), .pout( {n93} ) );
+	assign n48 = g_lsb;
+	assign n699 = p1;
+	assign n51 = g1;
+	ppa_black ppa_black_3_1 ( .gin( {g2,g1} ), .pin( {p2,p1} ), .gout( {n53} ), .pout( {n0} ) );
+	assign n56 = p3;
+	assign n55 = g3;
+	ppa_black ppa_black_5_1 ( .gin( {g4,g3} ), .pin( {p4,p3} ), .gout( {n57} ), .pout( {n58} ) );
+	assign n60 = p5;
+	assign n59 = g5;
+	ppa_black ppa_black_7_1 ( .gin( {g6,g5} ), .pin( {p6,p5} ), .gout( {n63} ), .pout( {n64} ) );
+	assign n68 = p7;
+	assign n67 = g7;
+	ppa_black ppa_black_9_1 ( .gin( {g8,g7} ), .pin( {p8,p7} ), .gout( {n69} ), .pout( {n70} ) );
+	assign n72 = p9;
+	assign n71 = g9;
+	ppa_black ppa_black_11_1 ( .gin( {g10,g9} ), .pin( {p10,p9} ), .gout( {n75} ), .pout( {n76} ) );
+	assign n80 = p11;
+	assign n79 = g11;
+	ppa_black ppa_black_13_1 ( .gin( {g12,g11} ), .pin( {p12,p11} ), .gout( {n81} ), .pout( {n82} ) );
+	assign n84 = p13;
+	assign n83 = g13;
+	ppa_black ppa_black_15_1 ( .gin( {g14,g13} ), .pin( {p14,p13} ), .gout( {n87} ), .pout( {n88} ) );
 
 // start of tree row 2
 
-	assign n97 = n49;
-	assign n98 = n50;
-	assign n99 = n51;
-	assign n100 = n52;
-	assign n101 = n53;
-	assign n102 = n54;
-	assign n105 = n61;
-	assign n106 = n62;
-	assign n109 = n63;
-	assign n110 = n64;
-	assign n113 = n65;
-	assign n114 = n66;
-	ppa_black ppa_black_7_2 ( .gin( {n70,n64} ), .pin( {n69,n63} ), .gout( {n118} ), .pout( {n117} ) );
-	assign n121 = n73;
-	assign n122 = n74;
-	assign n123 = n75;
-	assign n124 = n76;
-	assign n125 = n77;
-	assign n126 = n78;
-	ppa_black ppa_black_11_2 ( .gin( {n82,n76} ), .pin( {n81,n75} ), .gout( {n128} ), .pout( {n127} ) );
-	assign n129 = n85;
-	assign n130 = n86;
-	assign n133 = n87;
-	assign n134 = n88;
-	assign n137 = n89;
-	assign n138 = n90;
-	ppa_black ppa_black_15_2 ( .gin( {n94,n88} ), .pin( {n93,n87} ), .gout( {n142} ), .pout( {n141} ) );
+	assign n92 = n49;
+	assign n91 = n48;
+	assign n94 = n0;
+	assign n93 = n50;
+	assign n812 = n699;
+	assign n95 = n51;
+	assign n709 = n56;
+	assign n97 = n55;
+	assign n936 = n58;
+	assign n99 = n57;
+	assign n716 = n60;
+	assign n101 = n59;
+	ppa_black ppa_black_7_2 ( .gin( {n63,n57} ), .pin( {n64,n58} ), .gout( {n103} ), .pout( {n0} ) );
+	assign n106 = n68;
+	assign n105 = n67;
+	assign n108 = n70;
+	assign n107 = n69;
+	assign n110 = n72;
+	assign n109 = n71;
+	ppa_black ppa_black_11_2 ( .gin( {n75,n69} ), .pin( {n76,n70} ), .gout( {n111} ), .pout( {n112} ) );
+	assign n114 = n80;
+	assign n113 = n79;
+	assign n118 = n82;
+	assign n117 = n81;
+	assign n122 = n84;
+	assign n121 = n83;
+	ppa_black ppa_black_15_2 ( .gin( {n87,n81} ), .pin( {n88,n82} ), .gout( {n125} ), .pout( {n126} ) );
 
 // start of tree row 3
 
-	assign n145 = n97;
-	assign n146 = n98;
-	assign n147 = n99;
-	assign n148 = n100;
-	assign n149 = n101;
-	assign n150 = n102;
-	assign n151 = n103;
-	assign n152 = n104;
-	assign n153 = n105;
-	assign n154 = n106;
-	assign n155 = n109;
-	assign n156 = n110;
-	assign n157 = n113;
-	assign n158 = n114;
-	assign n161 = n121;
-	assign n162 = n122;
-	assign n165 = n123;
-	assign n166 = n124;
-	assign n169 = n125;
-	assign n170 = n126;
-	assign n173 = n127;
-	assign n174 = n128;
-	assign n177 = n129;
-	assign n178 = n130;
-	assign n181 = n133;
-	assign n182 = n134;
-	assign n185 = n137;
-	assign n186 = n138;
-	ppa_black ppa_black_15_3 ( .gin( {n142,n128} ), .pin( {n141,n127} ), .gout( {n190} ), .pout( {n189} ) );
+	assign n130 = n92;
+	assign n129 = n91;
+	assign n132 = n94;
+	assign n131 = n93;
+	assign n969 = n812;
+	assign n133 = n95;
+	assign n136 = n0;
+	assign n135 = n96;
+	assign n826 = n709;
+	assign n137 = n97;
+	assign n1101 = n936;
+	assign n138 = n99;
+	assign n839 = n716;
+	assign n139 = n101;
+	assign n767 = n106;
+	assign n141 = n105;
+	assign n947 = n108;
+	assign n143 = n107;
+	assign n774 = n110;
+	assign n145 = n109;
+	assign n1141 = n112;
+	assign n147 = n111;
+	assign n784 = n114;
+	assign n149 = n113;
+	assign n955 = n118;
+	assign n151 = n117;
+	assign n794 = n122;
+	assign n153 = n121;
+	ppa_black ppa_black_15_3 ( .gin( {n125,n111} ), .pin( {n126,n112} ), .gout( {n155} ), .pout( {n0} ) );
 
 // start of tree row 4
 
-	assign n193 = n145;
-	assign n194 = n146;
-	buffer_node buffer_node_1_4 ( .gin( {n148} ), .pin( {n147} ), .gout( {n196} ), .pout( {n195} ) );
-	assign n197 = n149;
-	assign n198 = n150;
-	buffer_node buffer_node_3_4 ( .gin( {n152} ), .pin( {n151} ), .gout( {n200} ), .pout( {n199} ) );
-	assign n201 = n153;
-	assign n202 = n154;
-	assign n203 = n155;
-	assign n204 = n156;
-	assign n205 = n157;
-	assign n206 = n158;
-	assign n209 = n161;
-	assign n210 = n162;
-	assign n211 = n165;
-	assign n212 = n166;
-	assign n213 = n169;
-	assign n214 = n170;
-	assign n215 = n173;
-	assign n216 = n174;
-	assign n217 = n177;
-	assign n218 = n178;
-	assign n219 = n181;
-	assign n220 = n182;
-	assign n221 = n185;
-	assign n222 = n186;
-	ppa_black ppa_black_15_4 ( .gin( {n190,n160} ), .pin( {n189,n159} ), .gout( {n224} ), .pout( {n223} ) );
+	assign n158 = n130;
+	assign n157 = n129;
+	buffer_node buffer_node_1_4 ( .gin( {n131} ), .pin( {n132} ), .gout( {n159} ), .pout( {n160} ) );
+	assign n0 = n969;
+	assign n161 = n133;
+	buffer_node buffer_node_3_4 ( .gin( {n135} ), .pin( {n136} ), .gout( {n163} ), .pout( {n164} ) );
+	assign n984 = n826;
+	assign n165 = n137;
+	assign n0 = n1101;
+	assign n167 = n138;
+	assign n998 = n839;
+	assign n169 = n139;
+	assign n892 = n767;
+	assign n173 = n141;
+	assign n1116 = n947;
+	assign n174 = n143;
+	assign n905 = n774;
+	assign n175 = n145;
+	assign n0 = n1141;
+	assign n176 = n147;
+	assign n915 = n784;
+	assign n177 = n149;
+	assign n1130 = n955;
+	assign n178 = n151;
+	assign n925 = n794;
+	assign n179 = n153;
+	ppa_grey ppa_grey_15_4 ( .gin( {n155,n140} ), .pin( {n0} ), .gout( {n180} ) );
 
 // start of tree row 5
 
-	assign n973 = n193;
-	assign n974 = n194;
-	assign n977 = n195;
-	assign n978 = n196;
-	ppa_black ppa_black_2_5 ( .gin( {n198,n196} ), .pin( {n197,n195} ), .gout( {n982} ), .pout( {n981} ) );
-	buffer_node buffer_node_3_5 ( .gin( {n200} ), .pin( {n199} ), .gout( {n986} ), .pout( {n985} ) );
-	assign n989 = n201;
-	assign n990 = n202;
-	ppa_black ppa_black_5_5 ( .gin( {n204,n200} ), .pin( {n203,n199} ), .gout( {n994} ), .pout( {n993} ) );
-	assign n997 = n205;
-	assign n998 = n206;
-	buffer_node buffer_node_7_5 ( .gin( {n208} ), .pin( {n207} ), .gout( {n1002} ), .pout( {n1001} ) );
-	assign n1005 = n209;
-	assign n1006 = n210;
-	assign n1009 = n211;
-	assign n1010 = n212;
-	assign n1013 = n213;
-	assign n1014 = n214;
-	assign n1021 = n217;
-	assign n1022 = n218;
-	assign n1025 = n219;
-	assign n1026 = n220;
-	assign n1029 = n221;
-	assign n1030 = n222;
-	assign n1033 = n223;
-	assign n1034 = n224;
+	assign n844 = n158;
+	assign n725 = n157;
+	assign n847 = n160;
+	assign n728 = n159;
+	ppa_grey ppa_grey_2_5 ( .gin( {n161,n159} ), .pin( {n160} ), .gout( {n731} ) );
+	buffer_node buffer_node_3_5 ( .gin( {n163} ), .pin( {n164} ), .gout( {n734} ), .pout( {n853} ) );
+	assign n0 = n984;
+	assign n736 = n165;
+	ppa_grey ppa_grey_5_5 ( .gin( {n167,n163} ), .pin( {n164} ), .gout( {n739} ) );
+	assign n0 = n998;
+	assign n741 = n169;
+	buffer_node buffer_node_7_5 ( .gin( {n171} ), .pin( {n172} ), .gout( {n744} ), .pout( {n863} ) );
+	assign n1051 = n892;
+	assign n746 = n173;
+	assign n0 = n1116;
+	assign n748 = n174;
+	assign n1065 = n905;
+	assign n750 = n175;
+	assign n1076 = n915;
+	assign n754 = n177;
+	assign n0 = n1130;
+	assign n756 = n178;
+	assign n1089 = n925;
+	assign n758 = n179;
+	assign n883 = n0;
+	assign n760 = n180;
 
 // start of tree row 6
 
-	assign n1147 = n973;
-	assign n1148 = n974;
-	assign n1151 = n977;
-	assign n1152 = n978;
-	assign n1155 = n981;
-	assign n1156 = n982;
-	assign n1159 = n985;
-	assign n1160 = n986;
-	ppa_black ppa_black_4_6 ( .gin( {n990,n986} ), .pin( {n989,n985} ), .gout( {n1164} ), .pout( {n1163} ) );
-	assign n1167 = n993;
-	assign n1168 = n994;
-	ppa_black ppa_black_6_6 ( .gin( {n998,n994} ), .pin( {n997,n993} ), .gout( {n1172} ), .pout( {n1171} ) );
-	buffer_node buffer_node_7_6 ( .gin( {n1002} ), .pin( {n1001} ), .gout( {n1176} ), .pout( {n1175} ) );
-	assign n1179 = n1005;
-	assign n1180 = n1006;
-	ppa_black ppa_black_9_6 ( .gin( {n1010,n1002} ), .pin( {n1009,n1001} ), .gout( {n1184} ), .pout( {n1183} ) );
-	assign n1187 = n1013;
-	assign n1188 = n1014;
-	buffer_node buffer_node_11_6 ( .gin( {n1018} ), .pin( {n1017} ), .gout( {n1192} ), .pout( {n1191} ) );
-	assign n1195 = n1021;
-	assign n1196 = n1022;
-	assign n1203 = n1029;
-	assign n1204 = n1030;
-	assign n1207 = n1033;
-	assign n1208 = n1034;
+	assign n1003 = n844;
+	assign n845 = n725;
+	assign n1006 = n847;
+	assign n848 = n728;
+	assign n1009 = n850;
+	assign n851 = n731;
+	assign n1012 = n853;
+	assign n854 = n734;
+	ppa_grey ppa_grey_4_6 ( .gin( {n736,n734} ), .pin( {n853} ), .gout( {n856} ) );
+	assign n1017 = n858;
+	assign n859 = n739;
+	ppa_grey ppa_grey_6_6 ( .gin( {n741,n739} ), .pin( {n858} ), .gout( {n861} ) );
+	buffer_node buffer_node_7_6 ( .gin( {n744} ), .pin( {n863} ), .gout( {n864} ), .pout( {n1022} ) );
+	assign n0 = n1051;
+	assign n866 = n746;
+	ppa_grey ppa_grey_9_6 ( .gin( {n748,n744} ), .pin( {n863} ), .gout( {n869} ) );
+	assign n0 = n1065;
+	assign n871 = n750;
+	buffer_node buffer_node_11_6 ( .gin( {n752} ), .pin( {n873} ), .gout( {n874} ), .pout( {n1032} ) );
+	assign n0 = n1076;
+	assign n876 = n754;
+	assign n0 = n1089;
+	assign n881 = n758;
+	assign n1042 = n883;
+	assign n884 = n760;
 
 // start of tree row 7
 
-	assign n1369 = n1147;
-	assign n1370 = n1148;
-	assign n1373 = n1151;
-	assign n1374 = n1152;
-	assign n1377 = n1155;
-	assign n1378 = n1156;
-	assign n1381 = n1159;
-	assign n1382 = n1160;
-	assign n1385 = n1163;
-	assign n1386 = n1164;
-	assign n1389 = n1167;
-	assign n1390 = n1168;
-	assign n1393 = n1171;
-	assign n1394 = n1172;
-	assign n1397 = n1175;
-	assign n1398 = n1176;
-	ppa_black ppa_black_8_7 ( .gin( {n1180,n1176} ), .pin( {n1179,n1175} ), .gout( {n1402} ), .pout( {n1401} ) );
-	assign n1405 = n1183;
-	assign n1406 = n1184;
-	ppa_black ppa_black_10_7 ( .gin( {n1188,n1184} ), .pin( {n1187,n1183} ), .gout( {n1410} ), .pout( {n1409} ) );
-	assign n1413 = n1191;
-	assign n1414 = n1192;
-	ppa_black ppa_black_12_7 ( .gin( {n1196,n1192} ), .pin( {n1195,n1191} ), .gout( {n1418} ), .pout( {n1417} ) );
-	assign n1421 = n1199;
-	assign n1422 = n1200;
-	assign n1429 = n1207;
-	assign n1430 = n1208;
-	block_1 block_1_instance ( .n215 ( n215 ), .n1025 ( n1025 ), .n216 ( n216 ), .n104 ( n104 ), .n1426 ( n1426 ), .n1204 ( n1204 ), .n103 ( n103 ), .n51 ( n51 ), .n1425 ( n1425 ), .n1026 ( n1026 ), .n207 ( n207 ), .p0 ( p0 ), .n1017 ( n1017 ), .n118 ( n118 ), .p_lsb ( p_lsb ), .sum_14 ( sum[14] ), .cin ( cin ), .p14 ( p14 ), .n1200 ( n1200 ), .n52 ( n52 ), .g0 ( g0 ), .n1203 ( n1203 ), .n1199 ( n1199 ), .n160 ( n160 ), .n208 ( n208 ), .n1018 ( n1018 ), .n117 ( n117 ), .n57 ( n57 ), .n159 ( n159 ), .g_lsb ( g_lsb ), .n58 ( n58 ) );
+	assign n0 = n1003;
+	assign n1004 = n845;
+	assign n0 = n1006;
+	assign n1007 = n848;
+	assign n0 = n1009;
+	assign n1010 = n851;
+	assign n0 = n1012;
+	assign n1013 = n854;
+	assign n0 = n0;
+	assign n1015 = n856;
+	assign n0 = n1017;
+	assign n1018 = n859;
+	assign n0 = n0;
+	assign n1020 = n861;
+	assign n0 = n1022;
+	assign n1023 = n864;
+	ppa_grey ppa_grey_8_7 ( .gin( {n866,n864} ), .pin( {n1022} ), .gout( {n1025} ) );
+	assign n0 = n1027;
+	assign n1028 = n869;
+	ppa_grey ppa_grey_10_7 ( .gin( {n871,n869} ), .pin( {n1027} ), .gout( {n1030} ) );
+	assign n0 = n1032;
+	assign n1033 = n874;
+	ppa_grey ppa_grey_12_7 ( .gin( {n876,n874} ), .pin( {n1032} ), .gout( {n1035} ) );
+	assign n0 = n1037;
+	assign n1038 = n879;
+	assign n0 = n1042;
+	assign n1043 = n884;
+	block_1 block_1_instance ( .p_lsb ( p_lsb ), .p0 ( p0 ), .n879 ( n879 ), .n50 ( n50 ), .g0 ( g0 ), .n103 ( n103 ), .p14 ( p14 ), .n1040 ( n1040 ), .n0 ( n0 ), .b_0 ( b[0] ), .n756 ( n756 ), .n881 ( n881 ), .n172 ( n172 ), .sum_14 ( sum[14] ), .n1037 ( n1037 ), .n873 ( n873 ), .n171 ( n171 ), .n176 ( n176 ), .n140 ( n140 ), .n96 ( n96 ), .a_0 ( a[0] ), .g_lsb ( g_lsb ), .n752 ( n752 ), .n53 ( n53 ) );
 
 
 endmodule
 
-module ppa_black(gin, pin, gout, pout);
+module ppa_grey(gin, pin, gout);
 
-	input [1:0] gin, pin;
-	output gout, pout;
+	input[1:0] gin;
+	input pin;
+	output gout;
 
-	and2 U1(pout,pin[1],pin[0]);
-	ao21 U2(gout,gin[0],pin[1],gin[1]);
+	ao21 U1(gout,gin[0],pin,gin[1]);
+
+endmodule
+
+module ppa_pre(a_in, b_in, pout, gout);
+
+	input a_in, b_in;
+	output pout, gout;
+
+	xor2 U1(pout,a_in,b_in);
+	and2 U2(gout,a_in,b_in);
 
 endmodule
 
@@ -280,13 +290,13 @@ module ppa_first_pre(cin, pout, gout);
 
 endmodule
 
-module ppa_pre(a_in, b_in, pout, gout);
+module ppa_black(gin, pin, gout, pout);
 
-	input a_in, b_in;
-	output pout, gout;
+	input [1:0] gin, pin;
+	output gout, pout;
 
-	xor2 U1(pout,a_in,b_in);
-	and2 U2(gout,a_in,b_in);
+	and2 U1(pout,pin[1],pin[0]);
+	ao21 U2(gout,gin[0],pin[1],gin[1]);
 
 endmodule
 
@@ -309,36 +319,20 @@ module ppa_post(pin, gin, sum);
 
 endmodule
 
-module ppa_grey(gin, pin, gout);
+module block_1( p_lsb, p0, n879, n50, g0, n103, p14, n1040, n0, b_0, n756, n881, n172, sum_14, n1037, n873, n171, n176, n140, n96, a_0, g_lsb, n752, n53);
 
-	input[1:0] gin;
-	input pin;
-	output gout;
-
-	ao21 U1(gout,gin[0],pin,gin[1]);
-
-endmodule
-
-module block_1( n215, n1025, n216, n104, n1426, n1204, n103, n51, n1425, n1026, n207, p0, n1017, n118, p_lsb, sum_14, cin, p14, n1200, n52, g0, n1203, n1199, n160, n208, n1018, n117, n57, n159, g_lsb, n58);
-
-	input n215, n118, n1025, n216, n58, cin, p14, g0, n1203, n1204, n117, n57, n1026, p0;
-	output p_lsb, n104, sum_14, n1200, n52, n1199, n160, n208, n1018, n1426, n103, n51, n159, g_lsb, n1425, n207, n1017;
-	buffer U1(n207,n159);
-	buffer U2(n208,n160);
-	and2 U1(n103,n57,n51);
-	ao21 U2(n104,n52,n57,n58);
-	assign p_lsb=1'b0;
-	assign g_lsb=cin;
-	and2 U1(n51,p0,p_lsb);
-	ao21 U2(n52,g_lsb,p0,g0);
-	and2 U1(n1199,n1025,n1017);
-	ao21 U2(n1200,n1018,n1025,n1026);
-	and2 U1(n159,n117,n103);
-	ao21 U2(n160,n104,n117,n118);
-	xor2 U1(sum_14,p14,n1426);
-	and2 U1(n1017,n215,n207);
-	ao21 U2(n1018,n208,n215,n216);
-	and2 U1(n1425,n1203,n1199);
-	ao21 U2(n1426,n1200,n1203,n1204);
+	input p_lsb, n176, n103, p14, a_0, n53, n0, b_0, n756, n881, g_lsb, n1037, n873;
+	output p0, n140, n96, n879, n50, n1040, n172, sum_14, n752, n171, g0;
+	ao21 U1(n140,n96,n0,n103);
+	xor2 U1(p0,a_0,b_0);
+	and2 U2(g0,a_0,b_0);
+	buffer U1(n172,n0);
+	buffer U2(n171,n140);
+	xor2 U1(sum_14,p14,n1040);
+	ao21 U1(n752,n171,n172,n176);
+	ao21 U1(n96,n50,n0,n53);
+	ao21 U1(n879,n752,n873,n756);
+	ao21 U1(n50,g_lsb,p_lsb,g0);
+	ao21 U1(n1040,n879,n1037,n881);
 
 endmodule

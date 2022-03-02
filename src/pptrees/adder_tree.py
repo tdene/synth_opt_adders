@@ -38,10 +38,10 @@ class adder_tree(prefix_tree):
         preamble.append("""
 module adder(cout, sum, a, b, cin);
 
-    input [{0}:0] a, b;
-    input cin;
-    output [{0}:0] sum;
-    output cout;
+	input [{0}:0] a, b;
+	input cin;
+	output [{0}:0] sum;
+	output cout;
 """.format(self.w-1))
 
         # Wire definitions
@@ -94,7 +94,7 @@ module adder(cout, sum, a, b, cin);
         ### Add custom pre/post processing
 
         # Additional pre node to handle cout
-        cout_pre = """    {1} {1}_cout ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );"""
+        cout_pre = "\t{1} {1}_cout ( .a_in( a[{0}] ), .b_in( b[{0}] ), .pout ( p{0} ), .gout ( g{0} ) );"
         cout_pre = cout_pre.format(self.w-1,self.node_defs['pre'])
 
         preamble.append(cout_pre)
@@ -102,7 +102,7 @@ module adder(cout, sum, a, b, cin);
 
         # Additional grey node to handle cout
         cout_g = node._parse_net(self.node_list[-1][-1].ins['gin'][0])
-        cout_grey = """    {2} {2}_cout ( .gin ( {{g{0},{1}}} ), .pin ( p{0} ), .gout ( cout ) );"""
+        cout_grey = "\t{2} {2}_cout ( .gin ( {{g{0},{1}}} ), .pin ( p{0} ), .gout ( cout ) );"
         cout_grey = cout_grey.format(self.w-1,cout_g,self.node_defs['grey'])
 
         preamble.append(cout_grey)
@@ -124,12 +124,12 @@ use ieee.numeric_std;""")
         # Entity definition
         preamble.append("""
 entity adder is
-    port (
-	a,b : in std_logic_vector({0} downto 0);
-	cin : in std_logic;
-	cout : out std_logic;
-	sum : out std_logic_vector({0} downto 0)
-    );
+	port (
+		a,b : in std_logic_vector({0} downto 0);
+		cin : in std_logic;
+		cout : out std_logic;
+		sum : out std_logic_vector({0} downto 0)
+	);
 end entity;
 """.format(self.w-1))
 
@@ -187,13 +187,13 @@ end entity;
         preamble.append("-- start of custom pre/post logic\n")
         # Additional pre node to handle cout
         cout_pre = """
-    {1}_cout: {1}
-	port map (
-	    a_in => a({0}),
-	    b_in => b({0}),
-	    pout => p{0},
-	    gout => g{0}
-        );""".format(self.w-1,self.node_defs['pre'])[1:]
+	{1}_cout: {1}
+		port map (
+			a_in => a({0}),
+			b_in => b({0}),
+			pout => p{0},
+			gout => g{0}
+		);""".format(self.w-1,self.node_defs['pre'])[1:]
 
         preamble.append(cout_pre)
         used_modules.add(self.node_defs['pre'])
@@ -201,13 +201,13 @@ end entity;
         # Additional grey node to handle cout
         cout_g = node._parse_net(self.node_list[-1][-1].ins['gin'][0])
         cout_grey = """
-    {2}_cout: {2}
-	port map (
-	    gin(0) => {1},
-	    gin(1) => g{0},
-	    pin => p{0},
-	    gout => cout
-        );""".format(self.w-1,cout_g,self.node_defs['grey'])[1:]
+	{2}_cout: {2}
+		port map (
+			gin(0) => {1},
+			gin(1) => g{0},
+			pin => p{0},
+			gout => cout
+		);""".format(self.w-1,cout_g,self.node_defs['grey'])[1:]
 
         preamble.append(cout_grey)
         used_modules.add(self.node_defs['grey'])
