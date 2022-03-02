@@ -102,7 +102,7 @@ entity ppa_grey is
 \tport (
 \t\tgin : in std_logic_vector(1 downto 0);
 \t\tgout : out std_logic;
-\t\tpin : in std_logic;
+\t\tpin : in std_logic
 \t);
 end entity;
 
@@ -243,7 +243,7 @@ entity ppaL_grey is
 \tport (
 \t\tgin : in std_logic_vector(1 downto 0);
 \t\tgout : out std_logic;
-\t\tpin : in std_logic;
+\t\tpin : in std_logic
 \t);
 end entity;
 
@@ -310,7 +310,7 @@ entity buffer_node is
 \t\tpin : in std_logic;
 \t\tpout : out std_logic;
 \t\tgin : in std_logic;
-\t\tgout : out std_logic;
+\t\tgout : out std_logic
 \t);
 end entity;
 
@@ -376,7 +376,7 @@ entity invis_node is
 \t\tgin : in std_logic;
 \t\tgout : out std_logic;
 \t\tpin : in std_logic;
-\t\tpout : out std_logic;
+\t\tpout : out std_logic
 \t);
 end entity;
 
@@ -437,7 +437,7 @@ entity ppa_pre is
 \t\ta_in : in std_logic;
 \t\tb_in : in std_logic;
 \t\tpout : out std_logic;
-\t\tgout : out std_logic;
+\t\tgout : out std_logic
 \t);
 end entity;
 
@@ -509,7 +509,7 @@ entity ppa_first_pre is
 \tport (
 \t\tcin : in std_logic;
 \t\tpout : out std_logic;
-\t\tgout : out std_logic;
+\t\tgout : out std_logic
 \t);
 end entity;
 
@@ -548,7 +548,7 @@ entity ppa_post is
 \tport (
 \t\tpin : in std_logic;
 \t\tgin : in std_logic;
-\t\tsum : out std_logic;
+\t\tsum : out std_logic
 \t);
 end entity;
 

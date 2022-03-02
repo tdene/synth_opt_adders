@@ -7,13 +7,13 @@ entity adder is
 	a,b : in std_logic_vector(15 downto 0);
 	cin : in std_logic;
 	cout : out std_logic;
-	sum : out std_logic_vector(15 downto 0);
+	sum : out std_logic_vector(15 downto 0)
     );
 end entity;
 
 architecture pptree of adder is
-	signal g1, p2, p14, p12, g6, g14, p9, p10, p5, p13, p0, p4, p_lsb, g11, g2, g0, p1, g_lsb, g9, g7, g12, p6, p11, p8, g8, p7, g5, g13, p3, g4, g10, g3 : std_logic;
-	signal n1025, n204, n1026, n1029, n1030, n1033, n1034, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n127, n128, n129, n130, n126, n1147, n133, n134, n1151, n1152, n137, n138, n1155, n1156, n141, n142, n145, n146, n1148, n149, n150, n1167, n1168, n153, n154, n155, n157, n158, n159, n160, n161, n162, n156, n1179, n165, n166, n1187, n1188, n169, n170, n1191, n1192, n173, n174, n1195, n1196, n177, n178, n1203, n1204, n181, n182, n1207, n1208, n185, n186, n189, n190, n193, n194, n195, n196, n197, n198, n199, n1159, n201, n202, n200, n205, n206, n1160, n203, n209, n210, n211, n212, n213, n214, n207, n208, n217, n218, n219, n220, n221, n222, n223, n224, n1163, n1164, n147, n148, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1021, n1022 : std_logic;
+	signal p0, p5, g4, g0, g8, g14, g11, g7, p8, p3, p_lsb, g_lsb, p1, g12, p10, p4, p2, p13, g1, p6, g10, g9, g5, p12, g13, p9, g2, g6, p11, p7, g3, p14 : std_logic;
+	signal n1025, n1026, n204, n1029, n1030, n1033, n1034, n49, n50, n51, n52, n53, n54, n57, n58, n215, n61, n62, n63, n64, n65, n66, n216, n69, n70, n73, n74, n75, n76, n77, n78, n81, n82, n85, n86, n87, n88, n89, n90, n93, n94, n97, n98, n99, n100, n101, n102, n103, n104, n105, n106, n109, n110, n113, n114, n117, n118, n121, n122, n123, n124, n125, n127, n128, n129, n130, n126, n133, n134, n1151, n137, n138, n1147, n1155, n141, n142, n1159, n1148, n145, n146, n1167, n1168, n149, n150, n147, n148, n153, n154, n155, n156, n157, n158, n159, n160, n161, n162, n1179, n165, n166, n169, n170, n1152, n1187, n173, n174, n1191, n1192, n177, n178, n1195, n1196, n181, n182, n1207, n1208, n185, n186, n1156, n1203, n189, n190, n193, n194, n195, n196, n197, n198, n199, n201, n202, n200, n203, n205, n206, n1160, n209, n210, n211, n212, n213, n214, n207, n208, n217, n218, n219, n220, n221, n223, n224, n222, n1163, n1164, n151, n152, n1171, n1172, n1175, n1176, n1180, n1183, n1184, n1369, n1370, n1188, n1373, n1374, n1377, n1378, n1381, n1382, n1385, n1386, n1389, n1390, n1393, n1394, n1397, n1398, n1401, n1402, n1405, n1406, n1409, n1410, n1413, n1414, n1417, n1418, n1421, n1422, n1425, n1426, n1199, n1429, n1430, n1200, n1204, n973, n974, n977, n978, n981, n982, n985, n986, n989, n990, n993, n994, n997, n998, n1001, n1002, n1005, n1006, n1009, n1010, n1013, n1014, n1017, n1018, n1021, n1022 : std_logic;
 
 begin
 
@@ -244,7 +244,7 @@ begin
 	    gin(0) => n1430,
 	    gin(1) => g15,
 	    pin => p15,
-	    gout => cout,
+	    gout => cout
         );
 
 -- start of tree row 1
@@ -711,53 +711,6 @@ begin
 
 end architecture
 
-entity buffer_node is
-	port (
-		pin : in std_logic;
-		pout : out std_logic;
-		gin : in std_logic;
-		gout : out std_logic;
-	);
-end entity;
-
-architecture behavior of buffer_node is
-begin
-
-U1: buffer
-	port map (
-		A => pin,
-		Y => pout
-	);
-
-U2: buffer
-	port map (
-		A => gin,
-		Y => gout
-	);
-
-end architecture;
-
-entity ppa_grey is
-	port (
-		gin : in std_logic_vector(1 downto 0);
-		gout : out std_logic;
-		pin : in std_logic;
-	);
-end entity;
-
-architecture behavior of ppa_grey is
-begin
-
-U1: ao21
-	port map (
-		A0 => gin(0),
-		A1 => pin,
-		B0 => gin(1),
-		Y => gout
-	);
-
-end architecture;
-
 entity ppa_black is
 	port (
 		gin : in std_logic_vector(1 downto 0);
@@ -787,12 +740,28 @@ U2: ao21
 
 end architecture;
 
+entity ppa_first_pre is
+	port (
+		cin : in std_logic;
+		pout : out std_logic;
+		gout : out std_logic
+	);
+end entity;
+
+architecture behavior of ppa_first_pre is
+begin
+
+	pout <= '0';
+	gout <= cin;
+
+end architecture;
+
 entity ppa_pre is
 	port (
 		a_in : in std_logic;
 		b_in : in std_logic;
 		pout : out std_logic;
-		gout : out std_logic;
+		gout : out std_logic
 	);
 end entity;
 
@@ -815,19 +784,29 @@ U2: and2
 
 end architecture;
 
-entity ppa_first_pre is
+entity buffer_node is
 	port (
-		cin : in std_logic;
+		pin : in std_logic;
 		pout : out std_logic;
-		gout : out std_logic;
+		gin : in std_logic;
+		gout : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_first_pre is
+architecture behavior of buffer_node is
 begin
 
-	pout <= '0';
-	gout <= cin;
+U1: buffer
+	port map (
+		A => pin,
+		Y => pout
+	);
+
+U2: buffer
+	port map (
+		A => gin,
+		Y => gout
+	);
 
 end architecture;
 
@@ -835,7 +814,7 @@ entity ppa_post is
 	port (
 		pin : in std_logic;
 		gin : in std_logic;
-		sum : out std_logic;
+		sum : out std_logic
 	);
 end entity;
 
@@ -847,6 +826,27 @@ U1: xor2
 		A => pin,
 		B => gin,
 		Y => sum
+	);
+
+end architecture;
+
+entity ppa_grey is
+	port (
+		gin : in std_logic_vector(1 downto 0);
+		gout : out std_logic;
+		pin : in std_logic
+	);
+end entity;
+
+architecture behavior of ppa_grey is
+begin
+
+U1: ao21
+	port map (
+		A0 => gin(0),
+		A1 => pin,
+		B0 => gin(1),
+		Y => gout
 	);
 
 end architecture;

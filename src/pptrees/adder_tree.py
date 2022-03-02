@@ -128,7 +128,7 @@ entity adder is
 	a,b : in std_logic_vector({0} downto 0);
 	cin : in std_logic;
 	cout : out std_logic;
-	sum : out std_logic_vector({0} downto 0);
+	sum : out std_logic_vector({0} downto 0)
     );
 end entity;
 """.format(self.w-1))
@@ -206,7 +206,7 @@ end entity;
 	    gin(0) => {1},
 	    gin(1) => g{0},
 	    pin => p{0},
-	    gout => cout,
+	    gout => cout
         );""".format(self.w-1,cout_g,self.node_defs['grey'])[1:]
 
         preamble.append(cout_grey)
