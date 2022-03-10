@@ -19,7 +19,7 @@ setup(
     long_description=open('README.md').read(),
     python_requires='>=3.7.*',
     install_requires=[
-        "networkx==2.6.3",
+        "networkx",
         "pydot",
         "graphviz"
     ]
