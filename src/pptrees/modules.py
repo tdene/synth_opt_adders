@@ -124,7 +124,7 @@ ppa_grey['shape']='square'
 ppa_grey['fillcolor']='grey'
 
 # List of inputs represented by (name, bits, diagonal_bits) tuple
-ppa_grey['ins']=[('gin',2,1),('pin',1,1)]
+ppa_grey['ins']=[('gin',2,1),('pin',1,0)]
 
 # List of outputs represented by (name, bits) tuple
 ppa_grey['outs']=[('gout',1)]
