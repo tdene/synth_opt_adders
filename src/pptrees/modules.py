@@ -135,7 +135,8 @@ ppa_grey['logic'] = lambda gin,pin: [
                 ]
 
 ppa_grey['pd'] = 7.5/3
-ppa_grey['le'] = 2
+ppa_grey['le'] = 5.0/3
+ppa_grey['diag_le'] = 6.0/3
 
 # What section of the tree is this cell in?
 # Pre, post, or main?
