@@ -12,8 +12,8 @@ entity adder is
 end entity;
 
 architecture pptree of adder is
-	signal p7, g13, g1, g_lsb, g10, p12, g6, g7, p5, g11, g9, p14, p13, p1, p_lsb, p4, g0, p3, g8, p10, g4, g14, g2, g3, g12, p8, p6, p2, p0, g5, p11, p9 : std_logic;
-	signal n1025, n1026, n1028, n1029, n1031, n1032, n1034, n1036, n1037, n1039, n1041, n1042, n1044, n1047, n1049, n1051, n1052, n1054, n1057, n1059, n1061, n1062, n48, n49, n50, n51, n52, n1072, n54, n55, n57, n58, n59, n60, n61, n62, n65, n66, n1086, n69, n70, n71, n72, n73, n74, n1097, n77, n78, n81, n82, n83, n84, n85, n86, n1110, n89, n90, n93, n94, n95, n97, n98, n99, n100, n96, n102, n103, n1122, n105, n106, n108, n109, n111, n112, n113, n114, n115, n117, n118, n119, n120, n116, n1137, n123, n124, n127, n128, n1151, n131, n132, n135, n136, n139, n137, n138, n141, n143, n144, n145, n146, n147, n148, n142, n150, n151, n153, n154, n156, n157, n159, n160, n162, n163, n165, n166, n168, n169, n171, n172, n173, n174, n175, n177, n178, n179, n181, n183, n185, n186, n187, n188, n189, n190, n191, n193, n194, n192, n715, n725, n1162, n732, n740, n743, n746, n749, n751, n754, n756, n759, n761, n763, n765, n767, n769, n771, n773, n775, n784, n791, n802, n813, n832, n846, n859, n862, n863, n865, n866, n869, n871, n872, n874, n877, n879, n881, n882, n884, n887, n889, n892, n894, n897, n899, n901, n902, n912, n925, n935, n945, n956, n967, n975, n990, n1005, n1019, n1022, n1023 : std_logic;
+	signal p14, p13, p6, p12, p2, g8, p5, g5, p3, g9, p1, p9, p0, g_lsb, g12, p_lsb, g6, g1, g13, g11, p10, g7, g2, g0, g14, p7, p8, g10, g3, g4, p11, p4 : std_logic;
+	signal n1025, n1028, n1026, n1029, n1031, n1032, n1034, n1036, n1037, n1039, n1042, n1041, n1044, n1047, n1049, n1051, n1052, n1054, n1057, n1059, n1061, n1062, n48, n49, n50, n51, n52, n54, n55, n1072, n57, n58, n59, n60, n61, n62, n1086, n65, n66, n69, n70, n71, n72, n73, n74, n1097, n77, n78, n81, n82, n83, n84, n85, n86, n1110, n89, n90, n93, n94, n95, n96, n97, n98, n99, n100, n1122, n102, n103, n105, n106, n108, n109, n111, n112, n113, n114, n115, n116, n117, n118, n119, n120, n1137, n123, n124, n127, n128, n1151, n131, n132, n135, n136, n137, n139, n138, n141, n142, n143, n144, n145, n146, n147, n148, n150, n151, n153, n154, n156, n157, n159, n160, n162, n163, n165, n166, n168, n169, n171, n172, n173, n174, n175, n177, n178, n179, n181, n183, n185, n186, n187, n188, n189, n190, n191, n192, n194, n193, n715, n725, n1162, n732, n740, n743, n746, n749, n751, n754, n756, n759, n761, n763, n765, n767, n769, n771, n773, n775, n784, n791, n802, n813, n832, n846, n859, n862, n863, n865, n866, n869, n871, n872, n874, n877, n879, n881, n882, n884, n887, n889, n892, n894, n897, n899, n901, n902, n912, n925, n935, n945, n956, n967, n975, n990, n1005, n1019, n1022, n1023 : std_logic;
 
 begin
 
@@ -448,7 +448,7 @@ begin
 
 	n172 <= n136;
 	n171 <= n135;
-	buffer_node_1_4: buffer_node
+	ppa_buffer_1_4: ppa_buffer
 		port map (
 			gin(0) => n137,
 			pin(0) => n138,
@@ -457,7 +457,7 @@ begin
 		);
 	n990 <= n832;
 	n175 <= n139;
-	buffer_node_3_4: buffer_node
+	ppa_buffer_3_4: ppa_buffer
 		port map (
 			gin(0) => n141,
 			pin(0) => n142,
@@ -470,7 +470,7 @@ begin
 	n181 <= n144;
 	n859 <= n732;
 	n183 <= n145;
-	buffer_node_7_4: buffer_node
+	ppa_buffer_7_4: ppa_buffer
 		port map (
 			gin(0) => n146,
 			pin(0) => n0,
@@ -512,7 +512,7 @@ begin
 			pin(0) => n990,
 			gout(0) => n746
 		);
-	buffer_node_3_5: buffer_node
+	ppa_buffer_3_5: ppa_buffer
 		port map (
 			gin(0) => n177,
 			pin(0) => n178,
@@ -530,7 +530,7 @@ begin
 		);
 	n1019 <= n859;
 	n756 <= n183;
-	buffer_node_7_5: buffer_node
+	ppa_buffer_7_5: ppa_buffer
 		port map (
 			gin(0) => n185,
 			pin(0) => n186,
@@ -585,7 +585,7 @@ begin
 			pin(0) => n1019,
 			gout(0) => n879
 		);
-	buffer_node_7_6: buffer_node
+	ppa_buffer_7_6: ppa_buffer
 		port map (
 			gin(0) => n759,
 			pin(0) => n881,
@@ -603,7 +603,7 @@ begin
 		);
 	n1086 <= n925;
 	n889 <= n765;
-	buffer_node_11_6: buffer_node
+	ppa_buffer_11_6: ppa_buffer
 		port map (
 			gin(0) => n767,
 			pin(0) => n891,
@@ -681,27 +681,30 @@ begin
 
 end architecture
 
-entity buffer_node is
+entity ppa_black is
 	port (
-		pin : in std_logic;
-		pout : out std_logic;
-		gin : in std_logic;
-		gout : out std_logic
+		gin : in std_logic_vector(1 downto 0);
+		gout : out std_logic;
+		pin : in std_logic_vector(1 downto 0);
+		pout : out std_logic
 	);
 end entity;
 
-architecture behavior of buffer_node is
+architecture behavior of ppa_black is
 begin
 
-U1: buffer
+U1: and2
 	port map (
-		A => pin,
+		A => pin(0),
+		B => pin(1),
 		Y => pout
 	);
 
-U2: buffer
+U2: ao21
 	port map (
-		A => gin,
+		A0 => gin(0),
+		A1 => pin(1),
+		B0 => gin(1),
 		Y => gout
 	);
 
@@ -723,6 +726,34 @@ U1: ao21
 		A0 => gin(0),
 		A1 => pin,
 		B0 => gin(1),
+		Y => gout
+	);
+
+end architecture;
+
+entity ppa_pre is
+	port (
+		a_in : in std_logic;
+		b_in : in std_logic;
+		pout : out std_logic;
+		gout : out std_logic
+	);
+end entity;
+
+architecture behavior of ppa_pre is
+begin
+
+U1: xor2
+	port map (
+		A => a_in,
+		B => b_in,
+		Y => pout
+	);
+
+U2: and2
+	port map (
+		A => a_in,
+		B => b_in,
 		Y => gout
 	);
 
@@ -764,58 +795,27 @@ U1: xor2
 
 end architecture;
 
-entity ppa_pre is
+entity ppa_buffer is
 	port (
-		a_in : in std_logic;
-		b_in : in std_logic;
+		pin : in std_logic;
 		pout : out std_logic;
+		gin : in std_logic;
 		gout : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_pre is
+architecture behavior of ppa_buffer is
 begin
 
-U1: xor2
+U1: buffer
 	port map (
-		A => a_in,
-		B => b_in,
+		A => pin,
 		Y => pout
 	);
 
-U2: and2
+U2: buffer
 	port map (
-		A => a_in,
-		B => b_in,
-		Y => gout
-	);
-
-end architecture;
-
-entity ppa_black is
-	port (
-		gin : in std_logic_vector(1 downto 0);
-		gout : out std_logic;
-		pin : in std_logic_vector(1 downto 0);
-		pout : out std_logic
-	);
-end entity;
-
-architecture behavior of ppa_black is
-begin
-
-U1: and2
-	port map (
-		A => pin(0),
-		B => pin(1),
-		Y => pout
-	);
-
-U2: ao21
-	port map (
-		A0 => gin(0),
-		A1 => pin(1),
-		B0 => gin(1),
+		A => gin,
 		Y => gout
 	);
 

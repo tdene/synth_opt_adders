@@ -26,6 +26,7 @@ class prefix_tree(graph):
                 - 'pre' (pre-processing)
                 - 'post' (post-processing)
                 - 'black' (prefix operation)
+                - 'buffer' (identity operation)
             Optional node definitions include but are not limited to:
                 - 'first_pre' (right-most pre-processing node)
                 - 'grey' (prefix operation in the last row)
@@ -88,7 +89,7 @@ class prefix_tree(graph):
                             node_color = "black"
                         self.add_node(node(b,a,self.node_defs[node_color]),pre=self[b-num_buf,a-1])
                     else:
-                        self.add_node(node(b,a,'buffer_node'))
+                        self.add_node(node(b,a,self.node_defs['buffer']))
             self.dna="kogge-stone"
         # Initialize serial structure
         else:
@@ -405,13 +406,13 @@ class prefix_tree(graph):
         # If new_pre is provided, use that, not what we calculate
         if new_pre is not None:
             if not node._exists(new_pre):
-                new_pre=self._morph_node(new_pre,'buffer_node')
+                new_pre=self._morph_node(new_pre,self.node_defs['buffer'])
             pre = new_pre
 
         # if ∃ post(n):
         # add buffer instead of inv
         if len(post)>0:
-            new_m='buffer_node'
+            new_m=self.node_defs['buffer']
         else:
             new_m='invis_node'
 
@@ -943,7 +944,7 @@ class prefix_tree(graph):
             x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,self.node_defs['black'])
             if not node._exists(y):
-                y=self._morph_node(y,'buffer_node')
+                y=self._morph_node(y,self.node_defs['buffer'])
             self._add_pre(x,y)
             self.walk_downstream(x,fun=self._recalc_pg)
 
@@ -995,7 +996,7 @@ class prefix_tree(graph):
                 top = self._morph_node(top,self.node_defs['black'])
                 self._add_pre(top,self.top(a))
                 if not node._exists(self.top(a)):
-                    self._morph_node(self.top(a),'buffer_node')
+                    self._morph_node(self.top(a),self.node_defs['buffer'])
             self.remove_all_edges(a,x)
             self._add_pre(x,b)
             self.walk_downstream(top,fun=self._recalc_pg)
@@ -1036,7 +1037,7 @@ class prefix_tree(graph):
 
         # Make sure b is at least a buffer
         if not node._exists(b):
-            b=self._morph_node(b,'buffer_node')
+            b=self._morph_node(b,self.node_defs['buffer'])
 
         pre = self.pre(a)
 
@@ -1044,7 +1045,7 @@ class prefix_tree(graph):
         pre = self.remove_all_edges(pre,a)
 
         if not node._exists(b):
-            b = self._morph_node(b,'buffer_node')
+            b = self._morph_node(b,self.node_defs['buffer'])
         self._add_pre(a,b)
         self.walk_downstream(a,fun=self._recalc_pg)
         
@@ -1053,7 +1054,7 @@ class prefix_tree(graph):
             x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,self.node_defs['black'])
             if not node._exists(y):
-                y=self._morph_node(y,'buffer_node')
+                y=self._morph_node(y,self.node_defs['buffer'])
             self._add_pre(x,y)
             self.walk_downstream(x,fun=self._recalc_pg)
 
@@ -1088,7 +1089,7 @@ class prefix_tree(graph):
         pre = self.remove_all_edges(pre,a)
 
         if not node._exists(b):
-            b = self._morph_node(b,'buffer_node')
+            b = self._morph_node(b,self.node_defs['buffer'])
         self._add_pre(a,b)
         self.walk_downstream(a,fun=self._recalc_pg)
         
@@ -1097,7 +1098,7 @@ class prefix_tree(graph):
             x=self[x.x,x.y]; y=self[y.x,y.y];
             x=self._morph_node(x,self.node_defs['black'])
             if not node._exists(y):
-                y=self._morph_node(y,'buffer_node')
+                y=self._morph_node(y,self.node_defs['buffer'])
             self._add_pre(x,y)
             self.walk_downstream(x,fun=self._recalc_pg)
 
@@ -1259,7 +1260,7 @@ class prefix_tree(graph):
             if len(self.post(modified))==0 or node._isbuf(modified):
                 m = 'invis_node'
             else:
-                m = 'buffer_node'
+                m = self.node_defs['buffer']
             self._morph_node(modified,m,True)
             return 1+self.reduce_idem()
         return 0

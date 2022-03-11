@@ -291,10 +291,10 @@ ppaL_grey['exists']=True
 modules['ppaL_grey']=ppaL_grey
 
 ### Buffer nodes
-buffer_node=dict()
+ppa_buffer=dict()
 
-buffer_node['verilog']="""
-module buffer_node(pin, gin, pout, gout);
+ppa_buffer['verilog']="""
+module ppa_buffer(pin, gin, pout, gout);
 
 	input pin, gin;
 	output pout, gout;
@@ -305,8 +305,8 @@ module buffer_node(pin, gin, pout, gout);
 endmodule
 """
 
-buffer_node['vhdl']="""
-entity buffer_node is
+ppa_buffer['vhdl']="""
+entity ppa_buffer is
 	port (
 		pin : in std_logic;
 		pout : out std_logic;
@@ -315,7 +315,7 @@ entity buffer_node is
 	);
 end entity;
 
-architecture behavior of buffer_node is
+architecture behavior of ppa_buffer is
 begin
 
 U1: buffer
@@ -333,28 +333,28 @@ U2: buffer
 end architecture;
 """
 
-buffer_node['shape']='invtriangle'
-buffer_node['fillcolor']='white'
+ppa_buffer['shape']='invtriangle'
+ppa_buffer['fillcolor']='white'
 
-buffer_node['ins']=[('gin',1,0),('pin',1,0)]
-buffer_node['outs']=[('gout',1),('pout',1)]
+ppa_buffer['ins']=[('gin',1,0),('pin',1,0)]
+ppa_buffer['outs']=[('gout',1),('pout',1)]
 
-buffer_node['logic'] = lambda pin,gin: [pin,gin]
+ppa_buffer['logic'] = lambda pin,gin: [pin,gin]
 
-buffer_node['pd'] = 0
-buffer_node['le'] = 0
+ppa_buffer['pd'] = 0
+ppa_buffer['le'] = 0
 
 # What section of the tree is this cell in?
 # Pre, post, or main?
-buffer_node['type']='main'
+ppa_buffer['type']='main'
 
 # Is this cell a buffer?
-buffer_node['buf']=True
+ppa_buffer['buf']=True
 
 # Is this just a fake, helper, cell?
-buffer_node['exists']=True
+ppa_buffer['exists']=True
 
-modules['buffer_node']=buffer_node
+modules['ppa_buffer']=ppa_buffer
 
 ### Invis nodes
 invis_node=dict()
@@ -402,8 +402,8 @@ invis_node['outs']=[('gout',1),('pout',1)]
 
 invis_node['logic'] = lambda pin,gin: [pin,gin]
 
-invis_node['pd'] = buffer_node['pd']
-invis_node['le'] = buffer_node['le']
+invis_node['pd'] = ppa_buffer['pd']
+invis_node['le'] = ppa_buffer['le']
 
 # What section of the tree is this cell in?
 # Pre, post, or main?

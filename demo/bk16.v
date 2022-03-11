@@ -5,8 +5,8 @@ module adder(cout, sum, a, b, cin);
 	output [15:0] sum;
 	output cout;
 
-	wire p7, g13, g1, g_lsb, g10, p12, g6, g7, p5, g11, g9, p14, p13, p1, p_lsb, p4, g0, p3, g8, p10, g4, g14, g2, g3, g12, p8, p6, p2, p0, g5, p11, p9;
-	wire n1025, n1026, n1028, n1029, n1031, n1032, n1034, n1036, n1037, n1039, n1041, n1042, n1044, n1047, n1049, n1051, n1052, n1054, n1057, n1059, n1061, n1062, n48, n49, n50, n51, n52, n1072, n54, n55, n57, n58, n59, n60, n61, n62, n65, n66, n1086, n69, n70, n71, n72, n73, n74, n1097, n77, n78, n81, n82, n83, n84, n85, n86, n1110, n89, n90, n93, n94, n95, n97, n98, n99, n100, n96, n102, n103, n1122, n105, n106, n108, n109, n111, n112, n113, n114, n115, n117, n118, n119, n120, n116, n1137, n123, n124, n127, n128, n1151, n131, n132, n135, n136, n139, n137, n138, n141, n143, n144, n145, n146, n147, n148, n142, n150, n151, n153, n154, n156, n157, n159, n160, n162, n163, n165, n166, n168, n169, n171, n172, n173, n174, n175, n177, n178, n179, n181, n183, n185, n186, n187, n188, n189, n190, n191, n193, n194, n192, n715, n725, n1162, n732, n740, n743, n746, n749, n751, n754, n756, n759, n761, n763, n765, n767, n769, n771, n773, n775, n784, n791, n802, n813, n832, n846, n859, n862, n863, n865, n866, n869, n871, n872, n874, n877, n879, n881, n882, n884, n887, n889, n892, n894, n897, n899, n901, n902, n912, n925, n935, n945, n956, n967, n975, n990, n1005, n1019, n1022, n1023;
+	wire p14, p13, p6, p12, p2, g8, p5, g5, p3, g9, p1, p9, p0, g_lsb, g12, p_lsb, g6, g1, g13, g11, p10, g7, g2, g0, g14, p7, p8, g10, g3, g4, p11, p4;
+	wire n1025, n1028, n1026, n1029, n1031, n1032, n1034, n1036, n1037, n1039, n1042, n1041, n1044, n1047, n1049, n1051, n1052, n1054, n1057, n1059, n1061, n1062, n48, n49, n50, n51, n52, n54, n55, n1072, n57, n58, n59, n60, n61, n62, n1086, n65, n66, n69, n70, n71, n72, n73, n74, n1097, n77, n78, n81, n82, n83, n84, n85, n86, n1110, n89, n90, n93, n94, n95, n96, n97, n98, n99, n100, n1122, n102, n103, n105, n106, n108, n109, n111, n112, n113, n114, n115, n116, n117, n118, n119, n120, n1137, n123, n124, n127, n128, n1151, n131, n132, n135, n136, n137, n139, n138, n141, n142, n143, n144, n145, n146, n147, n148, n150, n151, n153, n154, n156, n157, n159, n160, n162, n163, n165, n166, n168, n169, n171, n172, n173, n174, n175, n177, n178, n179, n181, n183, n185, n186, n187, n188, n189, n190, n191, n192, n194, n193, n715, n725, n1162, n732, n740, n743, n746, n749, n751, n754, n756, n759, n761, n763, n765, n767, n769, n771, n773, n775, n784, n791, n802, n813, n832, n846, n859, n862, n863, n865, n866, n869, n871, n872, n874, n877, n879, n881, n882, n884, n887, n889, n892, n894, n897, n899, n901, n902, n912, n925, n935, n945, n956, n967, n975, n990, n1005, n1019, n1022, n1023;
 
 // start of pre-processing logic
 
@@ -143,10 +143,10 @@ module adder(cout, sum, a, b, cin);
 
 	assign n172 = n136;
 	assign n171 = n135;
-	buffer_node buffer_node_1_4 ( .gin( {n137} ), .pin( {n138} ), .gout( {n173} ), .pout( {n174} ) );
+	ppa_buffer ppa_buffer_1_4 ( .gin( {n137} ), .pin( {n138} ), .gout( {n173} ), .pout( {n174} ) );
 	assign n990 = n832;
 	assign n175 = n139;
-	buffer_node buffer_node_3_4 ( .gin( {n141} ), .pin( {n142} ), .gout( {n177} ), .pout( {n178} ) );
+	ppa_buffer ppa_buffer_3_4 ( .gin( {n141} ), .pin( {n142} ), .gout( {n177} ), .pout( {n178} ) );
 	assign n846 = n725;
 	assign n179 = n143;
 	assign n1122 = n956;
@@ -176,13 +176,13 @@ module adder(cout, sum, a, b, cin);
 	assign n865 = n174;
 	assign n743 = n173;
 	ppa_grey ppa_grey_2_5 ( .gin( {n175,n173} ), .pin( {n990} ), .gout( {n746} ) );
-	buffer_node buffer_node_3_5 ( .gin( {n177} ), .pin( {n178} ), .gout( {n749} ), .pout( {n871} ) );
+	ppa_buffer ppa_buffer_3_5 ( .gin( {n177} ), .pin( {n178} ), .gout( {n749} ), .pout( {n871} ) );
 	assign n1005 = n846;
 	assign n751 = n179;
 	ppa_grey ppa_grey_5_5 ( .gin( {n181,n177} ), .pin( {n1122} ), .gout( {n754} ) );
 	assign n1019 = n859;
 	assign n756 = n183;
-	buffer_node buffer_node_7_5 ( .gin( {n185} ), .pin( {n186} ), .gout( {n759} ), .pout( {n881} ) );
+	ppa_buffer ppa_buffer_7_5 ( .gin( {n185} ), .pin( {n186} ), .gout( {n759} ), .pout( {n881} ) );
 	assign n912 = n784;
 	assign n761 = n187;
 	assign n1137 = n967;
@@ -212,13 +212,13 @@ module adder(cout, sum, a, b, cin);
 	assign n1036 = n876;
 	assign n877 = n754;
 	ppa_grey ppa_grey_6_6 ( .gin( {n756,n754} ), .pin( {n1019} ), .gout( {n879} ) );
-	buffer_node buffer_node_7_6 ( .gin( {n759} ), .pin( {n881} ), .gout( {n882} ), .pout( {n1041} ) );
+	ppa_buffer ppa_buffer_7_6 ( .gin( {n759} ), .pin( {n881} ), .gout( {n882} ), .pout( {n1041} ) );
 	assign n1072 = n912;
 	assign n884 = n761;
 	ppa_grey ppa_grey_9_6 ( .gin( {n763,n759} ), .pin( {n1137} ), .gout( {n887} ) );
 	assign n1086 = n925;
 	assign n889 = n765;
-	buffer_node buffer_node_11_6 ( .gin( {n767} ), .pin( {n891} ), .gout( {n892} ), .pout( {n1051} ) );
+	ppa_buffer ppa_buffer_11_6 ( .gin( {n767} ), .pin( {n891} ), .gout( {n892} ), .pout( {n1051} ) );
 	assign n1097 = n935;
 	assign n894 = n769;
 	assign n1110 = n945;
@@ -255,18 +255,18 @@ module adder(cout, sum, a, b, cin);
 	assign n1057 = n897;
 	assign n0 = n1061;
 	assign n1062 = n902;
-	block_1 block_1_instance ( .n186 ( n186 ), .n899 ( n899 ), .n897 ( n897 ), .n55 ( n55 ), .n108 ( n108 ), .n50 ( n50 ), .n767 ( n767 ), .n1162 ( n1162 ), .n0 ( n0 ), .n185 ( n185 ), .g0 ( g0 ), .n1110 ( n1110 ), .n190 ( n190 ), .n1059 ( n1059 ), .n98 ( n98 ), .p0 ( p0 ), .n54 ( n54 ), .cin ( cin ), .n109 ( n109 ), .p14 ( p14 ), .sum_14 ( sum[14] ), .n771 ( n771 ), .n1151 ( n1151 ), .n146 ( n146 ), .p_lsb ( p_lsb ), .g_lsb ( g_lsb ) );
+	block_1 block_1_instance ( .n109 ( n109 ), .n108 ( n108 ), .n1162 ( n1162 ), .n1151 ( n1151 ), .n771 ( n771 ), .n767 ( n767 ), .n1059 ( n1059 ), .n98 ( n98 ), .n54 ( n54 ), .n190 ( n190 ), .n185 ( n185 ), .sum_14 ( sum[14] ), .n55 ( n55 ), .p14 ( p14 ), .n0 ( n0 ), .n50 ( n50 ), .p0 ( p0 ), .cin ( cin ), .n897 ( n897 ), .g0 ( g0 ), .g_lsb ( g_lsb ), .p_lsb ( p_lsb ), .n1110 ( n1110 ), .n899 ( n899 ), .n186 ( n186 ), .n146 ( n146 ) );
 
 
 endmodule
 
-module buffer_node(pin, gin, pout, gout);
+module ppa_black(gin, pin, gout, pout);
 
-	input pin, gin;
-	output pout, gout;
+	input [1:0] gin, pin;
+	output gout, pout;
 
-	buffer U1(pout,pin);
-	buffer U2(gout,gin);
+	and2 U1(pout,pin[1],pin[0]);
+	ao21 U2(gout,gin[0],pin[1],gin[1]);
 
 endmodule
 
@@ -277,6 +277,16 @@ module ppa_grey(gin, pin, gout);
 	output gout;
 
 	ao21 U1(gout,gin[0],pin,gin[1]);
+
+endmodule
+
+module ppa_pre(a_in, b_in, pout, gout);
+
+	input a_in, b_in;
+	output pout, gout;
+
+	xor2 U1(pout,a_in,b_in);
+	and2 U2(gout,a_in,b_in);
 
 endmodule
 
@@ -299,40 +309,30 @@ module ppa_post(pin, gin, sum);
 
 endmodule
 
-module ppa_pre(a_in, b_in, pout, gout);
+module ppa_buffer(pin, gin, pout, gout);
 
-	input a_in, b_in;
+	input pin, gin;
 	output pout, gout;
 
-	xor2 U1(pout,a_in,b_in);
-	and2 U2(gout,a_in,b_in);
+	buffer U1(pout,pin);
+	buffer U2(gout,gin);
 
 endmodule
 
-module ppa_black(gin, pin, gout, pout);
+module block_1( n109, n108, n1162, n1151, n771, n767, n1059, n98, n54, n190, n185, sum_14, n55, p14, n0, n50, p0, cin, n897, g0, g_lsb, p_lsb, n1110, n899, n186, n146);
 
-	input [1:0] gin, pin;
-	output gout, pout;
-
-	and2 U1(pout,pin[1],pin[0]);
-	ao21 U2(gout,gin[0],pin[1],gin[1]);
-
-endmodule
-
-module block_1( n186, n899, n897, n55, n108, n50, n767, n1162, n0, n185, g0, n1110, n190, n1059, n98, p0, n54, cin, n109, p14, sum_14, n771, n1151, n146, p_lsb, g_lsb);
-
-	input n899, n55, n108, n54, cin, n1162, n109, n0, g0, n1110, p14, n190, n1151, n771, p0;
-	output n186, n897, n50, n767, n185, sum_14, n1059, n98, n146, p_lsb, g_lsb;
+	input n55, p14, n109, n108, n1162, n0, p0, cin, n1151, n771, g0, n1110, n899, n54, n190;
+	output n50, n186, n897, g_lsb, n767, n1059, p_lsb, sum_14, n98, n185, n146;
+	ao21 U1(n767,n185,n1162,n190);
 	ao21 U1(n897,n767,n1151,n771);
 	ao21 U1(n50,g_lsb,p0,g0);
-	ao21 U1(n1059,n897,n1110,n899);
 	ao21 U1(n146,n98,n109,n108);
+	buffer U1(n186,n0);
+	buffer U2(n185,n146);
+	ao21 U1(n1059,n897,n1110,n899);
 	assign p_lsb=1'b0;
 	assign g_lsb=cin;
 	xor2 U1(sum_14,p14,n1059);
 	ao21 U1(n98,n50,n55,n54);
-	buffer U1(n186,n0);
-	buffer U2(n185,n146);
-	ao21 U1(n767,n185,n1162,n190);
 
 endmodule
