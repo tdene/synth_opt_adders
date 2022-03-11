@@ -1,4 +1,5 @@
 // Inverter
+(* blackbox *)
 module inverter
 (
     Y, A
@@ -11,6 +12,7 @@ module inverter
 endmodule
 
 // Buffer
+(* blackbox *)
 module buffer
 (
     Y, A
@@ -23,6 +25,7 @@ module buffer
 endmodule
 
 // NAND2
+(* blackbox *)
 module nand2
 (
     Y, A, B
@@ -35,6 +38,7 @@ module nand2
 endmodule
 
 // NOR2
+(* blackbox *)
 module nor2
 (
     Y, A, B
@@ -47,6 +51,7 @@ module nor2
 endmodule
 
 // AND2
+(* blackbox *)
 module and2
 (
     Y, A, B
@@ -59,6 +64,7 @@ module and2
 endmodule
 
 // OR2
+(* blackbox *)
 module or2
 (
     Y, A, B
@@ -71,6 +77,7 @@ module or2
 endmodule
 
 // NAND3
+(* blackbox *)
 module nand3
 (
     Y, A, B, C
@@ -83,6 +90,7 @@ module nand3
 endmodule
 
 // NOR3
+(* blackbox *)
 module nor3
 (
     Y, A, B, C
@@ -95,6 +103,7 @@ module nor3
 endmodule
 
 // AND3
+(* blackbox *)
 module and3
 (
     Y, A, B, C
@@ -107,6 +116,7 @@ module and3
 endmodule
 
 // OR3
+(* blackbox *)
 module or3
 (
     Y, A, B, C
@@ -119,6 +129,7 @@ module or3
 endmodule
 
 // NAND4
+(* blackbox *)
 module nand4
 (
     Y, A, B, C, D
@@ -131,6 +142,7 @@ module nand4
 endmodule
 
 // NOR4
+(* blackbox *)
 module nor4
 (
     Y, A, B, C, D
@@ -143,6 +155,7 @@ module nor4
 endmodule
 
 // AND4
+(* blackbox *)
 module and4
 (
     Y, A, B, C, D
@@ -155,6 +168,7 @@ module and4
 endmodule
 
 // OR4
+(* blackbox *)
 module or4
 (
     Y, A, B, C, D
@@ -167,6 +181,7 @@ module or4
 endmodule
 
 // NAND2B
+(* blackbox *)
 module nand2b
 (
     Y, A, B
@@ -179,6 +194,7 @@ module nand2b
 endmodule
 
 // NOR2B
+(* blackbox *)
 module nor2b
 (
     Y, A, B
@@ -191,6 +207,7 @@ module nor2b
 endmodule
 
 // AO21
+(* blackbox *)
 module ao21
 (
     Y, A0, A1, B0
@@ -203,6 +220,7 @@ module ao21
 endmodule
 
 // OA21
+(* blackbox *)
 module oa21
 (
     Y, A0, A1, B0
@@ -215,6 +233,7 @@ module oa21
 endmodule
 
 // AOI21
+(* blackbox *)
 module aoi21
 (
     Y, A0, A1, B0
@@ -227,6 +246,7 @@ module aoi21
 endmodule
 
 // OAI21
+(* blackbox *)
 module oai21
 (
     Y, A0, A1, B0
@@ -239,6 +259,7 @@ module oai21
 endmodule
 
 // AO22
+(* blackbox *)
 module ao22
 (
     Y, A0, A1, B0, B1
@@ -251,6 +272,7 @@ module ao22
 endmodule
 
 // OA22
+(* blackbox *)
 module oa22
 (
     Y, A0, A1, B0, B1
@@ -263,6 +285,7 @@ module oa22
 endmodule
 
 // AOI22
+(* blackbox *)
 module aoi22
 (
     Y, A0, A1, B0, B1
@@ -275,6 +298,7 @@ module aoi22
 endmodule
 
 // OAI22
+(* blackbox *)
 module oai22
 (
     Y, A0, A1, B0, B1
@@ -287,6 +311,7 @@ module oai22
 endmodule
 
 // XOR2
+(* blackbox *)
 module xor2
 (
     Y, A, B
@@ -299,6 +324,7 @@ module xor2
 endmodule
 
 // XNOR2
+(* blackbox *)
 module xnor2
 (
     Y, A, B
@@ -311,6 +337,7 @@ module xnor2
 endmodule
 
 // MUX2
+(* blackbox *)
 module mux2
 (
     Y, S, A, B
@@ -323,6 +350,7 @@ module mux2
 endmodule
 
 // MUX2I
+(* blackbox *)
 module muxi2
 (
     Y, S, A, B
