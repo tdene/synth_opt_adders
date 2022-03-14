@@ -11,6 +11,7 @@ class adder_tree(prefix_tree):
                 'post':'ppa_post',
                 'black':'ppa_black',
                 'grey':'ppa_grey',
+                'buffer':'ppa_buffer',
                 'first_pre':'ppa_first_pre'
                 },
             is_idem=True):
