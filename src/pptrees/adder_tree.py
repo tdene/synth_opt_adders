@@ -20,15 +20,18 @@ class adder_tree(prefix_tree):
         """
         super().__init__(width,network,node_defs,is_idem)
 
-    def _hdl_preamble(self,language="verilog"):
+    def hdl(self,out=None,mapping="behavioral",language="verilog",top_module="adder",full_flat=False):
+        super().hdl(out,mapping,language,top_module,full_flat)
+
+    def _hdl_preamble(self,language="verilog",top_module="adder"):
         """Defines the preamble of the graph's HDL
 
         This method implements prefix_graph's counterpart for adders.
         """
-        if language=="verilog": return self._verilog_preamble()
-        if language=="vhdl": return self._vhdl_preamble()
+        if language=="verilog": return self._verilog_preamble(top_module)
+        if language=="vhdl": return self._vhdl_preamble(top_module)
 
-    def _verilog_preamble(self):
+    def _verilog_preamble(self,top_module):
         """Verilog preamble for the adder's HDL"""
 
         preamble = []
@@ -36,13 +39,13 @@ class adder_tree(prefix_tree):
 
         # Main module header
         preamble.append("""
-module adder(cout, sum, a, b, cin);
+module {1}(cout, sum, a, b, cin);
 
 	input [{0}:0] a, b;
 	input cin;
 	output [{0}:0] sum;
 	output cout;
-""".format(self.w-1))
+""".format(self.w-1,top_module))
 
         # Wire definitions
 
@@ -110,7 +113,7 @@ module adder(cout, sum, a, b, cin);
 
         return (preamble,used_modules)
 
-    def _vhdl_preamble(self):
+    def _vhdl_preamble(self,top_module):
         """VHDL preamble for the adder's HDL"""
 
         preamble = []
@@ -123,7 +126,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std;""")
         # Entity definition
         preamble.append("""
-entity adder is
+entity {1} is
 	port (
 		a,b : in std_logic_vector({0} downto 0);
 		cin : in std_logic;
@@ -131,7 +134,7 @@ entity adder is
 		sum : out std_logic_vector({0} downto 0)
 	);
 end entity;
-""".format(self.w-1))
+""".format(self.w-1,top_module))
 
         # Architecture definition
         preamble.append("architecture pptree of adder is")

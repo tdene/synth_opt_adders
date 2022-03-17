@@ -515,7 +515,7 @@ class prefix_graph(nx.MultiDiGraph):
         return (block_hdl,block_defs)
         
 
-    def _hdl_preamble(self,language='verilog'):
+    def _hdl_preamble(self,language='verilog',top_module="graph"):
         """Defines the preamble of the graph's HDL
         
         This abstract method is meant to be implemented by child classes.
@@ -525,7 +525,7 @@ class prefix_graph(nx.MultiDiGraph):
         """
         return ([],set())
 
-    def hdl(self,out=None,mapping="behavioral",language="verilog",full_flat=False):
+    def hdl(self,out=None,mapping="behavioral",language="verilog",top_module="graph",full_flat=False):
         """Outputs HDL representation of graph
         
         out is an optional file to write the HDL into
@@ -565,7 +565,7 @@ class prefix_graph(nx.MultiDiGraph):
             shutil.copy(pkg_map_file,local_map_file)
 
         # Pull in HDL preamble, as defined by child class 
-        hdl, module_defs = self._hdl_preamble(language=language)
+        hdl, module_defs = self._hdl_preamble(language=language,top_module=top_module)
 
         # Iterate over all nodes in graph
         for a in self.node_list:
