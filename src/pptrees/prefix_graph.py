@@ -525,47 +525,13 @@ class prefix_graph(nx.MultiDiGraph):
         """
         return ([],set())
 
-    def hdl(self,out=None,mapping="behavioral",language="verilog",top_module="graph",full_flat=False):
-        """Outputs HDL representation of graph
+    def _hdl_body(self,language='verilog',comment_string="",full_flat=False):
+        """Defines the body of the graph's HDL
         
-        out is an optional file to write the HDL into
-        mapping specifies what cell-set to map the logic into
-        language specifies what language to output
-        full_flat is an optional argument that can fully flatten the netlist
+        Returns a tuple consisting of the HDL string,
+        and any modules used by the body.
         """
-        # Check that output path is valid
-        if out is not None:
-            outdir = pathlib.Path(out).resolve().parent
-            if not outdir.exists():
-                raise FileNotFoundError("desired path for hdl output is invalid")
-
-        # Check that language is supported
-        if language not in ["verilog","vhdl"]:
-            raise ValueError("unsupported hardware-descriptive language requested")
-
-        # Set language-specific variables
-        if language == "verilog":
-            end_string = "endmodule"
-            comment_string = "\n// start of tree row {0}\n"
-            file_suffix = ".v"
-        if language == "vhdl":
-            end_string = "end architecture"
-            comment_string = "\n-- start of tree row {0}\n"
-            file_suffix = ".vhd"
-
-        # Locate mapping file and check its existence
-        with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
-            pkg_map_file = pkg_map_dir / (mapping+'_map'+file_suffix)
-            local_map_file = outdir / (mapping+'_map'+file_suffix)
-
-            if not pkg_map_file.is_file():
-                raise ValueError("unsupported mapping requested")
-
-        # Copy mapping file from package to local directory
-            shutil.copy(pkg_map_file,local_map_file)
-
-        # Pull in HDL preamble, as defined by child class 
-        hdl, module_defs = self._hdl_preamble(language=language,top_module=top_module)
+        hdl, module_defs = ([],set())
 
         # Iterate over all nodes in graph
         for a in self.node_list:
@@ -591,13 +557,59 @@ class prefix_graph(nx.MultiDiGraph):
         # Remove last two comment strings
         hdl = hdl[:-2]
 
+        return (hdl,module_defs)
+
+
+    def hdl(self,out=None,mapping="behavioral",language="verilog",top_module="graph",full_flat=False):
+        """Outputs HDL representation of graph
+        
+        out is an optional file to write the HDL into
+        mapping specifies what cell-set to map the logic into
+        language specifies what language to output
+        full_flat is an optional argument that can fully flatten the netlist
+        """
+        # Check that output path is valid
+        if out is not None:
+            outdir = pathlib.Path(out).resolve().parent
+            if not outdir.exists():
+                raise FileNotFoundError("desired path for hdl output is invalid")
+
+        # Check that language is supported
+        if language not in ["verilog","vhdl"]:
+            raise ValueError("unsupported hardware-descriptive language requested")
+
+        # Set language-specific variables
+        if language == "verilog":
+            end_string = "\nendmodule\n"
+            comment_string = "\n// start of tree row {0}\n"
+            file_suffix = ".v"
+        if language == "vhdl":
+            end_string = "\nend architecture\n"
+            comment_string = "\n-- start of tree row {0}\n"
+            file_suffix = ".vhd"
+
+        # Locate mapping file and check its existence
+        with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
+            pkg_map_file = pkg_map_dir / (mapping+'_map'+file_suffix)
+            local_map_file = outdir / (mapping+'_map'+file_suffix)
+
+            if not pkg_map_file.is_file():
+                raise ValueError("unsupported mapping requested")
+
+            # Copy mapping file from package to local directory
+            shutil.copy(pkg_map_file,local_map_file)
+
+        # Pull in HDL preamble, as defined by child class 
+        preamble_hdl, preamble_defs = self._hdl_preamble(language=language,top_module=top_module)
+
+        # Pull in the body of the HDL
+        body_hdl, body_defs = self._hdl_body(language=language,comment_string=comment_string,full_flat=full_flat)
+
         # Pull in HDL of blocks
         block_hdl, block_defs = self._hdl_blocks(language=language)
 
-        hdl.extend(block_hdl)
-
-        # End main module
-        hdl.append('\n' + end_string + '\n')
+        hdl = preamble_hdl + body_hdl + block_hdl + [end_string]
+        module_defs = preamble_defs | body_defs
 
         # Format into string; remove first newline
         hdl = '\n'.join(hdl)[1:]
