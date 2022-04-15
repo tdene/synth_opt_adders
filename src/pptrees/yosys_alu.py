@@ -3,7 +3,7 @@ from .adder_tree import adder_tree
 from .prefix_graph import prefix_node as node
 import pathlib
 import shutil
-import importlib
+import importlib.resources
 
 class yosys_alu(adder_tree):
     """Class that generates parallel prefix adder trees"""
@@ -28,8 +28,8 @@ class yosys_alu(adder_tree):
         file_suffix = ".v"
 
         # Locate mapping file and check its existence
-        with importlib.resources.path("pptrees","mappings") as pkg_map_dir:
-            pkg_map_file = pkg_map_dir / (mapping+'_map'+file_suffix)
+        map_file = mapping+'_map'+file_suffix
+        with importlib.resources.path("pptrees.mappings",map_file) as pkg_map_file:
             local_map_file = outdir / (mapping+'_map'+file_suffix)
 
             if not pkg_map_file.is_file():
