@@ -234,7 +234,7 @@ module oai21
     output Y;
     input A0, A1, B0;
 
-    sky130_fd_sc_hd__o21ai_1 oai21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
+    sky130_fd_sc_hd__o21ai_1 oai21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
 
 endmodule
 
