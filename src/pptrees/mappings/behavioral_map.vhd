@@ -8,7 +8,7 @@ entity and2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of and2 is
 begin
@@ -26,7 +26,7 @@ entity and3 is
     C : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of and3 is
 begin
@@ -45,7 +45,7 @@ entity and4 is
     D : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of and4 is
 begin
@@ -63,7 +63,7 @@ entity ao21 is
     B0 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of ao21 is
 begin
@@ -82,7 +82,7 @@ entity ao22 is
     B1 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of ao22 is
 begin
@@ -100,7 +100,7 @@ entity aoi21 is
     B0 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of aoi21 is
 begin
@@ -119,7 +119,7 @@ entity aoi22 is
     B1 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of aoi22 is
 begin
@@ -135,7 +135,7 @@ entity buffer_module is
     A : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of buffer_module is
 begin
@@ -151,7 +151,7 @@ entity inverter is
     A : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of inverter is
 begin
@@ -169,7 +169,7 @@ entity mux2 is
     S : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of mux2 is
 begin
@@ -187,7 +187,7 @@ entity muxi2 is
     S : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 begin
   Y <= not (B when S = '1' else A);
@@ -203,7 +203,7 @@ entity nand2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nand2 is
 begin
@@ -220,7 +220,7 @@ entity nand2b is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nand2b is
 begin
@@ -238,7 +238,7 @@ entity nand3 is
     C : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nand3 is
 begin
@@ -257,7 +257,7 @@ entity nand4 is
     D : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nand4 is
 begin
@@ -274,7 +274,7 @@ entity nor2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nor2 is
 begin
@@ -291,7 +291,7 @@ entity nor2b is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nor2b is
 begin
@@ -309,7 +309,7 @@ entity nor3 is
     C : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nor3 is
 begin
@@ -328,7 +328,7 @@ entity nor4 is
     D : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of nor4 is
 begin
@@ -346,7 +346,7 @@ entity oa21 is
     B0 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of oa21 is
 begin
@@ -365,7 +365,7 @@ entity oa22 is
     B1 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of oa22 is
 begin
@@ -383,7 +383,7 @@ entity oai21 is
     B0 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of oai21 is
 begin
@@ -402,7 +402,7 @@ entity oai22 is
     B1 : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of oai22 is
 begin
@@ -419,7 +419,7 @@ entity or2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of or2 is
 begin
@@ -437,7 +437,7 @@ entity or3 is
     C : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of or3 is
 begin
@@ -456,7 +456,7 @@ entity or4 is
     D : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of or4 is
 begin
@@ -473,7 +473,7 @@ entity xnor2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of xnor2 is
 begin
@@ -490,10 +490,9 @@ entity xor2 is
     B : in std_logic;
     Y : out std_logic
   );
-end entity; 
+end entity;
 
 architecture behavior of xor2 is
 begin
   Y <= A xor B;
 end architecture;
-
