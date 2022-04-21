@@ -508,6 +508,21 @@ class prefix_graph(nx.MultiDiGraph):
                 block_def += "\nendmodule"
             elif language == "vhdl":
                 block_def += "\nend architecture"
+            # Replace all standard cell instance names with consecutive numbers
+            ## Split by (
+            split_def = block_def.split('(')
+            instance_count = 0
+            ## Replace U0 with U{instance_count}
+            for i in range(len(split_def)):
+                if 'U' in split_def[i]:
+                    # Get index of U
+                    u_index = split_def[i].index('U')
+                    # Replace everything from here to end of selection
+                    split_def[i] = split_def[i][:u_index+1] + '{0}'.format(instance_count)
+                    instance_count += 1
+            ## Rejoin string
+            block_def = '('.join(split_def)
+
             # Add block definition to list of block_defs
             block_defs.append(block_def)
 
