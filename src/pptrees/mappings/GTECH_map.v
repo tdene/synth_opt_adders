@@ -8,7 +8,7 @@ module inverter
 
     assign Y = ~A;
 
-endmodule : inverter
+endmodule
 
 // Buffer
 module buffer
@@ -20,7 +20,7 @@ module buffer
 
     GTECH_BUF buffer(.A(A), .Z(Y));
 
-endmodule: buffer
+endmodule
 
 // NAND2
 module nand2
@@ -32,7 +32,7 @@ module nand2
 
     GTECH_NAND2 nand2(.A(A), .B(B), .Z(Y));
 
-endmodule: nand2
+endmodule
 
 // NOR2
 module nor2
@@ -44,7 +44,7 @@ module nor2
 
     GTECH_NOR2 nor2(.A(A), .B(B), .Z(Y));
 
-endmodule: nor2
+endmodule
 
 // AND2
 module and2
@@ -56,7 +56,7 @@ module and2
 
     GTECH_AND2 and2(.A(A), .B(B), .Z(Y));
 
-endmodule: and2
+endmodule
 
 // OR2
 module or2
@@ -68,7 +68,7 @@ module or2
 
     GTECH_OR2 or2(.A(A), .B(B), .Z(Y));
 
-endmodule: or2
+endmodule
 
 // NAND3
 module nand3
@@ -80,7 +80,7 @@ module nand3
 
     GTECH_NAND3 nand3(.A(A), .B(B), .C(C), .Z(Y));
 
-endmodule: nand3
+endmodule
 
 // NOR3
 module nor3
@@ -92,7 +92,7 @@ module nor3
 
     GTECH_NOR3 nor3(.A(A), .B(B), .C(C), .Z(Y));
 
-endmodule: nor3
+endmodule
 
 // AND3
 module and3
@@ -104,7 +104,7 @@ module and3
 
     GTECH_AND3 and3(.A(A), .B(B), .C(C), .Z(Y));
 
-endmodule: and3
+endmodule
 
 // OR3
 module or3
@@ -116,7 +116,7 @@ module or3
 
     GTECH_OR3 or3(.A(A), .B(B), .C(C), .Z(Y));
 
-endmodule: or3
+endmodule
 
 // NAND4
 module nand4
@@ -128,7 +128,7 @@ module nand4
 
     GTECH_NAND4 nand4(.A(A), .B(B), .C(C), .D(D), .Z(Y));
 
-endmodule: nand4
+endmodule
 
 // NOR4
 module nor4
@@ -140,7 +140,7 @@ module nor4
 
     GTECH_NOR4 nor4(.A(A), .B(B), .C(C), .D(D), .Z(Y));
 
-endmodule: nor4
+endmodule
 
 // AND4
 module and4
@@ -152,7 +152,7 @@ module and4
 
     GTECH_AND4 and4(.A(A), .B(B), .C(C), .D(D), .Z(Y));
 
-endmodule: and4
+endmodule
 
 // OR4
 module or4
@@ -164,7 +164,7 @@ module or4
 
     GTECH_OR4 or4(.A(A), .B(B), .C(C), .D(D), .Z(Y));
 
-endmodule: or4
+endmodule
 
 // NAND2B
 module nand2b
@@ -176,7 +176,7 @@ module nand2b
 
     GTECH_AND_NOT nand2b(.A(B), .B(A), .Z(Y));
 
-endmodule: nand2b
+endmodule
 
 // NOR2B
 module nor2b
@@ -188,7 +188,7 @@ module nor2b
 
     GTECH_OR_NOT nor2b(.A(B), .B(A), .Z(Y));
 
-endmodule: nor2b
+endmodule
 
 // AO21
 module ao21
@@ -200,7 +200,7 @@ module ao21
 
     GTECH_AO21 ao21(.A(A0), .B(A1), .C(B0), .Z(Y));
 
-endmodule: ao21
+endmodule
 
 // OA21
 module oa21
@@ -212,7 +212,7 @@ module oa21
 
     GTECH_OA21 oa21(.A(A0), .B(A1), .C(B0), .Z(Y));
 
-endmodule: oa21
+endmodule
 
 // AOI21
 module aoi21
@@ -224,7 +224,7 @@ module aoi21
 
     GTECH_AOI21 aoi21(.A(A0), .B(A1), .C(B0), .Z(Y));
 
-endmodule: aoi21
+endmodule
 
 // OAI21
 module oai21
@@ -236,7 +236,7 @@ module oai21
 
     GTECH_OAI21 oai21(.A(A0), .B(A1), .C(B0), .Z(Y));
 
-endmodule: oai21
+endmodule
 
 // AO22
 module ao22
@@ -248,7 +248,7 @@ module ao22
 
     GTECH_AO22 ao22(.A(A0), .B(A1), .C(B0), .D(B1), .Z(Y));
 
-endmodule: ao22
+endmodule
 
 // OA22
 module oa22
@@ -260,7 +260,7 @@ module oa22
 
     GTECH_OA22 oa22(.A(A0), .B(A1), .C(B0), .D(B1), .Z(Y));
 
-endmodule: oa22
+endmodule
 
 // AOI22
 module aoi22
@@ -272,7 +272,7 @@ module aoi22
 
     GTECH_AOI22 aoi22(.A(A0), .B(A1), .C(B0), .D(B1), .Z(Y));
 
-endmodule: aoi22
+endmodule
 
 // OAI22
 module oai22
@@ -284,7 +284,7 @@ module oai22
 
     GTECH_OAI22 oai22(.A(A0), .B(A1), .C(B0), .D(B1), .Z(Y));
 
-endmodule: oai22
+endmodule
 
 // XOR2
 module xor2
@@ -296,7 +296,7 @@ module xor2
 
     GTECH_XOR2 xor2(.A(A), .B(B), .Z(Y));
 
-endmodule: xor2
+endmodule
 
 // XNOR2
 module xnor2
@@ -308,7 +308,7 @@ module xnor2
 
     GTECH_XNOR2 xnor2(.A(A), .B(B), .Z(Y));
 
-endmodule: xnor2
+endmodule
 
 // MUX2
 module mux2
@@ -320,7 +320,7 @@ module mux2
 
     GTECH_MUX2 mux2(.A(A), .B(B), .S(S), .Z(Y));
 
-endmodule: mux2
+endmodule
 
 // MUX2I
 module muxi2
@@ -332,4 +332,4 @@ module muxi2
 
     GTECH_MUXI2 muxi2(.A(A), .B(B), .S(S), .Z(Y));
 
-endmodule: muxi2
+endmodule

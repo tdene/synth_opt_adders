@@ -29,12 +29,26 @@ Synopsys and Cadence tools.
 
 The target of this mapping is the
 [sky130_fd_sc_hd](https://github.com/google/skywater-pdk-libs-sky130_fd_sc_hs)
-standard cell library of the open-source 
+standard cell library of the open-source
 [SKY130](https://github.com/google/skywater-pdk) PDK.
 
 ## sky130_fd_sc_hs_map.v
 
 The target of this mapping is the
 [sky130_fd_sc_hs](https://github.com/google/skywater-pdk-libs-sky130_fd_sc_hs)
-standard cell library of the open-source 
+standard cell library of the open-source
+[SKY130](https://github.com/google/skywater-pdk) PDK.
+
+## sky130_fd_sc_ms_map.v
+
+The target of this mapping is the
+[sky130_fd_sc_ms](https://github.com/google/skywater-pdk-libs-sky130_fd_sc_ms)
+standard cell library of the open-source
+[SKY130](https://github.com/google/skywater-pdk) PDK.
+
+## sky130_fd_sc_ls_map.v
+
+The target of this mapping is the
+[sky130_fd_sc_ls](https://github.com/google/skywater-pdk-libs-sky130_fd_sc_ls)
+standard cell library of the open-source
 [SKY130](https://github.com/google/skywater-pdk) PDK.

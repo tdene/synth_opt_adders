@@ -6,7 +6,7 @@ module inverter
     output Y;
     input A;
 
-    sky130_fd_sc_hs__inv_1 inverter(.Y(Y), .A(A));
+    sky130_fd_sc_ms__inv_1 inverter(.Y(Y), .A(A));
 
 endmodule
 
@@ -18,7 +18,7 @@ module buffer
     output Y;
     input A;
 
-    sky130_fd_sc_hs__buf_1 buffer(.X(Y), .A(A));
+    sky130_fd_sc_ms__buf_1 buffer(.X(Y), .A(A));
 
 endmodule
 
@@ -30,7 +30,7 @@ module nand2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__nand2_1 nand2(.Y(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__nand2_1 nand2(.Y(Y), .A(A), .B(B));
 
 endmodule
 
@@ -42,7 +42,7 @@ module nor2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__nor2_1 nor2(.Y(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__nor2_1 nor2(.Y(Y), .A(A), .B(B));
 
 endmodule
 
@@ -54,7 +54,7 @@ module and2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__and2_1 and2(.X(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__and2_1 and2(.X(Y), .A(A), .B(B));
 
 endmodule
 
@@ -66,7 +66,7 @@ module or2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__or2_1 or2(.X(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__or2_1 or2(.X(Y), .A(A), .B(B));
 
 endmodule
 
@@ -78,7 +78,7 @@ module nand3
     output Y;
     input A, B, C;
 
-    sky130_fd_sc_hs__nand3_1 nand3(.Y(Y), .A(A), .B(B), .C(C));
+    sky130_fd_sc_ms__nand3_1 nand3(.Y(Y), .A(A), .B(B), .C(C));
 
 endmodule
 
@@ -90,7 +90,7 @@ module nor3
     output Y;
     input A, B, C;
 
-    sky130_fd_sc_hs__nor3_1 nor3(.Y(Y), .A(A), .B(B), .C(C));
+    sky130_fd_sc_ms__nor3_1 nor3(.Y(Y), .A(A), .B(B), .C(C));
 
 endmodule
 
@@ -102,7 +102,7 @@ module and3
     output Y;
     input A, B, C;
 
-    sky130_fd_sc_hs__and3_1 and3(.X(Y), .A(A), .B(B), .C(C));
+    sky130_fd_sc_ms__and3_1 and3(.X(Y), .A(A), .B(B), .C(C));
 
 endmodule
 
@@ -114,7 +114,7 @@ module or3
     output Y;
     input A, B, C;
 
-    sky130_fd_sc_hs__or3_1 or3(.X(Y), .A(A), .B(B), .C(C));
+    sky130_fd_sc_ms__or3_1 or3(.X(Y), .A(A), .B(B), .C(C));
 
 endmodule
 
@@ -126,7 +126,7 @@ module nand4
     output Y;
     input A, B, C, D;
 
-    sky130_fd_sc_hs__nand4_1 nand4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
+    sky130_fd_sc_ms__nand4_1 nand4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
 
 endmodule
 
@@ -138,7 +138,7 @@ module nor4
     output Y;
     input A, B, C, D;
 
-    sky130_fd_sc_hs__nor4_1 nor4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
+    sky130_fd_sc_ms__nor4_1 nor4(.Y(Y), .A(A), .B(B), .C(C), .D(D));
 
 endmodule
 
@@ -150,7 +150,7 @@ module and4
     output Y;
     input A, B, C, D;
 
-    sky130_fd_sc_hs__and4_1 and4(.X(Y), .A(A), .B(B), .C(C), .D(D));
+    sky130_fd_sc_ms__and4_1 and4(.X(Y), .A(A), .B(B), .C(C), .D(D));
 
 endmodule
 
@@ -162,7 +162,7 @@ module or4
     output Y;
     input A, B, C, D;
 
-    sky130_fd_sc_hs__or4_1 or4(.X(Y), .A(A), .B(B), .C(C), .D(D));
+    sky130_fd_sc_ms__or4_1 or4(.X(Y), .A(A), .B(B), .C(C), .D(D));
 
 endmodule
 
@@ -174,7 +174,7 @@ module nand2b
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__nand2b_1 nand2b(.Y(Y), .A_N(A), .B(B));
+    sky130_fd_sc_ms__nand2b_1 nand2b(.Y(Y), .A_N(A), .B(B));
 
 endmodule
 
@@ -186,7 +186,7 @@ module nor2b
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__nor2b_1 nor2b(.Y(Y), .A(B), .B_N(A));
+    sky130_fd_sc_ms__nor2b_1 nor2b(.Y(Y), .A(B), .B_N(A));
 
 endmodule
 
@@ -198,7 +198,7 @@ module ao21
     output Y;
     input A0, A1, B0;
 
-    sky130_fd_sc_hs__a21o_1 ao21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
+    sky130_fd_sc_ms__a21o_1 ao21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
 
 endmodule
 
@@ -210,7 +210,7 @@ module oa21
     output Y;
     input A0, A1, B0;
 
-    sky130_fd_sc_hs__o21a_1 oa21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
+    sky130_fd_sc_ms__o21a_1 oa21(.X(Y), .A1(A0), .A2(A1), .B1(B0));
 
 endmodule
 
@@ -222,7 +222,7 @@ module aoi21
     output Y;
     input A0, A1, B0;
 
-    sky130_fd_sc_hs__a21oi_1 aoi21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
+    sky130_fd_sc_ms__a21oi_1 aoi21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
 
 endmodule
 
@@ -234,7 +234,7 @@ module oai21
     output Y;
     input A0, A1, B0;
 
-    sky130_fd_sc_hs__o21ai_1 oai21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
+    sky130_fd_sc_ms__o21ai_1 oai21(.Y(Y), .A1(A0), .A2(A1), .B1(B0));
 
 endmodule
 
@@ -246,7 +246,7 @@ module ao22
     output Y;
     input A0, A1, B0, B1;
 
-    sky130_fd_sc_hs__a22o_1 ao22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
+    sky130_fd_sc_ms__a22o_1 ao22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
 endmodule
 
@@ -258,7 +258,7 @@ module oa22
     output Y;
     input A0, A1, B0, B1;
 
-    sky130_fd_sc_hs__o22a_1 oa22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
+    sky130_fd_sc_ms__o22a_1 oa22(.X(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
 endmodule
 
@@ -270,7 +270,7 @@ module aoi22
     output Y;
     input A0, A1, B0, B1;
 
-    sky130_fd_sc_hs__a22oi_1 aoi22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
+    sky130_fd_sc_ms__a22oi_1 aoi22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
 endmodule
 
@@ -282,7 +282,7 @@ module oai22
     output Y;
     input A0, A1, B0, B1;
 
-    sky130_fd_sc_hs__o22ai_1 oai22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
+    sky130_fd_sc_ms__o22ai_1 oai22(.Y(Y), .A1(A0), .A2(A1), .B1(B0), .B2(B1));
 
 endmodule
 
@@ -294,7 +294,7 @@ module xor2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__xor2_1 xor2(.X(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__xor2_1 xor2(.X(Y), .A(A), .B(B));
 
 endmodule
 
@@ -306,7 +306,7 @@ module xnor2
     output Y;
     input A, B;
 
-    sky130_fd_sc_hs__xnor2_1 xnor2(.Y(Y), .A(A), .B(B));
+    sky130_fd_sc_ms__xnor2_1 xnor2(.Y(Y), .A(A), .B(B));
 
 endmodule
 
@@ -318,7 +318,7 @@ module mux2
     output Y;
     input S, A, B;
 
-    sky130_fd_sc_hs__mux2_1 mux2(.X(Y), .S(S), .A0(A), .A1(B));
+    sky130_fd_sc_ms__mux2_1 mux2(.X(Y), .S(S), .A0(A), .A1(B));
 
 endmodule
 
@@ -330,6 +330,6 @@ module muxi2
     output Y;
     input S, A, B;
 
-    sky130_fd_sc_hs__mux2i_1 muxi2(.Y(Y), .S(S), .A0(A), .A1(B));
+    sky130_fd_sc_ms__mux2i_1 muxi2(.Y(Y), .S(S), .A0(A), .A1(B));
 
 endmodule
