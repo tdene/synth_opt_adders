@@ -24,14 +24,17 @@ class prefix_tree(graph):
         Pre-conditions:
             width is an integer
             network is a valid initial network choice (defaults to ripple)
+
             node_defs is a dictionary that defines the following nodes:
                 - 'pre' (pre-processing)
                 - 'post' (post-processing)
                 - 'black' (prefix operation)
                 - 'buffer' (identity operation)
+
             Optional node definitions include but are not limited to:
-                - 'first_pre' (right-most pre-processing node)
-                - 'grey' (prefix operation in the last row)
+                'first_pre' (right-most pre-processing node)
+                'grey' (prefix operation in the last row)
+
             is_idem is a boolean noting if the prefix operation is idempotent
         """
         if not isinstance(width, int):
@@ -500,8 +503,7 @@ class prefix_tree(graph):
 
         Pre-conditions:
             n is a valid node in the main part of the tree
-            c is a list of "hypothetical" valid cells that do not
-                yet exist, but are treated as though they do
+            c is a list of "hypothetical" valid cells that do not yet exist, but are treated as though they do
         """
         right = self.right(n)
         if (
@@ -560,10 +562,8 @@ class prefix_tree(graph):
 
         Pre-conditions:
             n is a valid node in the main part of the tree
-            c is a list of "hypothetical" valid cells that do not
-                yet exist, but are treated as though they do
-            d is a list of "hypothetical" diagonal predecessors
-                of each respective cell listed by c
+            c is a list of "hypothetical" valid cells that do not yet exist, but are treated as though they do
+            d is a list of "hypothetical" diagonal predecessors of each respective cell listed by c
         """
         # Figure out bounds so that wires don't cross illegaly
         # First, find the left-most right neighbor of n
@@ -594,12 +594,13 @@ class prefix_tree(graph):
         a is a node in the tree
         b is its current diagonal predecessor
         a_bits are the nodes that feed into a:
+
             its current top
             its new diagonal predecessor after the change (if any)
+        
         x is the closest node north of a that is empty (available)
 
-        c is a list of "hypothetical" cells that do not yet exist,
-            but could be added in to fix the tree.
+        c is a list of "hypothetical" cells that do not yet exist, but could be added in to fix the tree.
         d is a list of c's diagonal predecessor connections.
         path is the path that a specific recursive branch has taken.
         result is the final output of a specific recursive branch
