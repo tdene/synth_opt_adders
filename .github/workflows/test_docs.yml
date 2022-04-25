@@ -22,6 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .
+          pip install sphinx
           sudo apt install pandoc
       - name: Test documentation
         run: |
