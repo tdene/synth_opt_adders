@@ -1,21 +1,22 @@
-from .modules import modules
-from .adder_tree import adder_tree
-from .prefix_graph import prefix_node as node
+import importlib.resources
 import pathlib
 import shutil
-import importlib.resources
+
+from .adder_tree import adder_tree
+from .modules import modules
+
 
 class yosys_alu(adder_tree):
     """Class that generates parallel prefix adder trees"""
 
-    def __init__(self,width,network="ripple"):
+    def __init__(self, width, network="ripple"):
         """Initializes a parallel prefix tree adder to be used by a Yosys $alu mapping pass
 
         Refer to the adder_tree's docstring for a full description.
         """
-        super().__init__(width,network)
+        super().__init__(width, network)
 
-    def yosys_map(self,out=None,mapping="behavioral"):
+    def yosys_map(self, out=None, mapping="behavioral"):
         """Writes out map files used to translate the HDL"""
 
         # Check that output path is valid
@@ -28,24 +29,24 @@ class yosys_alu(adder_tree):
         file_suffix = ".v"
 
         # Locate mapping file and check its existence
-        map_file = mapping+'_map'+file_suffix
-        with importlib.resources.path("pptrees.mappings",map_file) as pkg_map_file:
-            local_map_file = outdir / (mapping+'_map'+file_suffix)
+        map_file = mapping + "_map" + file_suffix
+        with importlib.resources.path("pptrees.mappings", map_file) as pkg_map_file:
+            local_map_file = outdir / (mapping + "_map" + file_suffix)
 
             if not pkg_map_file.is_file():
                 raise ValueError("unsupported mapping requested")
 
             # Copy mapping file from package to local directory
-            shutil.copy(pkg_map_file,local_map_file)
+            shutil.copy(pkg_map_file, local_map_file)
 
         # Create file that contains all module definitions
-        module_def_text = "".join([modules[x]['verilog'] for x in modules])
+        module_def_text = "".join([modules[x]["verilog"] for x in modules])
 
         # Write to file
-        with open(outdir / "modules.v",'w') as f:
-            print(module_def_text,file=f)
+        with open(outdir / "modules.v", "w") as f:
+            print(module_def_text, file=f)
 
-    def hdl(self,out=None,mapping="behavioral",top_module="adder"):
+    def hdl(self, out=None, mapping="behavioral", top_module="adder"):
         """Generates HDL that can be used by Yosys $alu mapping pass"""
 
         # Check that output path is valid
@@ -93,27 +94,34 @@ module _{0}_alu (A, B, CI, BI, X, Y, CO);
     assign CO[Y_WIDTH-2:0] = 0;
     {0} U1(.cout(CO[Y_WIDTH-1]), .sum(Y), .a(AA), .b(BB), .cin(CI));
 endmodule
-""".format(top_module)
+""".format(
+            top_module
+        )
 
-        # Pull in HDL preamble, as defined by child class 
-        preamble_hdl, preamble_defs = self._hdl_preamble(language='verilog',top_module=top_module)
+        # Pull in HDL preamble, as defined by child class
+        preamble_hdl, preamble_defs = self._hdl_preamble(
+            language="verilog", top_module=top_module
+        )
 
         # Pull in the body of the HDL
-        body_hdl, body_defs = self._hdl_body(language='verilog',comment_string=comment_string)
+        body_hdl, body_defs = self._hdl_body(
+            language="verilog", comment_string=comment_string
+        )
 
         # Pull in HDL of blocks
-        block_hdl, block_defs = self._hdl_blocks(language='verilog')
+        block_hdl, block_defs = self._hdl_blocks(language="verilog")
 
         hdl = preamble_hdl + body_hdl + block_hdl + [end_string]
 
         # Format into string
-        hdl = alu_hdl + '\n'.join(hdl)
+        hdl = alu_hdl + "\n".join(hdl)
 
         # Write to file
         if out is not None:
-            
-            with open(out,'w') as f:
-                print(hdl,file=f)
 
-if __name__=="__main__":
+            with open(out, "w") as f:
+                print(hdl, file=f)
+
+
+if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
