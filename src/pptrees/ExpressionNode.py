@@ -14,8 +14,10 @@ class ExpressionNode:
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
+        x_pos (int): The x-coordinate of this node's graphical representation
+        y_pos (int): The y-coordinate of this node's graphical representation
     """
-    def __init__(self, nid, value, children=[], parent=None):
+    def __init__(self, nid, value, x_pos, y_pos, children=[], parent=None):
         """Initializes a new ExpressionNode
 
         Args:
@@ -26,21 +28,32 @@ class ExpressionNode:
         if value not in modules:
             raise ValueError("Invalid module name: {}".format(value))
 
+        # Node attributes
         self.nid = nid
         self.children = children
         self.parent = parent
         self.value = value
-        self.leafs = 0
+
+        # HDL-related attributes
         self.flat = False
-        self.block = None
         self.in_nets = {x: [None] * y for x, y in modules[value]["ins"].items()}
         self.out_nets = {x: [None] * y for x, y in modules[value]["outs"].items()}
 
+        # Graph-related attributes
+        self.leafs = 0
+        self.block = None
+
+        # Visualization-related attributes
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+
     def __str__(self):
+        """Returns a string representation of this node"""
         return self.value
 
     def __repr__(self):
-        return self.value
+        """Returns a string representation of this node"""
+        return (self.value, self.nid, self.x_pos, self.y_pos)
 
     def __lt__(self, other):
         """Compares this node to another node by position in tree
