@@ -21,10 +21,19 @@ class ExpressionNode:
         """Initializes a new ExpressionNode
 
         Args:
+            nid (int): The unique ID of this node
             value (str): The value of the node; a valid module name
+            x_pos (int): The x-coordinate of this node's graphical representation
+            y_pos (int): The y-coordinate of this node's graphical representation
             children (list): A list of child nodes
             parent (ExpressionNode): The parent node
         """
+        if not isinstance(nid, int):
+            raise TypeError("Node ID must be an integer")
+        if not isinstance(x_pos, int):
+            raise TypeError("X-coordinate must be an integer")
+        if not isinstance(y_pos, int):
+            raise TypeError("Y-coordinate must be an integer")
         if value not in modules:
             raise ValueError("Invalid module name: {}".format(value))
 
@@ -88,15 +97,39 @@ class ExpressionNode:
         """
         return self.leafs > other.leafs
 
-    def add_child(self, child):
+    def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node
 
         Args:
             child (ExpressionNode): The child node to add
+            pin1 (tuple): (name, index) of the parent pin
+            pin2 (tuple): (name, index) of the child pin
+            net_name (str): Fall-back net name, if it does not exist
         """
+
+        # Connect nodes
         self.children.append(child)
         self.leafs = self.leafs | child.leafs
         child.parent = self
+
+        # Connect correct ports
+        pn1, pi1 = pin1
+        pn2, pi2 = pin2
+
+        if pn1 not in self.out_nets or pn2 not in child.in_nets:
+            raise ValueError("Invalid pin connection")
+
+        ## Check if net already exists
+        if not (self.out_nets[pn1][pi1] is None):
+            net_name = self.out_nets[pn1][pi1]
+        elif not (child.in_nets[pn2][pi2] is None):
+            net_name = child.in_nets[pn2][pi2]
+
+        ## Assign net name to ports
+        node1.out_nets[pn1][pi1] = net_name
+        node2.in_nets[pn2][pi2] = net_name
+
+        return net_name
 
     def remove_child(self, child):
         """Removes a child node from this node
