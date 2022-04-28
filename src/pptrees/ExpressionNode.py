@@ -10,7 +10,6 @@ class ExpressionNode:
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): An integer encoding all leaf nodes reachable from this node
-        flat (bool): Whether or not this node's HDL should be flattened
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
@@ -44,7 +43,6 @@ class ExpressionNode:
         self.value = value
 
         # HDL-related attributes
-        self.flat = False
         self.in_nets = {x: [None] * y for x, y in modules[value]["ins"].items()}
         self.out_nets = {x: [None] * y for x, y in modules[value]["outs"].items()}
 
@@ -141,11 +139,7 @@ class ExpressionNode:
         self.leafs = self.leafs & ~child.leafs
         child.parent = None
 
-    def toggle_flat(self):
-        """Flattens or unflattens the HDL of this node"""
-        self.flat = not self.flat
-
-    def hdl(self, language="verilog"):
+    def hdl(self, language="verilog",flat=False):
         """Returns the HDL of this node
 
         Args:
@@ -154,14 +148,14 @@ class ExpressionNode:
         Returns:
             str: The HDL of this node
         """
-        if not self.flat and self.language == "verilog":
+        if not flat and language == "verilog":
             return self._verilog()
-        if not self.flat and self.language == "vhdl":
+        if not flat and language == "vhdl":
             return self._vhdl()
-        if self.flat and self.language == "verilog":
-            return self._flat_verilog()
-        if self.flat and self.language == "vhdl":
-            return self._flat_vhdl()
+        if flat and language == "verilog":
+            return self._verilog_flat()
+        if flat and language == "vhdl":
+            return self._vhdl_flat()
 
     def _verilog(self):
         """Return single line of Verilog consisting of module instantiation"""
@@ -203,7 +197,7 @@ class ExpressionNode:
 
         return ret
 
-    def _flat_verilog(self):
+    def _verilog_flat(self):
         """Return Verilog consisting of the module's internal logic"""
 
         ### Grab only instantiated cells from the HDL definiton
