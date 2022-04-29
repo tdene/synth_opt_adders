@@ -5,11 +5,9 @@ def lg(x):
     """Returns the base-2 logarithm of x, rounded up"""
     return x.bit_length() - 1
 
-
 def sub_brackets(x):
     """Reformats 'a[0]' to 'a_0'"""
     return x.replace("[", "_").replace("]", "")
-
 
 def verso_pin(x):
     """Returns the verso version of a pin"""
@@ -30,6 +28,88 @@ def parse_net(x):
     if "$" in x:
         return x.replace("$", "")
     raise TypeError("net stored in node {0} is invalid".format(repr(x)))
+
+hdl_syntax = {
+        "verilog": {
+            "entity": "module {0}(\n{1}\n);\n",
+            "entity_in": "input",
+            "entity_out": "output",
+            "entity_port": "{0} {2} {1};",
+            "port_range": "[{0}:{1}]",
+            "arch": "{1}\nendmodule // {0}",
+            "inst": "{0} U0(\n{1}\n);",
+            "inst_port": ".{0}({1})",
+            "slice_markers": lambda x: x,
+            "comment_string": "// ",
+            "file_extension": ".v"
+        },
+        "vhdl": {
+            "entity": "entity {0} is\n\tport (\n{1}\n);\nend entity;",
+            "entity_in": "in",
+            "entity_out": "out",
+            "entity_port": "\t\t{1} : {0} std_logic{2};\n",
+            "port_range": "_vector({0} downto {1})",
+            "arch": ("architecture {0}_arch of {0} is"
+                     "\n\tbegin\n{1}\n"
+                     "end architecture {0}_arch;"),
+            "inst": ("\tU0: {0}\n"
+                     "\t\tport map (\n{1}\n"
+                     "\t\t);"),
+            "inst_port": "\t\t{0} => {1}\n",
+            "slice_markers": lambda x: x.replace("[","(").replace("]",")"),
+            "comment_string": "-- ",
+            "file_extension": ".vhd"
+        }
+}
+
+def hdl_entity(name, ins, outs, language="verilog"):
+    """Formats an entity declaration
+
+    Args:
+        name (str): The name of the entity
+        ports (list of (string, int)): A list of ports to be declared
+        language (str): The language in which to generate the HDL
+    """
+    syntax = hdl_syntax[language]
+    ports_str = ""
+    for port in ins:
+        port_range = syntax["port_range"].format(port[1],0) if port[1] else ""
+        ports_str += syntax["entity_port"].format(
+                        syntax["entity_in"],
+                        port[0],
+                        port_range)
+    for port in outs:
+        port_range = syntax["port_range"].format(port[1],0) if port[1] else ""
+        ports_str += syntax["entity_port"].format(
+                        syntax["entity_out"],
+                        port[0],
+                        port_range)
+    return syntax["entity"].format(name, ports_str)
+
+def hdl_arch(name, insts, language="verilog"):
+    """Formats an architecture declaration
+
+    Args:
+        name (str): The name of the entity
+        insts (list): A list of instances to be declared
+        language (str): The language in which to generate the HDL
+    """
+    syntax = hdl_syntax[language]
+    return syntax["arch"].format(name, "\n".join(insts))
+
+def hdl_inst(name, ports, language="verilog"):
+    """Formats an instance declaration
+
+    Args:
+        name (str): The name of the instance
+        ports (list of (string, string)): A list of ports to be connected
+        language (str): The language in which to generate the HDL
+    """
+    syntax = hdl_syntax[language]
+    ports = [(port[0], syntax.slice_markers(port[1])) for port in ports]
+    ports_list = [syntax["inst_port"].format(port[0], port[1]) for port in ports]
+    return syntax["inst"].format(name, ",\n".join(ports_list))
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

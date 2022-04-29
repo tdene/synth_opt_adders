@@ -168,7 +168,7 @@ class ExpressionNode:
         for a in pins:
             b = reversed([parse_net(x) for x in pins[a]])
             ret += " .{0}( {{ {1} }} ),".format(a)
-        ret = ret[:-1] + " );"
+        ret = ret[:-1] + " );\n"
 
         return ret
 
@@ -190,7 +190,7 @@ class ExpressionNode:
                 ret += "\n\t\t\t{0}({1}) => {2},".format(a, b, net_name)
 
         # Close parenthesis
-        ret = ret[:-1] + "\n\t\t);"
+        ret = ret[:-1] + "\n\t\t);\n"
 
         return ret
 
@@ -234,3 +234,6 @@ class ExpressionNode:
                     ret = ret.replace("{0}[{1}]".format(a, b), net_name)
 
         return ret[:-1]
+
+if __name__ == "__main__":
+    raise RuntimeError("This module is not intended to be run directly")
