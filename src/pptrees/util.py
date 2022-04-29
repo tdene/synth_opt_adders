@@ -31,7 +31,7 @@ def parse_net(x):
 
 hdl_syntax = {
         "verilog": {
-            "entity": "module {0}(\n{1}\n);\n",
+            "entity": "module {0}(\n{1}\n);\n\n",
             "entity_in": "input",
             "entity_out": "output",
             "entity_port": "{0} {2} {1};",
@@ -40,11 +40,12 @@ hdl_syntax = {
             "inst": "{0} U0(\n{1}\n);",
             "inst_port": ".{0}({1})",
             "slice_markers": lambda x: x,
+            "wire_def": "wire {0};",
             "comment_string": "// ",
             "file_extension": ".v"
         },
         "vhdl": {
-            "entity": "entity {0} is\n\tport (\n{1}\n);\nend entity;",
+            "entity": "entity {0} is\n\tport (\n{1}\n);\nend entity;\n\n",
             "entity_in": "in",
             "entity_out": "out",
             "entity_port": "\t\t{1} : {0} std_logic{2};\n",
@@ -56,7 +57,9 @@ hdl_syntax = {
                      "\t\tport map (\n{1}\n"
                      "\t\t);"),
             "inst_port": "\t\t{0} => {1}\n",
-            "slice_markers": lambda x: x.replace("[","(").replace("]",")"),
+            "slice_markers":
+                lambda x: x.replace("[","(").replace("]",")").replace(":"," downto "),
+            "wire_def": "signal {0} : std_logic;",
             "comment_string": "-- ",
             "file_extension": ".vhd"
         }
@@ -67,7 +70,8 @@ def hdl_entity(name, ins, outs, language="verilog"):
 
     Args:
         name (str): The name of the entity
-        ports (list of (string, int)): A list of ports to be declared
+        ins (list of (string, int)): A list of input ports
+        outs (list of (string, int)): A list of output ports
         language (str): The language in which to generate the HDL
     """
     syntax = hdl_syntax[language]
@@ -86,16 +90,16 @@ def hdl_entity(name, ins, outs, language="verilog"):
                         port_range)
     return syntax["entity"].format(name, ports_str)
 
-def hdl_arch(name, insts, language="verilog"):
+def hdl_arch(name, body, language="verilog"):
     """Formats an architecture declaration
 
     Args:
         name (str): The name of the entity
-        insts (list): A list of instances to be declared
+        body (str): The body of the architecture
         language (str): The language in which to generate the HDL
     """
     syntax = hdl_syntax[language]
-    return syntax["arch"].format(name, "\n".join(insts))
+    return syntax["arch"].format(name, body)
 
 def hdl_inst(name, ports, language="verilog"):
     """Formats an instance declaration
