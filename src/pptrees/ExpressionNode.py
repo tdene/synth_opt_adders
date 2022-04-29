@@ -5,7 +5,6 @@ class ExpressionNode:
     """Defines a node in an expression tree
 
     Attributes:
-        nid (int): The unique ID of this node
         children (list): A list of child nodes
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
@@ -16,19 +15,16 @@ class ExpressionNode:
         x_pos (int): The x-coordinate of this node's graphical representation
         y_pos (int): The y-coordinate of this node's graphical representation
     """
-    def __init__(self, nid, value, x_pos, y_pos, children=[], parent=None):
+    def __init__(self, value, x_pos, y_pos, children=[], parent=None):
         """Initializes a new ExpressionNode
 
         Args:
-            nid (int): The unique ID of this node
             value (str): The value of the node; a valid module name
             x_pos (int): The x-coordinate of this node's graphical representation
             y_pos (int): The y-coordinate of this node's graphical representation
             children (list): A list of child nodes
             parent (ExpressionNode): The parent node
         """
-        if not isinstance(nid, int):
-            raise TypeError("Node ID must be an integer")
         if not isinstance(x_pos, int):
             raise TypeError("X-coordinate must be an integer")
         if not isinstance(y_pos, int):
@@ -37,7 +33,6 @@ class ExpressionNode:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Node attributes
-        self.nid = nid
         self.children = children
         self.parent = parent
         self.value = value
@@ -60,7 +55,7 @@ class ExpressionNode:
 
     def __repr__(self):
         """Returns a string representation of this node"""
-        return (self.value, self.nid, self.x_pos, self.y_pos)
+        return (self.value, self.x_pos, self.y_pos)
 
     def __lt__(self, other):
         """Compares this node to another node by position in tree
@@ -143,25 +138,27 @@ class ExpressionNode:
         """Returns the HDL of this node
 
         Args:
-            language (str): The language to return the HDL in
+            language (str): The language in which to generate the HDL
+            flat (bool): If True, flatten the node's HDL
 
         Returns:
             str: The HDL of this node
+            list: Set of HDL module definitions used in the node
         """
         if not flat and language == "verilog":
-            return self._verilog()
+            return (self._verilog(), set(modules[self.value][language]))
         if not flat and language == "vhdl":
-            return self._vhdl()
+            return (self._vhdl(), set(modules[self.value][language]))
         if flat and language == "verilog":
-            return self._verilog_flat()
+            return (self._verilog_flat(), set())
         if flat and language == "vhdl":
-            return self._vhdl_flat()
+            return (self._vhdl_flat(), set())
 
     def _verilog(self):
         """Return single line of Verilog consisting of module instantiation"""
 
         # Instantiate module
-        ret = "\t{0} U{1} (".format(self.value, self.nid)
+        ret = "\t{0} U0 (".format(self.value)
 
         # Create list of all instance pins and copy in unformatted net IDs
         pins = self.in_nets.copy()
@@ -179,7 +176,7 @@ class ExpressionNode:
         """Return single line of VHDL consisting of module instantiation"""
 
         # Instantiate module
-        ret = "\tU{1}: {0}\n".format(self.value, self.nid)
+        ret = "\tU0: {0}\n".format(self.value)
         ret += "\t\tport map ("
 
         # Create list of all instance pins and copy in unformatted net IDs
