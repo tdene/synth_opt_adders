@@ -6,7 +6,7 @@ from .modules import modules
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
 from .util import parse_net, sub_brackets
 
-class ExpressionGraph(nx.MultiDiGraph):
+class ExpressionGraph(nx.DiGraph):
     """Defines a di-graph of arithmetic expressions
 
     The graph is defined as follows:
@@ -119,36 +119,26 @@ class ExpressionGraph(nx.MultiDiGraph):
             "arrowhead": "none",
             "headport": "ne",
             "tailport": "sw",
-            "ins": pin1,
-            "outs": pin2,
+            "ins": [pin1],
+            "outs": [pin2],
+            "edge_nets": [actual_net_name]
         }
-        attr["edge_name"] = edge_name
 
         # Initialize weight to 1
         # This is later modified by logical effort
         attr["weight"] = 1
 
+        # If the two nodes are already connnected, simply update the pins
+        if self.has_edge(node1, node2):
+            edge_data = self.get_edge_data(node1, node2, default = attr)
+            edge_data["ins"].append(pin1)
+            edge_data["outs"].append(pin2)
+            edge_data["edge_nets"].append(actual_net_name)
+        else:
         # Add the edge to the graph
-        super().add_edge(node1, node2, **attr)
+            super().add_edge(node1, node2, **attr)
 
-    def remove_all_edges(self, node1, node2):
-        """Removes all edges between two nodes
-
-        NetworkX appears to remove all edges between 2 nodes in a MultiGraph?
-        So just keep removing until an Exception is thrown.
-
-        Args:
-            node1 (ExpressionNode): The first node
-            node2 (ExpressionNode): The second node
-        """
-        if node1 not in self or node2 not in self:
-            raise ValueError("Invalid node names")
-
-        try:
-            self.remove_edge(node1, node2)
-            return self.remove_all_edges(node1, node2)
-        except nx.NetworkXError:
-            return
+        return self.get_edge_data(node1, node2)
 
     def add_block(self, *nodes):
         """Creates a new module block of nodes
