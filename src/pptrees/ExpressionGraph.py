@@ -13,6 +13,7 @@ class ExpressionGraph(nx.MultiDiGraph):
     - Each edge is a net connecting two modules
 
     Attributes:
+        name (string): The name of the graph
         next_net (int): The next net name to be used
         next_block (int): The next block name to be used
         blocks (list): The list of blocks in the graph
@@ -20,7 +21,7 @@ class ExpressionGraph(nx.MultiDiGraph):
         out_ports (list of ((string, int), string)): The list of output ports
     """
 
-    def __init__(self, in_ports=None, out_ports=None):
+    def __init__(self, name="graph", in_ports=None, out_ports=None):
         """Initializes the graph
 
         Specifying in_ports and out_ports is optional.
@@ -29,6 +30,7 @@ class ExpressionGraph(nx.MultiDiGraph):
         If they are not specified, the graph will finds its own.
 
         Args:
+            name (string): The name of the graph
             in_ports (list of tuples): The list of input ports
             out_ports (list of tuples): The list of output ports
         """
@@ -38,6 +40,8 @@ class ExpressionGraph(nx.MultiDiGraph):
                 not all(x is not None for x in [in_ports, out_ports]):
             raise ValueError(("in_ports and out_ports"
                 "must both be None or both be lists"))
+
+        self.name = name
 
         # Save the input and output ports
         self.in_ports = in_ports
@@ -104,7 +108,7 @@ class ExpressionGraph(nx.MultiDiGraph):
             raise TypeError("Node2 must be an ExpressionNode")
 
         # Connect the nodes
-        proposed_net_name = self.next_net
+        proposed_net_name = "$n{0}_{1}".format(self.next_net, self.name)
         actual_net_name = node1.add_child(node2, pin1, pin2)
         if proposed_net_name == actual_net_name:
             self.next_net += 1
@@ -268,7 +272,7 @@ class ExpressionGraph(nx.MultiDiGraph):
         language="verilog",
         flat=False,
         full_flat=False,
-        module_name="graph",
+        module_name=None,
         description_string="start of unnamed graph"
     ):
         """Creates a HDL description of the graph
@@ -288,6 +292,10 @@ class ExpressionGraph(nx.MultiDiGraph):
         # Check that the language is supported
         if language not in ["verilog", "vhdl"]:
             raise ValueError("Unsupported hardware-descriptive language")
+
+        # If module name is not defined, set it to graph's name
+        if module_name is None:
+            module_name = self.name
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
