@@ -1,3 +1,4 @@
+import re
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
@@ -335,6 +336,14 @@ class ExpressionGraph(nx.MultiDiGraph):
 
             hdl += node_hdl
             module_defs.update(node_defs)
+
+        # This HDL description will have multiple instances in it
+        # By default, util.hdl_inst names all instances "U0"
+        # These names need to be made unique
+        U_count = 0
+        for U in re.finditer(r"U\d+", hdl):
+            hdl = hdl[:U.start()] + "U" + str(U_count) + hdl[U.end():]
+            U_count += 1
 
         # Add wire definitions
         in_wires, out_wires = self._get_internal_nets()
