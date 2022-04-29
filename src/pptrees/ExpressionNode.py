@@ -1,5 +1,5 @@
 from .modules import modules
-from .utils import parse_net
+from .util import parse_net
 
 class ExpressionNode:
     """Defines a node in an expression tree
@@ -15,7 +15,7 @@ class ExpressionNode:
         x_pos (int): The x-coordinate of this node's graphical representation
         y_pos (int): The y-coordinate of this node's graphical representation
     """
-    def __init__(self, value, x_pos, y_pos, children=[], parent=None):
+    def __init__(self, value, x_pos=0, y_pos=0, children=[], parent=None):
         """Initializes a new ExpressionNode
 
         Args:
@@ -38,8 +38,8 @@ class ExpressionNode:
         self.value = value
 
         # HDL-related attributes
-        self.in_nets = {x: [None] * y for x, y in modules[value]["ins"].items()}
-        self.out_nets = {x: [None] * y for x, y in modules[value]["outs"].items()}
+        self.in_nets = {x: [None] * y for x, y, z in modules[value]["ins"]}
+        self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
 
         # Graph-related attributes
         self.leafs = 0
@@ -55,7 +55,7 @@ class ExpressionNode:
 
     def __repr__(self):
         """Returns a string representation of this node"""
-        return (self.value, self.x_pos, self.y_pos)
+        return "{0}_{1}_{2}_{3}".format(self.value, self.leafs, self.x_pos, self.y_pos)
 
     def __lt__(self, other):
         """Compares this node to another node by position in tree
@@ -89,6 +89,10 @@ class ExpressionNode:
             bool: Whether or not this node is further left than the other node
         """
         return self.leafs > other.leafs
+
+    def __hash__(self):
+        """Returns the hash of this node"""
+        return hash(self.__repr__())
 
     def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node

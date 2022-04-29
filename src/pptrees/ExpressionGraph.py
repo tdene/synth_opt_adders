@@ -1,4 +1,4 @@
-from networkx as nx
+import networkx as nx
 
 from .ExpressionNode import ExpressionNode
 from .modules import modules
@@ -105,7 +105,7 @@ class ExpressionGraph(nx.MultiDiGraph):
 
         # Connect the nodes
         proposed_net_name = self.next_net
-        actual_net_name = node1.add_child(node2, pin1, pin2):
+        actual_net_name = node1.add_child(node2, pin1, pin2)
         if proposed_net_name == actual_net_name:
             self.next_net += 1
 
