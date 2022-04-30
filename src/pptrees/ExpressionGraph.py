@@ -290,12 +290,10 @@ class ExpressionGraph(nx.DiGraph):
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
-        #comment_string = syntax["comment_string"]
 
         # Create the HDL
 
         hdl = ""
-        #hdl = comment_string + description_string + "\n"
         module_defs = set()
 
         # Pull in the HDL description of blocks
