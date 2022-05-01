@@ -369,8 +369,6 @@ class ExpressionGraph(nx.DiGraph):
         inst = hdl_inst(module_name, inst_ports, language)
         ## Add the instance to the HDL
         hdl = inst
-        print(hdl)
-        [print(x) for x in module_defs]
 
         return hdl, module_defs
 

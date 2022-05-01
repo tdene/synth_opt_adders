@@ -222,9 +222,13 @@ class ExpressionTree(ExpressionGraph):
                 continue
             # This will raise an exception if the port is not found
             matching_port = get_matching_port(port, child_ports)
+            # Figure out which bits of the port to connect to
+            offset = 0
+            for x in range(index):
+                offset += port[2+x]
             # Add an edge for each bit of the port
             for b in range(port[2+index]):
-                pin1 = (port[0], b)
+                pin1 = (port[0], b+offset)
                 pin2 = (matching_port[0], b)
                 super().add_edge(parent, pin1, child, pin2)
         
