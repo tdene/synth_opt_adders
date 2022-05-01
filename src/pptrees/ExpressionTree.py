@@ -39,25 +39,25 @@ class ExpressionTree(ExpressionGraph):
                  idem=False,
                  node_defs={}
                 ):
-        """Initialized the tree
+        """Initializes the ExpressionTree
 
         Args:
             width (int): The number of leaves in the tree
             in_ports (list of ((string, int), string)): List of input ports
             out_ports (list of ((string, int), string)): List of output ports
+            name (string): The name of the graph
             start_point (string): The starting structure of the tree
             radix (int): The radix of the tree
-            name (string): The name of the graph
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
                 - "pre": Pre-processing node
                 - "root": Root node
                 - "black": Main expression node used in the tree
-                - "lspine": Nodes that lie along the left spine of the tree
                 - "buffer": Buffer node
 
             Optional node definitions include but are not limited to:
                 - "grey": Black node that feeds into the root node
+                - "lspine": Nodes that lie along the left spine of the tree
                 - "lspine_pre": Pre- node that feeds into the left spine
                 - "first_pre": Right-most pre-processing node
         """
@@ -133,8 +133,11 @@ class ExpressionTree(ExpressionGraph):
                 ## Place pre-processing nodes
                 if a == radix-1:
                     # Left spine is special
-                    if pre_counter == 0:
+                    if pre_counter == self.width-1:
                         pre = node_defs.get("lspine_pre", node_defs["pre"])
+                    # Right-most pre- may be special
+                    elif pre_counter == 0:
+                        pre = node_defs.get("first_pre", node_defs["pre"])
                     else:
                         pre = node_defs["pre"]
                     pre_node = Node(pre)
