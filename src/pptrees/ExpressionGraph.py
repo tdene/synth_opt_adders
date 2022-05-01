@@ -110,8 +110,8 @@ class ExpressionGraph(nx.DiGraph):
 
         # Connect the nodes
         proposed_net_name = "$n{0}_{1}".format(self.next_net, self.name)
-        actual_net_name = parent.add_child(child, pin1, pin2)
-        if proposed_net_name == actual_net_name:
+        net_name = parent.add_child(child, pin1, pin2, proposed_net_name)
+        if proposed_net_name == net_name:
             self.next_net += 1
 
         # Styles the edge for GraphViz visualization
@@ -121,7 +121,7 @@ class ExpressionGraph(nx.DiGraph):
             "tailport": "sw",
             "ins": [pin1],
             "outs": [pin2],
-            "edge_nets": [actual_net_name]
+            "edge_nets": [net_name]
         }
 
         # Initialize weight to 1
@@ -133,7 +133,7 @@ class ExpressionGraph(nx.DiGraph):
             edge_data = self.get_edge_data(parent, child, default = attr)
             edge_data["ins"].append(pin1)
             edge_data["outs"].append(pin2)
-            edge_data["edge_nets"].append(actual_net_name)
+            edge_data["edge_nets"].append(net_name)
         else:
         # Add the edge to the graph
             super().add_edge(parent, child, **attr)

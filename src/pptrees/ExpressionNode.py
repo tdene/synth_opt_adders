@@ -33,6 +33,8 @@ class ExpressionNode:
 
         # Node attributes
         self.value = value
+        self.children = []
+        self.parent = None
 
         # HDL-related attributes
         self.in_nets = {x: [None] * y for x, y, *z in modules[value]["ins"]}
@@ -101,25 +103,25 @@ class ExpressionNode:
             net_name (str): Fall-back net name, if it does not exist
         """
 
-        if pn1 not in self.out_nets or pn2 not in child.in_nets:
-            raise ValueError("Invalid pin connection")
-
-        # Connect correct ports
+        # Break the pins apart into names and indices
         pn1, pi1 = pin1
         pn2, pi2 = pin2
 
+        if pn1 not in self.in_nets or pn2 not in child.out_nets:
+            raise ValueError("Invalid pin connection")
+
         ## Check if net already exists
-        if not (self.out_nets[pn1][pi1] is None):
-            net_name = self.out_nets[pn1][pi1]
-        elif not (child.in_nets[pn2][pi2] is None):
-            net_name = child.in_nets[pn2][pi2]
+        if not (self.in_nets[pn1][pi1] is None):
+            net_name = self.in_nets[pn1][pi1]
+        elif not (child.out_nets[pn2][pi2] is None):
+            net_name = child.out_nets[pn2][pi2]
 
         ## Assign net name to ports
-        node1.out_nets[pn1][pi1] = net_name
-        node2.in_nets[pn2][pi2] = net_name
+        self.in_nets[pn1][pi1] = net_name
+        child.out_nets[pn2][pi2] = net_name
 
         # If nodes are not already connected, connect them
-        if child.parent != self:
+        if not child.parent is self:
             self.children.append(child)
             child.parent = self
             # Recalculate leafs recursively
