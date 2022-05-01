@@ -93,24 +93,24 @@ class ExpressionGraph(nx.DiGraph):
         super().remove_node(node)
         return node
 
-    def add_edge(self, node1, pin1, node2, pin2):
-        """Adds a directed edge to the graph, from node1 to node2
+    def add_edge(self, parent, pin1, child, pin2):
+        """Adds a directed edge to the graph, from parent to child
 
         Args:
-            node1 (ExpressionNode): The name of the first node
+            parent (ExpressionNode): The name of the first node
             pin1 (tuple): (name, index) of the pin on the first node
-            node2 (ExpressionNode): The name of the second node
+            child (ExpressionNode): The name of the second node
             pin2 (tuple): (name, index) of the pin on the second node
         """
 
-        if not isinstance(node1, ExpressionNode):
+        if not isinstance(parent, ExpressionNode):
             raise TypeError("Node1 must be an ExpressionNode")
-        if not isinstance(node2, ExpressionNode):
+        if not isinstance(child, ExpressionNode):
             raise TypeError("Node2 must be an ExpressionNode")
 
         # Connect the nodes
         proposed_net_name = "$n{0}_{1}".format(self.next_net, self.name)
-        actual_net_name = node1.add_child(node2, pin1, pin2)
+        actual_net_name = parent.add_child(child, pin1, pin2)
         if proposed_net_name == actual_net_name:
             self.next_net += 1
 
@@ -129,16 +129,16 @@ class ExpressionGraph(nx.DiGraph):
         attr["weight"] = 1
 
         # If the two nodes are already connnected, simply update the pins
-        if self.has_edge(node1, node2):
-            edge_data = self.get_edge_data(node1, node2, default = attr)
+        if self.has_edge(parent, child):
+            edge_data = self.get_edge_data(parent, child, default = attr)
             edge_data["ins"].append(pin1)
             edge_data["outs"].append(pin2)
             edge_data["edge_nets"].append(actual_net_name)
         else:
         # Add the edge to the graph
-            super().add_edge(node1, node2, **attr)
+            super().add_edge(parent, child, **attr)
 
-        return self.get_edge_data(node1, node2)
+        return self.get_edge_data(parent, child)
 
     def add_block(self, *nodes):
         """Creates a new module block of nodes
