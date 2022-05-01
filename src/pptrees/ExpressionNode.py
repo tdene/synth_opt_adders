@@ -6,6 +6,7 @@ class ExpressionNode:
 
     Attributes:
         children (list): A list of child nodes
+            Note that this list is ordered, and the first child is the leftmost
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): An integer encoding all leaf nodes reachable from this node
@@ -15,15 +16,13 @@ class ExpressionNode:
         x_pos (int): The x-coordinate of this node's graphical representation
         y_pos (int): The y-coordinate of this node's graphical representation
     """
-    def __init__(self, value, x_pos=0, y_pos=0, children=[], parent=None):
+    def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
 
         Args:
             value (str): The value of the node; a valid module name
             x_pos (int): The x-coordinate of this node's graphical representation
             y_pos (int): The y-coordinate of this node's graphical representation
-            children (list): A list of child nodes
-            parent (ExpressionNode): The parent node
         """
         if not isinstance(x_pos, int):
             raise TypeError("X-coordinate must be an integer")
@@ -33,8 +32,6 @@ class ExpressionNode:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Node attributes
-        self.children = children
-        self.parent = parent
         self.value = value
 
         # HDL-related attributes
@@ -136,8 +133,11 @@ class ExpressionNode:
             child (ExpressionNode): The child node to remove
         """
         self.children.remove(child)
-        self.leafs = self.leafs & ~child.leafs
         child.parent = None
+        # Recalculate leafs
+        self.leafs = 0
+        for c in self.children:
+            self.leafs = self.leafs | c.leafs
 
     def hdl(self, language="verilog",flat=False):
         """Returns the HDL of this node
