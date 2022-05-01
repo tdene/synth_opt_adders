@@ -147,9 +147,9 @@ class ExpressionNode:
             list: Set of HDL module definitions used in the node
         """
         if not flat and language == "verilog":
-            return (self._verilog(), set(modules[self.value][language]))
+            return (self._verilog(), (modules[self.value][language],))
         if not flat and language == "vhdl":
-            return (self._vhdl(), set(modules[self.value][language]))
+            return (self._vhdl(), (modules[self.value][language],))
         if flat and language == "verilog":
             return (self._verilog_flat(), set())
         if flat and language == "vhdl":

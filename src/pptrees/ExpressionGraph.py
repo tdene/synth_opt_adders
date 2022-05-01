@@ -345,10 +345,6 @@ class ExpressionGraph(nx.DiGraph):
         in_wires, out_wires = self._get_internal_nets()
         wires = in_wires | out_wires
 
-        print(in_wires)
-        print(out_wires)
-        print('hi')
-
         wire_hdl = syntax["wire_def"].format(", ".join(wires))
 
         # Assemble the HDL
