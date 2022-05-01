@@ -179,14 +179,14 @@ class ExpressionTree(ExpressionGraph):
 
     def _connect_tree_outports(self, root):
         """Connect the tree's output ports to the root node"""
-        for a in range(self.out_shape):
+        for a in range(len(self.out_shape)):
             for b in range(self.out_shape[a]):
                 net_name = "${}[{}]".format(self.out_ports[a][0][0],b)
                 root.out_nets[a] = net_name
 
     def _connect_tree_inports(self, node, index):
         """Connect the tree's input ports to a pre-processing node"""
-        for a in range(self.in_shape):
+        for a in range(len(self.in_shape)):
             net_name = "${}[{}]".format(self.in_ports[a][0][0],index)
             node.in_nets[a] = net_name
 
@@ -205,7 +205,7 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Child must be an Node")
         if not isinstance(index, int):
             raise TypeError("index must be an integer")
-        if index < -radix or index > radix-1:
+        if index < -self.radix or index > self.radix-1:
             raise ValueError(("Tree nodes may not have more edges"
                               "than the radix of the tree"))
 
@@ -223,7 +223,7 @@ class ExpressionTree(ExpressionGraph):
             # This will raise an exception if the port is not found
             matching_port = get_matching_port(port, child_ports)
             # Add an edge for each bit of the port
-            for b in range(port[index]):
+            for b in range(port[2+index]):
                 pin1 = (port[0], b)
                 pin2 = (matching_port[0], b)
                 super().add_edge(parent, pin1, child, pin2)

@@ -35,7 +35,7 @@ class ExpressionNode:
         self.value = value
 
         # HDL-related attributes
-        self.in_nets = {x: [None] * y for x, y, z in modules[value]["ins"]}
+        self.in_nets = {x: [None] * y for x, y, *z in modules[value]["ins"]}
         self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
 
         # Graph-related attributes

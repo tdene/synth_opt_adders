@@ -57,8 +57,8 @@ end architecture;
 ppa_black["shape"] = "square"
 ppa_black["fillcolor"] = "black"
 
-# List of inputs represented by (name, bits, diagonal_bits) tuple
-ppa_black["ins"] = [("gin", 2, 1), ("pin", 2, 1)]
+# List of inputs represented by (name, total_bits, *bits_per_direction) tuple
+ppa_black["ins"] = [("gin", 2, 1, 1), ("pin", 2, 1, 1)]
 
 # List of outputs represented by (name, bits) tuple
 ppa_black["outs"] = [("gout", 1), ("pout", 1)]
@@ -129,7 +129,7 @@ ppa_grey["shape"] = "square"
 ppa_grey["fillcolor"] = "grey"
 
 # List of inputs represented by (name, bits, diagonal_bits) tuple
-ppa_grey["ins"] = [("gin", 2, 1), ("pin", 1, 0)]
+ppa_grey["ins"] = [("gin", 2, 1, 1), ("pin", 1, 1, 0)]
 
 # List of outputs represented by (name, bits) tuple
 ppa_grey["outs"] = [("gout", 1)]
@@ -206,7 +206,7 @@ ppaL_black["shape"] = "square"
 ppaL_black["fillcolor"] = "black"
 
 # List of inputs represented by (name, bits, diagonal_bits) tuple
-ppaL_black["ins"] = [("gin", 2, 1), ("pin", 2, 1)]
+ppaL_black["ins"] = [("gin", 2, 1, 1), ("pin", 2, 1, 1)]
 
 # List of outputs represented by (name, bits) tuple
 ppaL_black["outs"] = [("gout", 1), ("pout", 1)]
@@ -273,7 +273,7 @@ ppaL_grey["shape"] = "square"
 ppaL_grey["fillcolor"] = "grey"
 
 # List of inputs represented by (name, bits, diagonal_bits) tuple
-ppaL_grey["ins"] = [("gin", 2, 1)]
+ppaL_grey["ins"] = [("gin", 2, 1, 1)]
 
 # List of outputs represented by (name, bits) tuple
 ppaL_grey["outs"] = [("gout", 1)]
@@ -346,7 +346,7 @@ end architecture;
 ppa_buffer["shape"] = "invtriangle"
 ppa_buffer["fillcolor"] = "white"
 
-ppa_buffer["ins"] = [("gin", 1, 0), ("pin", 1, 0)]
+ppa_buffer["ins"] = [("gin", 1, 1, 0), ("pin", 1, 1, 0)]
 ppa_buffer["outs"] = [("gout", 1), ("pout", 1)]
 
 ppa_buffer["logic"] = lambda pin, gin: [pin, gin]
@@ -411,7 +411,7 @@ invis_node["width"] = 0
 invis_node["height"] = 0
 invis_node["fillcolor"] = "black"
 
-invis_node["ins"] = [("gin", 1, 0), ("pin", 1, 0)]
+invis_node["ins"] = [("gin", 1, 1, 0), ("pin", 1, 1, 0)]
 invis_node["outs"] = [("gout", 1), ("pout", 1)]
 
 invis_node["logic"] = lambda pin, gin: [pin, gin]
@@ -485,7 +485,7 @@ ppa_pre["fillcolor"] = "white"
 ppa_pre["label"] = "pre"
 ppa_pre["style"] = "dashed"
 
-ppa_pre["ins"] = [("a_in", 1, 0), ("b_in", 1, 0)]
+ppa_pre["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 1, 0)]
 ppa_pre["outs"] = [("pout", 1), ("gout", 1)]
 
 ppa_pre["logic"] = lambda a, b: [a ^ b, a & b]
@@ -542,7 +542,7 @@ begin
 end architecture;
 """
 
-ppa_first_pre["ins"] = [("cin", 1, 0)]
+ppa_first_pre["ins"] = [("cin", 1, 1, 0)]
 
 ppa_first_pre["logic"] = lambda cin: [0, cin]
 
@@ -595,7 +595,7 @@ ppa_post["label"] = "post"
 ppa_post["style"] = "dashed"
 ppa_post["fixedsize"] = "shape"
 
-ppa_post["ins"] = [("gin", 1, 0), ("pin", 1, 1)]
+ppa_post["ins"] = [("gin", 1, 1, 0), ("pin", 1, 0, 1)]
 ppa_post["outs"] = [("sum", 1)]
 
 ppa_post["logic"] = lambda pin, gin: [pin ^ gin]
