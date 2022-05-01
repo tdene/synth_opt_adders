@@ -43,10 +43,10 @@ def parse_net(x):
 
 hdl_syntax = {
         "verilog": {
-            "entity": "module {0}(\n{1}\n);\n\n",
+            "entity": "module {0}(\n\t{1}\n\t);\n\n",
             "entity_in": "input",
             "entity_out": "output",
-            "entity_port": "{0} {2} {1};",
+            "entity_port": "{0} {2} {1},",
             "port_range": "[{0}:{1}]",
             "arch": "{1}\nendmodule // {0}",
             "inst": "{0} U0(\n{1}\n);",
@@ -87,19 +87,24 @@ def hdl_entity(name, ins, outs, language="verilog"):
         language (str): The language in which to generate the HDL
     """
     syntax = hdl_syntax[language]
-    ports_str = ""
+    ports_str = []
     for port in ins:
-        port_range = syntax["port_range"].format(port[1],0) if port[1] else ""
-        ports_str += syntax["entity_port"].format(
-                        syntax["entity_in"],
-                        port[0],
-                        port_range)
+        port_range = syntax["port_range"].format(port[1]-1,0) if port[1]>1 else ""
+        next_port = syntax["entity_port"].format(
+                                            syntax["entity_in"],
+                                            port[0],
+                                            port_range
+                                            )
+        ports_str.append(next_port)
     for port in outs:
-        port_range = syntax["port_range"].format(port[1],0) if port[1] else ""
-        ports_str += syntax["entity_port"].format(
-                        syntax["entity_out"],
-                        port[0],
-                        port_range)
+        port_range = syntax["port_range"].format(port[1]-1,0) if port[1]>1 else ""
+        next_port = syntax["entity_port"].format(
+                                            syntax["entity_out"],
+                                            port[0],
+                                            port_range
+                                            )
+        ports_str.append(next_port)
+    ports_str = "\n\t".join(ports_str)
     return syntax["entity"].format(name, ports_str)
 
 def hdl_arch(name, body, language="verilog"):

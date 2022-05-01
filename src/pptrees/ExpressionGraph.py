@@ -358,8 +358,10 @@ class ExpressionGraph(nx.DiGraph):
         # If flat HDL is not desired, wrap the graph in a module
         ## First get in_ports and out_ports
         (in_ports, out_ports) = self._get_ports()
+        entity_ins = [x[0] for x in in_ports]
+        entity_outs = [x[0] for x in out_ports]
         ## Then create the entity
-        entity = hdl_entity(module_name, in_ports, out_ports, language)
+        entity = hdl_entity(module_name, entity_ins, entity_outs, language)
         ## Then create the architecture
         arch = hdl_arch(module_name, hdl, language)
         ## Add the entity and architecture to the module_defs
