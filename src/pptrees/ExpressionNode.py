@@ -127,9 +127,9 @@ class ExpressionNode:
 
     ### NOTE: THIS ASSUMES THAT PARENTS AND CHILDREN ARE FULLY CONNECTED
     ### TO-DO: Handle case of partially connected nodes
-    def _recalculate_leafs(self):
+    def _recalculate_leafs(self, leafs=0):
         """Recalculates the leafs of this node and its parents"""
-        self.leafs = 0
+        self.leafs = leafs
         for c in self.children:
             self.leafs = self.leafs | c.leafs
         if self.parent is not None:

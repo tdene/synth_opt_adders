@@ -132,7 +132,7 @@ class ExpressionTree(ExpressionGraph):
         while pre_counter > -1:
             for a in range(radix):
                 ## Place pre-processing nodes
-                if a == radix-1:
+                if a == radix-1 or pre_counter < radix-1:
                     # Left spine is special
                     if pre_counter == self.width-1:
                         pre = node_defs.get("lspine_pre", node_defs["pre"])
@@ -145,6 +145,7 @@ class ExpressionTree(ExpressionGraph):
                     self.add_node(pre_node)
                     self.add_edge(prev_root, pre_node, a)
                     self._connect_inports(pre_node, pre_counter)
+                    pre_node._recalculate_pos(leafs=pre_counter)
                     pre_counter -= 1
                     # Advance prev_root
                     prev_root = prev_root.children[0]
@@ -229,6 +230,7 @@ class ExpressionTree(ExpressionGraph):
         ### TO-DO: Make this more general
         y_pos = parent.y_pos+1
         x_diff = 2**(lg(self.width)-y_pos)
+        x_diff = 1
 
         if index == 0:
             x_pos = parent.x_pos + x_diff
@@ -237,6 +239,9 @@ class ExpressionTree(ExpressionGraph):
 
         child.x_pos = x_pos
         child.y_pos = y_pos
+
+        diagram_pos = "{0},{1}!".format(child.x_pos, child.y_pos*-1)
+        self.nodes[child]["pos"] = diagram_pos
 
     def png(self, fname="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
@@ -247,6 +252,7 @@ class ExpressionTree(ExpressionGraph):
         pg.set_splines("false")
         pg.set_concentrate("true")
 
+        pg.write_dot(fname.replace(".png", ".dot"))
         pg.write_png(fname, prog="neato")
 
 if __name__ == "__main__":

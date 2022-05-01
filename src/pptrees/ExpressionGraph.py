@@ -69,14 +69,16 @@ class ExpressionGraph(nx.DiGraph):
             raise TypeError("Node must be an ExpressionNode")
 
         # Add GraphViz attributes
-        attr = modules[node.value]
-        attr["shape"] = attr.get("shape", "square")
-        attr["fillcolor"] = attr.get("fillcolor", "white")
-        attr["label"] = attr.get("label", "")
-        attr["style"] = attr.get("style", "filled")
+        kwargs = modules[node.value]
+        kwargs.update(attr)
+        kwargs["shape"] = kwargs.get("shape", "square")
+        kwargs["fillcolor"] = kwargs.get("fillcolor", "white")
+        kwargs["label"] = kwargs.get("label", "")
+        kwargs["style"] = kwargs.get("style", "filled")
+        kwargs["pos"] = "{0},{1}!".format(node.x_pos, node.y_pos*-1)
 
         # Add the node to the graph
-        super().add_node(node, **attr)
+        super().add_node(node, **kwargs)
         return node
 
     def remove_node(self, node):
@@ -115,10 +117,8 @@ class ExpressionGraph(nx.DiGraph):
             self.next_net += 1
 
         # Styles the edge for GraphViz visualization
-        attr = {
+        kwargs = {
             "arrowhead": "none",
-            "headport": "ne",
-            "tailport": "sw",
             "ins": [pin1],
             "outs": [pin2],
             "edge_nets": [net_name]
@@ -126,17 +126,17 @@ class ExpressionGraph(nx.DiGraph):
 
         # Initialize weight to 1
         # This is later modified by logical effort
-        attr["weight"] = 1
+        kwargs["weight"] = 1
 
         # If the two nodes are already connnected, simply update the pins
         if self.has_edge(parent, child):
-            edge_data = self.get_edge_data(parent, child, default = attr)
+            edge_data = self.get_edge_data(parent, child, default = kwargs)
             edge_data["ins"].append(pin1)
             edge_data["outs"].append(pin2)
             edge_data["edge_nets"].append(net_name)
         else:
         # Add the edge to the graph
-            super().add_edge(parent, child, **attr)
+            super().add_edge(parent, child, **kwargs)
 
         return self.get_edge_data(parent, child)
 
