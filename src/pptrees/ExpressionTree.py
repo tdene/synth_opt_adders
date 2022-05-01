@@ -77,7 +77,7 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Tree idempotency must be a boolean")
         if not isinstance(node_defs, dict):
             raise TypeError("Tree node definitions must be a dictionary")
-        for required in ["pre", "root", "black", "lspine"]:
+        for required in ["pre", "root", "black", "buffer"]:
             if required not in node_defs:
                 raise ValueError(("Tree node definitions must contain"
                                   " the node {}").format(required))
@@ -90,10 +90,11 @@ class ExpressionTree(ExpressionGraph):
 
         # Get node port shapes from the module definitions
         self.in_shape = [x[1] for x in modules[node_defs["pre"]]["ins"]]
-        self.out_shape = [x[1] for x in modules[node_defs["root"]]["ins"]]
+        self.out_shape = [x[1] for x in modules[node_defs["root"]]["outs"]]
 
         self.black_shape = [x[1] for x in modules[node_defs["black"]]["ins"]]
         black_out_shape = [x[1] for x in modules[node_defs["black"]]["outs"]]
+        black_out_shape = [self.radix*x for x in black_out_shape]
         if black_out_shape != self.black_shape:
             raise ValueError(("The main recurrence node of the tree"
                               " must have the same input and output shape"))

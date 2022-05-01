@@ -54,13 +54,13 @@ class AdderTree(ExpressionTree):
 
         # Provide defaults for in_ports and out_ports
         if in_ports is None or out_ports is None:
-            in_ports = (
+            in_ports = [
                         (('a', width), 'a'),
                         (('b', width), 'b')
-                       )
-            out_ports = (
-                         (('sum', width), 'sum')
-                        )
+                       ]
+            out_ports = [
+                         (('sum', 1), 'sum')
+                        ]
 
         # Initialize the expression tree
         super().__init__(width,
