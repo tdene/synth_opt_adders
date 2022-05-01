@@ -42,6 +42,8 @@ class ExpressionGraph(nx.DiGraph):
             raise ValueError(("in_ports and out_ports"
                 "must both be None or both be lists"))
 
+        super().__init__()
+
         self.name = name
 
         # Save the input and output ports
@@ -54,8 +56,6 @@ class ExpressionGraph(nx.DiGraph):
         # Procedurally-generated block names start with "block1"
         self.next_block = 0
         self.blocks = [None]
-
-        super().__init__()
 
     def add_node(self, node, **attr):
         """Adds a node to the graph
