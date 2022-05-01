@@ -167,7 +167,7 @@ class ExpressionNode:
 
         # Format net IDs into the module instantiation
         for a in pins:
-            b = ','.join(reversed([parse_net(x) for x in pins[a]]))
+            b = ','.join([parse_net(x) for x in pins[a]])
             ret += " .{0}( {{ {1} }} ),".format(a,b)
         ret = ret[:-1] + " );\n"
 

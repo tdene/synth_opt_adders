@@ -179,6 +179,10 @@ class ExpressionTree(ExpressionGraph):
         """Connect the tree's output ports to the root node"""
         for a in range(len(self.out_shape)):
             port_name = self.out_ports[a][0][0]
+            if self.out_shape[a] == 1:
+                net_name = "${}".format(port_name)
+                root.out_nets[port_name][0] = net_name
+                continue
             for b in range(self.out_shape[a]):
                 net_name = "${}[{}]".format(port_name,b)
                 root.out_nets[port_name][b] = net_name
