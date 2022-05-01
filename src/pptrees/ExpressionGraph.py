@@ -226,9 +226,9 @@ class ExpressionGraph(nx.DiGraph):
 
         # If the graph has pre-defined ports, filter them out
         if self.in_ports is not None:
-            in_ports = [x[0] for x in self.in_ports[0]]
+            in_ports = [x[0][0] for x in self.in_ports]
             in_nets = [x for x in in_nets if x.split("[")[0] not in in_ports]
-            out_ports = [x[0] for x in self.out_ports[0]]
+            out_ports = [x[0][0] for x in self.out_ports[0]]
             out_nets = [x for x in out_nets if x.split("[")[0] not in out_ports]
 
         return (set(in_nets), set(out_nets))
@@ -345,11 +345,15 @@ class ExpressionGraph(nx.DiGraph):
         in_wires, out_wires = self._get_internal_nets()
         wires = in_wires | out_wires
 
-        wire_hdl = syntax["wire_def"].format(",".join(wires))
+        print(in_wires)
+        print(out_wires)
+        print('hi')
+
+        wire_hdl = syntax["wire_def"].format(", ".join(wires))
 
         # Assemble the HDL
         hdl = syntax["comment_string"] + description_string + "\n" + \
-                wire_hdl + "\n" + hdl
+                "\t" + wire_hdl + "\n" + hdl
 
         # If flat HDL is desired, it can returned here
         if flat:
