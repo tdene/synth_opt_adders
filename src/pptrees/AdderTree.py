@@ -48,8 +48,8 @@ class AdderTree(ExpressionTree):
                 "black"         : "ppa_black",
                 "grey"          : "ppa_grey",
                 "buffer"        : "ppa_buffer",
-                "lspine_pre"    : "ppa_pre",
-                "first_pre"     : "ppa_first_pre"
+                "lspine_pre"    : "ppa_lspine_pre",
+                "lspine"        : "ppa_lspine"
                 }
 
         # Provide defaults for in_ports and out_ports

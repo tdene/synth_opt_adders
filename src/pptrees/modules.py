@@ -555,12 +555,12 @@ ppa_post = dict()
 ppa_post[
     "verilog"
 ] = """
-module ppa_post(pin, gin, sum);
+module ppa_post(xin, yin, gin, sum);
 
-	input pin, gin;
+	input xin, yin, gin;
 	output sum;
 
-	xor2 U1(sum,pin,gin);
+	mux2 U1(sum,gin,yin,xin);
 
 endmodule
 """
@@ -570,7 +570,8 @@ ppa_post[
 ] = """
 entity ppa_post is
 	port (
-		pin : in std_logic;
+		yin : in std_logic;
+		xin : in std_logic;
 		gin : in std_logic;
 		sum : out std_logic
 	);
@@ -579,26 +580,29 @@ end entity;
 architecture behavior of ppa_post is
 begin
 
-U1: xor2
+U1: mux2
 	port map (
-		A => pin,
-		B => gin,
+		A => yin,
+		B => xin,
+		S => gin,
 		Y => sum
 	);
 
 end architecture;
 """
 
-ppa_post["shape"] = "invtrapezium"
+ppa_post["shape"] = "circle"
+ppa_post["color"] = "white"
 ppa_post["fillcolor"] = "white"
-ppa_post["label"] = "post"
-ppa_post["style"] = "dashed"
+ppa_post["label"] = "⊕"
+ppa_post["style"] = "solid"
 ppa_post["fixedsize"] = "shape"
+ppa_post["fontsize"] = "60"
 
-ppa_post["ins"] = [("gin", 1, 1, 0), ("pin", 1, 0, 1)]
+ppa_post["ins"] = [("gin", 1, 0, 1), ("xin", 1, 1, 0), ("yin", 1, 1, 0)]
 ppa_post["outs"] = [("sum", 1)]
 
-ppa_post["logic"] = lambda pin, gin: [pin ^ gin]
+ppa_post["logic"] = lambda yin, xin, gin: [yin if gin else xin]
 
 ppa_post["pd"] = 9 / 3
 ppa_post["le"] = 9 / 3
@@ -615,6 +619,118 @@ ppa_post["exists"] = True
 
 modules["ppa_post"] = ppa_post
 
+### ppa_lspine_pre
+
+ppa_lspine_pre = {}
+
+ppa_lspine_pre[
+    "verilog"
+] = """
+module ppa_lspine_pre(a_in, b_in, yout, xout);
+
+	input a_in, b_in;
+	output yout, xout;
+
+	xor2  U1(xout,a_in,b_in);
+	xnor2 U1(yout,a_in,b_in);
+
+endmodule
+"""
+
+ppa_lspine_pre[
+    "vhdl"
+] = """
+entity ppa_lspine_pre is
+	port (
+		a_in : in std_logic;
+		b_in : in std_logic;
+		xout : out std_logic
+		yout : out std_logic
+	);
+end entity;
+
+architecture behavior of ppa_lspine_pre is
+begin
+
+U1: xor2
+	port map (
+		A => a_in,
+		B => b_in,
+		Y => xout
+	);
+
+U1: xnor2
+	port map (
+		A => a_in,
+		B => b_in,
+		Y => yout
+	);
+
+end architecture;
+"""
+
+ppa_lspine_pre["shape"] = "circle"
+ppa_lspine_pre["color"] = "white"
+ppa_lspine_pre["fillcolor"] = "white"
+ppa_lspine_pre["label"] = "⊗"
+ppa_lspine_pre["style"] = "solid"
+ppa_lspine_pre["fixedsize"] = "shape"
+ppa_lspine_pre["fontsize"] = "60"
+
+ppa_lspine_pre["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
+ppa_lspine_pre["outs"] = [("xout", 1), ("yout", 1)]
+
+ppa_lspine_pre["logic"] = lambda pin, gin: [pin ^ gin, ~(pin ^ gin)]
+
+ppa_lspine_pre["pd"] = 9 / 3
+ppa_lspine_pre["le"] = 9 / 3
+
+modules["ppa_lspine_pre"] = ppa_lspine_pre
+
+### ppa_lspine
+
+ppa_lspine = {}
+
+ppa_lspine[
+    "verilog"
+] = """
+module ppa_lspine(xin, yin, pin, gin, xout, yout);
+
+	input xin, yin, pin, gin;
+	output xout, yout;
+
+        wire w1;
+
+        or2  U1(w1, pin, gin);
+	mux2 U2(xout,gin,yin,xin);
+	mux2 U3(yout,w1 ,yin,xin);
+
+endmodule
+"""
+
+ppa_lspine[
+    "vhdl"
+] = """
+"""
+
+ppa_lspine["shape"] = "circle"
+ppa_lspine["color"] = "white"
+ppa_lspine["fillcolor"] = "white"
+ppa_lspine["label"] = "⊗"
+ppa_lspine["style"] = "solid"
+ppa_lspine["fixedsize"] = "shape"
+ppa_lspine["fontsize"] = "60"
+
+ppa_lspine["ins"] = [("xin", 1, 1, 0), ("yin", 1, 1, 0),
+                     ("pin", 1, 0, 1), ("gin", 1, 0, 1)]
+ppa_lspine["outs"] = [("xout", 1), ("yout", 1)]
+
+#ppa_lspine["logic"] = lambda pin, gin: [pin ^ gin, ~(pin ^ gin)]
+
+ppa_lspine["pd"] = 9 / 3
+ppa_lspine["le"] = 9 / 3
+
+modules["ppa_lspine"] = ppa_lspine
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

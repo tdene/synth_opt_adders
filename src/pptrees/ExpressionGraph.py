@@ -75,7 +75,7 @@ class ExpressionGraph(nx.DiGraph):
         kwargs["fillcolor"] = kwargs.get("fillcolor", "white")
         kwargs["label"] = kwargs.get("label", "")
         kwargs["style"] = kwargs.get("style", "filled")
-        kwargs["pos"] = "{0},{1}!".format(node.x_pos, node.y_pos*-1)
+        kwargs["pos"] = "{0},{1}!".format(node.x_pos*-1, node.y_pos*-1)
 
         # Add the node to the graph
         super().add_node(node, **kwargs)

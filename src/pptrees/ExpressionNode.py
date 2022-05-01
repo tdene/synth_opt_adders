@@ -54,7 +54,7 @@ class ExpressionNode:
 
     def __repr__(self):
         """Returns a string representation of this node"""
-        return "{0}_{1}_{2}_{3}".format(self.value, self.leafs, self.x_pos, self.y_pos)
+        return "{0}_{1}_{2}".format(self.value, self.x_pos, self.y_pos)
 
     def __lt__(self, other):
         """Compares this node to another node by position in tree

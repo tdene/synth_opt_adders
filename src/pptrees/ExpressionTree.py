@@ -132,7 +132,7 @@ class ExpressionTree(ExpressionGraph):
         while pre_counter > -1:
             for a in range(radix):
                 ## Place pre-processing nodes
-                if a == radix-1 or pre_counter < radix-1:
+                if a == 0 or pre_counter < radix-1:
                     # Left spine is special
                     if pre_counter == self.width-1:
                         pre = node_defs.get("lspine_pre", node_defs["pre"])
@@ -145,14 +145,15 @@ class ExpressionTree(ExpressionGraph):
                     self.add_node(pre_node)
                     self.add_edge(prev_root, pre_node, a)
                     self._connect_inports(pre_node, pre_counter)
-                    pre_node._recalculate_pos(leafs=pre_counter)
+                    pre_node._recalculate_leafs(leafs=pre_counter)
                     pre_counter -= 1
-                    # Advance prev_root
-                    prev_root = prev_root.children[0]
                 else:
                     black_node = Node(node_defs["black"])
                     self.add_node(black_node)
                     self.add_edge(prev_root, black_node, a)
+                # Advance prev_root
+                if a == radix-1:
+                    prev_root = prev_root.children[1]
 
     def __len__(self):
         """Redefine the len() function to return the depth of the tree"""
@@ -215,7 +216,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Attempt to connect all ports
         for port in parent_ports:
-            if port[index] == 0:
+            if port[2+index] == 0:
                 continue
             # This will raise an exception if the port is not found
             matching_port = get_matching_port(port, child_ports)
@@ -240,7 +241,7 @@ class ExpressionTree(ExpressionGraph):
         child.x_pos = x_pos
         child.y_pos = y_pos
 
-        diagram_pos = "{0},{1}!".format(child.x_pos, child.y_pos*-1)
+        diagram_pos = "{0},{1}!".format(child.x_pos*-1, child.y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
 
     def png(self, fname="tree.png"):
