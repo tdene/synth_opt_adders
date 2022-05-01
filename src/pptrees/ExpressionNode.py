@@ -6,10 +6,10 @@ class ExpressionNode:
 
     Attributes:
         children (list): A list of child nodes
-            Note that this list is ordered, and the first child is the leftmost
+            Note that this list is ordered, and the first child is rightmost
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
-        leafs (int): An integer encoding all leaf nodes reachable from this node
+        leafs (int): An integer encoding all leafs reachable from this node
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
