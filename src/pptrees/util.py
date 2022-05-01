@@ -13,6 +13,18 @@ def verso_pin(x):
     """Returns the verso version of a pin"""
     return x.replace("out", "in") if "out" in x else x.replace("in", "out")
 
+def get_matching_port(port,other_ports):
+    """Returns the port in other_ports that is the verso of port
+
+    Args:
+        port (str): The port to find the verso of
+        other_ports (list): The list of ports to search
+    """
+    for other_port in other_ports:
+        if port[0] == verso_pin(other_port[0]):
+            return other_port
+    raise ValueError("No matching port found for {0}".format(port[0]))
+
 def parse_net(x):
     """Converts a net's ID to its name in HDL
 
