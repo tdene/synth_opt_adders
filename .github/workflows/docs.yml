@@ -2,6 +2,7 @@ name: 'doc'
 
 on:
   push:
+      branches: [main]
 
 jobs:
 
