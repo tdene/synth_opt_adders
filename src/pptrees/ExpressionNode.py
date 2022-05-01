@@ -50,7 +50,7 @@ class ExpressionNode:
 
     def __str__(self):
         """Returns a string representation of this node"""
-        return self.value
+        return self.__repr__()
 
     def __repr__(self):
         """Returns a string representation of this node"""
@@ -67,17 +67,6 @@ class ExpressionNode:
         """
         return self.leafs < other.leafs
 
-    def __eq__(self, other):
-        """Compares this node to another node by position in tree
-
-        Args:
-            other (ExpressionNode): The node to compare to
-
-        Returns:
-            bool: Whether or not this node is in the same position as the other node
-        """
-        return self.leafs == other.leafs
-
     def __gt__(self, other):
         """Compares this node to another node by position in tree
 
@@ -88,10 +77,6 @@ class ExpressionNode:
             bool: Whether or not this node is further left than the other node
         """
         return self.leafs > other.leafs
-
-    def __hash__(self):
-        """Returns the hash of this node"""
-        return hash(self.__repr__())
 
     def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node

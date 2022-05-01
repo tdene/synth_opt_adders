@@ -124,7 +124,7 @@ class ExpressionTree(ExpressionGraph):
         self.root = Node(node_defs["root"], x_pos = 0, y_pos = 0)
         self.root = self.add_node(self.root)
         ### Connect the root node to the tree's ports
-        self._connect_tree_outports(self.root)
+        self._connect_outports(self.root)
 
         ## Initialize the rest of the tree
         prev_root = self.root
@@ -144,7 +144,7 @@ class ExpressionTree(ExpressionGraph):
                     pre_node = Node(pre)
                     self.add_node(pre_node)
                     self.add_edge(prev_root, pre_node, a)
-                    self.connect_tree_inport(pre_node, pre_counter)
+                    self._connect_inports(pre_node, pre_counter)
                     pre_counter -= 1
                     # Advance prev_root
                     prev_root = prev_root.children[0]
@@ -157,34 +157,30 @@ class ExpressionTree(ExpressionGraph):
         """Redefine the len() function to return the depth of the tree"""
         depth = 0
         for n in self.nodes:
-            if n.depth > depth:
-                depth = n.depth
+            if n.y_pos > depth:
+                depth = n.y_pos
         return depth+1
 
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
-        Calling tree[y] will return a sorted list of all nodes at depth n
         Calling tree[x][y] will return the xth node from the right at depth y
         """
-        if isinstance(key, int):
-            nodes = [n for n in self.nodes if n.depth == key]
-            return sorted(nodes, key=lambda x: -x.x_pos)
-        elif len(key) == 2:
-            nodes = [n for n in self.nodes if n.depth == key[0]]
+        if isinstance(key, tuple) and len(key) == 2:
+            nodes = [n for n in self.nodes if n.y_pos == key[0]]
             nodes = sorted(nodes, key=lambda x: -x.x_pos)
             return nodes[key[1]]
         else:
-            raise ValueError("Invalid attempt to get item from tree")
+            return super().__getitem__(key)
 
-    def _connect_tree_outports(self, root):
+    def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
         for a in range(len(self.out_shape)):
             for b in range(self.out_shape[a]):
                 net_name = "${}[{}]".format(self.out_ports[a][0][0],b)
                 root.out_nets[a] = net_name
 
-    def _connect_tree_inports(self, node, index):
+    def _connect_inports(self, node, index):
         """Connect the tree's input ports to a pre-processing node"""
         for a in range(len(self.in_shape)):
             net_name = "${}[{}]".format(self.in_ports[a][0][0],index)
