@@ -146,6 +146,30 @@ class ExpressionTree(ExpressionGraph):
                     self.add_node(black_node)
                     self.add_edge(prev_root, black_node, a)
 
+    def __len__(self):
+        """Redefine the len() function to return the depth of the tree"""
+        depth = 0
+        for n in self.nodes:
+            if n.depth > depth:
+                depth = n.depth
+        return depth
+
+    def __getitem__(self, key):
+        """Redefine the [] operator to readily access nodes
+
+        Calling tree[y] will return a sorted list of all nodes at depth n
+        Calling tree[x][y] will return the xth node from the right at depth y
+        """
+        if isinstance(key, int):
+            nodes = [n for n in self.nodes if n.depth == key]
+            return sorted(nodes, key=lambda x: -x.x_pos)
+        elif len(key) == 2:
+            nodes = [n for n in self.nodes if n.depth == key[0]]
+            nodes = sorted(nodes, key=lambda x: -x.x_pos)
+            return nodes[key[1]]
+        else:
+            raise ValueError("Invalid attempt to get item from tree")
+
     def _connect_tree_outports(self, root):
         """Connect the tree's output ports to the root node"""
         for a in range(self.out_shape):

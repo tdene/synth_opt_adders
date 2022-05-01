@@ -121,8 +121,9 @@ class ExpressionNode:
         # If nodes are not already connected, connect them
         if child.parent != self:
             self.children.append(child)
-            self.leafs = self.leafs | child.leafs
             child.parent = self
+            # Recalculate leafs recursively
+            self._recalculate_leafs()
 
         return net_name
 
@@ -134,10 +135,18 @@ class ExpressionNode:
         """
         self.children.remove(child)
         child.parent = None
-        # Recalculate leafs
+        # Recalculate leafs recursively
+        self._recalculate_leafs()
+
+    ### NOTE: THIS ASSUMES THAT PARENTS AND CHILDREN ARE FULLY CONNECTED
+    ### TO-DO: Handle case of partially connected nodes
+    def _recalculate_leafs(self):
+        """Recalculates the leafs of this node and its parents"""
         self.leafs = 0
         for c in self.children:
             self.leafs = self.leafs | c.leafs
+        if self.parent is not None:
+            self.parent._recalculate_leafs()
 
     def hdl(self, language="verilog",flat=False):
         """Returns the HDL of this node
