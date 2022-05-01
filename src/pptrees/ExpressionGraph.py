@@ -214,9 +214,9 @@ class ExpressionGraph(nx.DiGraph):
         # Get the nets from nodes
         for node in self.nodes:
             for net in node.in_nets.values():
-                in_nets.update([parse_net(net) for x in net])
+                in_nets.update([parse_net(x) for x in net])
             for net in node.out_nets.values():
-                out_nets.update([parse_net(net) for x in net])
+                out_nets.update([parse_net(x) for x in net])
 
         # Get the nets from blocks
         for block in [x for x in self.blocks if x is not None]:
@@ -226,9 +226,9 @@ class ExpressionGraph(nx.DiGraph):
 
         # If the graph has pre-defined ports, filter them out
         if self.in_ports is not None:
-            in_ports = [x[0] for x in in_ports[0]]
+            in_ports = [x[0] for x in self.in_ports[0]]
             in_nets = [x for x in in_nets if x.split("[")[0] not in in_ports]
-            out_ports = [x[0] for x in out_ports[0]]
+            out_ports = [x[0] for x in self.out_ports[0]]
             out_nets = [x for x in out_nets if x.split("[")[0] not in out_ports]
 
         return (set(in_nets), set(out_nets))
@@ -329,9 +329,17 @@ class ExpressionGraph(nx.DiGraph):
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
         U_count = 0
-        for U in re.finditer(r"U\d+", hdl):
-            hdl = hdl[:U.start()] + "U" + str(U_count) + hdl[U.end():]
+        good_hdl = ""
+        while True:
+            # Find the next instance name
+            U = re.search(r"U\d+", hdl)
+            if U is None:
+                break
+            # Replace it with the next name
+            good_hdl += hdl[:U.start()] + "U" + str(U_count)
+            hdl = hdl[U.end():]
             U_count += 1
+        hdl = good_hdl
 
         # Add wire definitions
         in_wires, out_wires = self._get_internal_nets()
@@ -351,14 +359,18 @@ class ExpressionGraph(nx.DiGraph):
         ## First get in_ports and out_ports
         (in_ports, out_ports) = self._get_ports()
         ## Then create the entity
-        entity = hdl_entity(module_name, in_ports[0], out_ports[0], language)
+        entity = hdl_entity(module_name, in_ports, out_ports, language)
         ## Then create the architecture
         arch = hdl_arch(module_name, hdl, language)
         ## Add the entity and architecture to the module_defs
         module_defs.add(entity+arch)
         ## Create an instance of the module
-        inst_ports = [[x[0][0],x[1]] for x in ins + outs]
+        inst_ports = [[x[0][0],x[1]] for x in in_ports + out_ports]
         inst = hdl_inst(module_name, inst_ports, language)
+        ## Add the instance to the HDL
+        hdl = inst
+        print(hdl)
+        [print(x) for x in module_defs]
 
         return hdl, module_defs
 

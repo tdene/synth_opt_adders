@@ -178,15 +178,17 @@ class ExpressionTree(ExpressionGraph):
     def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
         for a in range(len(self.out_shape)):
+            port_name = self.out_ports[a][0][0]
             for b in range(self.out_shape[a]):
-                net_name = "${}[{}]".format(self.out_ports[a][0][0],b)
-                root.out_nets[a] = net_name
+                net_name = "${}[{}]".format(port_name,b)
+                root.out_nets[port_name][b] = net_name
 
     def _connect_inports(self, node, index):
         """Connect the tree's input ports to a pre-processing node"""
         for a in range(len(self.in_shape)):
-            net_name = "${}[{}]".format(self.in_ports[a][0][0],index)
-            node.in_nets[a] = net_name
+            port_name = self.in_ports[a][0][0]
+            net_name = "${}[{}]".format(port_name,index)
+            node.in_nets[port_name][0] = net_name
 
     def add_edge(self, parent, child, index):
         """Adds a directed edge to the tree, from child output to parent input

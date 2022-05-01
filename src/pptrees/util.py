@@ -122,7 +122,7 @@ def hdl_inst(name, ports, language="verilog"):
         language (str): The language in which to generate the HDL
     """
     syntax = hdl_syntax[language]
-    ports = [(port[0], syntax.slice_markers(port[1])) for port in ports]
+    ports = [(port[0], syntax["slice_markers"](port[1])) for port in ports]
     ports_list = [syntax["inst_port"].format(port[0], port[1]) for port in ports]
     return syntax["inst"].format(name, ",\n".join(ports_list))
 
