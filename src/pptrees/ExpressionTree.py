@@ -1,3 +1,6 @@
+import networkx as nx
+import pydot
+
 from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import modules
@@ -152,7 +155,7 @@ class ExpressionTree(ExpressionGraph):
         for n in self.nodes:
             if n.depth > depth:
                 depth = n.depth
-        return depth
+        return depth+1
 
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
@@ -219,7 +222,7 @@ class ExpressionTree(ExpressionGraph):
             for b in range(port[index]):
                 pin1 = (port[0], b)
                 pin2 = (matching_port[0], b)
-                self.add_edge(parent, pin1, child, pin2)
+                super().add_edge(parent, pin1, child, pin2)
         
         # Adjust x-pos and y-pos of the child
         ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
@@ -234,6 +237,17 @@ class ExpressionTree(ExpressionGraph):
 
         child.x_pos = x_pos
         child.y_pos = y_pos
+
+    def png(self, fname="tree.png"):
+        """Generate a PNG representation of the tree using GraphViz"""
+
+        # Convert the graph to pydot
+        pg = nx.drawing.nx_pydot.to_pydot(self)
+#        pg.set_rankdir("LR")
+        pg.set_splines("false")
+        pg.set_concentrate("true")
+
+        pg.write_png(fname, prog="neato")
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
