@@ -339,7 +339,7 @@ class ExpressionGraph(nx.DiGraph):
             good_hdl += hdl[:U.start()] + "U" + str(U_count)
             hdl = hdl[U.end():]
             U_count += 1
-        hdl = good_hdl
+        hdl = good_hdl + hdl
 
         # Add wire definitions
         in_wires, out_wires = self._get_internal_nets()
