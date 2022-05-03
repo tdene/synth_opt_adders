@@ -1,12 +1,13 @@
 from .modules import modules
-from .util import parse_net
+from .util import parse_net, verso_pin
 
 class ExpressionNode:
     """Defines a node in an expression tree
 
     Attributes:
         children (list): A list of child nodes
-            Note that this list is ordered, and the first child is rightmost
+            Note that this list is ordered for trees,
+            and the first child is leftmost
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): An integer encoding all leafs reachable from this node
@@ -78,6 +79,33 @@ class ExpressionNode:
         """
         return self.leafs > other.leafs
 
+    def __iter__(self):
+        """Iterates over the children of this node"""
+        for c in self.children:
+            yield c
+
+    def __getitem__(self, key):
+        """Returns the child node at the given index"""
+        return self.children[key]
+
+    def morph(self, value):
+        """Morphs this node to a new value
+
+        This will error out if the node has a parent or children.
+        """
+        if self.parent is not None or \
+                any([not x is None for x in self.children]):
+            raise ValueError("Cannot morph a node with children or parents")
+        if value not in modules:
+            raise ValueError("Invalid module name: {}".format(value))
+
+        # Morph the node
+        self.value = value
+
+        # Change HDL-related attributes
+        self.in_nets = {x: [None] * y for x, y, *z in modules[value]["ins"]}
+        self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
+
     def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node
 
@@ -107,7 +135,11 @@ class ExpressionNode:
 
         # If nodes are not already connected, connect them
         if not child.parent is self:
-            self.children.append(child)
+            try:
+                index = self.children.index(None)
+                self.children[index] = child
+            except ValueError:
+                self.children.append(child)
             child.parent = self
             # Recalculate leafs recursively
             self._recalculate_leafs()
@@ -120,10 +152,36 @@ class ExpressionNode:
         Args:
             child (ExpressionNode): The child node to remove
         """
-        self.children.remove(child)
+
+        # Remove child/parent connection
+        index = self.children.index(child)
+        self.children[index] = None
         child.parent = None
+
+        # Reset net names in parent (inpins only!)
+        for pn, pins in self.in_nets.items():
+            vrs = verso_pin(pn)
+            for pi in range(len(pins)):
+                net = pins[pi]
+                if pi is None:
+                    continue
+                if net in child.out_nets[vrs]:
+                    pins[pi] = None
+
         # Recalculate leafs recursively
         self._recalculate_leafs()
+
+    def iter_down(self, fun):
+        """Calls a function on this node and all descendants
+
+        Args:
+            fun (function): The function to call on each child
+        """
+        fun(self)
+        for c in self.children:
+            if c is not None:
+                fun(c)
+            c.iter_children(fun)
 
     ### NOTE: THIS ASSUMES THAT PARENTS AND CHILDREN ARE FULLY CONNECTED
     ### TO-DO: Handle case of partially connected nodes
@@ -131,6 +189,8 @@ class ExpressionNode:
         """Recalculates the leafs of this node and its parents"""
         self.leafs = leafs
         for c in self.children:
+            if c is None:
+                continue
             self.leafs = self.leafs | c.leafs
         if self.parent is not None:
             self.parent._recalculate_leafs()
