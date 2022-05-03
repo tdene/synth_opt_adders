@@ -240,7 +240,6 @@ class ExpressionTree(ExpressionGraph):
         ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
         ### TO-DO: Make this more general
         y_pos = parent.y_pos+1
-        x_diff = 2**(lg(self.width)-y_pos)
         x_diff = 1
 
         if index == 0:
@@ -253,6 +252,116 @@ class ExpressionTree(ExpressionGraph):
 
         diagram_pos = "{0},{1}!".format(child.x_pos*-1, child.y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
+
+    ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
+    ### TO-DO: Make this more general
+    def left_rotate(self, node):
+        """Rotate a node to the left
+
+        Args:
+            node (Node): The node to rotate
+        """
+        if not isinstance(node, Node):
+            raise TypeError("node must be an Node")
+        if node.parent is None or len(node.parent.children) != self.radix:
+            raise ValueError("Can only rotate nodes with full families")
+        if node.parent[1] != node:
+            raise ValueError("Can only rotate right children")
+
+        # Get the parent and child nodes
+        parent = node.parent
+        lchild = node[0]
+        rchild = node[1]
+        plchild = node.parent[0]
+        if parent.parent is None:
+            thru_root = True
+        else:
+            thru_root = False
+            parent_dir = parent.parent.children.index(parent)
+
+        # Disconnect the nodes
+        if not thru_root:
+            self.remove_edge(parent.parent, parent)
+        self.remove_edge(parent, node)
+        self.remove_edge(node, lchild)
+        if thru_root:
+            self.remove_edge(parent, plchild)
+            self.remove_edge(node, rchild)
+
+        # If rotating through root, nodes must be morphed
+        if thru_root:
+            parent.morph(self.node_defs["lspine"])
+            child.morph(self.node_defs["root"])
+
+        # Adjust the y-pos
+        parent.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+
+        # Rotate the nodes
+        if not thru_root:
+            self.add_edge(parent.parent, parent, parent_dir)
+        self.add_edge(parent, lchild, 1)
+        self.add_edge(node, parent, 0)
+        if thru_root:
+            self.add_edge(parent, plchild, 0)
+            self.add_edge(node, rchild, 1)
+
+        return node
+
+    ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
+    ### TO-DO: Make this more general
+    def right_rotate(self, node):
+        """Rotate a node to the right
+
+        Args:
+            node (Node): The node to rotate
+        """
+        if not isinstance(node, Node):
+            raise TypeError("node must be an Node")
+        if node.parent is None or len(node.parent.children) != self.radix:
+            raise ValueError("Can only rotate nodes with full families")
+        if node.parent[0] != node:
+            raise ValueError("Can only rotate left children")
+
+        # Get the parent and child nodes
+        parent = node.parent
+        rchild = node[1]
+        lchild = node[0]
+        prchild = node.parent[1]
+        if parent.parent is None:
+            thru_root = True
+        else:
+            thru_root = False
+            parent_dir = parent.parent.children.index(parent)
+
+        # Disconnect the nodes
+        if not thru_root:
+            self.remove_edge(parent.parent, parent)
+        self.remove_edge(parent, node)
+        self.remove_edge(node, rchild)
+        if thru_root:
+            self.remove_edge(parent, prchild)
+            self.remove_edge(node, lchild)
+
+        # If rotating through root, nodes must be morphed
+        if thru_root:
+            parent.morph(self.node_defs["black"])
+            child.morph(self.node_defs["root"])
+
+        # Adjust the y-pos
+        parent.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+
+        # Rotate the nodes
+        if not thru_root:
+            self.add_edge(parent.parent, parent, parent_dir)
+        self.add_edge(parent, rchild, 0)
+        self.add_edge(node, parent, 1)
+        if thru_root:
+            self.add_edge(parent, prchild, 1)
+            self.add_edge(node, lchild, 0)
+
+        return node
 
     def png(self, fname="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
