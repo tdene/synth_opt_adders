@@ -1,5 +1,4 @@
-#!/bin/python3
-
+import re
 
 def lg(x):
     """Returns the base-2 logarithm of x, rounded up"""
@@ -131,6 +130,13 @@ def hdl_inst(name, ports, language="verilog"):
     ports_list = [syntax["inst_port"].format(port[0], port[1]) for port in ports]
     return syntax["inst"].format(name, ",\n".join(ports_list))
 
+def atoi(x):
+    """Converts a string to an integer"""
+    return int(x) if x.isdigit() else x
+
+def natural_keys(text):
+    """Human sorting / natural sorting"""
+    return [atoi(c) for c in re.split('(\d+)', text)]
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

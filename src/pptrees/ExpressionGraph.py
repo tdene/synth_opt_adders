@@ -9,6 +9,7 @@ from .ExpressionNode import ExpressionNode
 from .modules import modules
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
 from .util import parse_net, sub_brackets
+from .util import natural_keys
 
 class ExpressionGraph(nx.DiGraph):
     """Defines a di-graph of arithmetic expressions
@@ -395,6 +396,7 @@ class ExpressionGraph(nx.DiGraph):
         # Add wire definitions
         in_wires, out_wires = self._get_internal_nets()
         wires = in_wires | out_wires
+        wires = sorted(list(wires), key=natural_keys)
 
         wire_hdl = syntax["wire_def"].format(", ".join(wires))
 
