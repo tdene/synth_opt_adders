@@ -140,6 +140,33 @@ class ExpressionGraph(nx.DiGraph):
 
         return self.get_edge_data(parent, child)
 
+    def remove_edge(self, parent, child):
+        """Removes an edge from the graph
+
+        Args:
+            parent (ExpressionNode): The name of the first node
+            child (ExpressionNode): The name of the second node
+        """
+
+        if not isinstance(parent, ExpressionNode):
+            raise TypeError("Node1 must be an ExpressionNode")
+        if not isinstance(child, ExpressionNode):
+            raise TypeError("Node2 must be an ExpressionNode")
+        if not self.has_edge(parent, child):
+            raise ValueError("Edge does not exist")
+
+        # Save the edge data
+        edge_data = self.get_edge_data(parent, child)
+
+        # Remove the edge from the graph
+        super().remove_edge(parent, child)
+
+        # Remove the edge from the nodes
+        parent.remove_child(child)
+
+        # Return the edge data
+        return edge_data
+
     def add_block(self, *nodes):
         """Creates a new module block of nodes
 
