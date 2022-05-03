@@ -594,7 +594,7 @@ end architecture;
 ppa_post["shape"] = "circle"
 ppa_post["color"] = "white"
 ppa_post["fillcolor"] = "white"
-ppa_post["label"] = "⊕"
+ppa_post["label"] = "⊗"
 ppa_post["style"] = "solid"
 ppa_post["fixedsize"] = "shape"
 ppa_post["fontsize"] = "60"
