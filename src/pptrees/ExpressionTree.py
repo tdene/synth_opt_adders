@@ -166,14 +166,26 @@ class ExpressionTree(ExpressionGraph):
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
-        Calling tree[x][y] will return the xth node from the right at depth y
+        Calling tree[x,y] will return the xth node from the right at depth y
         """
         if isinstance(key, tuple) and len(key) == 2:
-            nodes = [n for n in self.nodes if n.y_pos == key[0]]
-            nodes = sorted(nodes, key=lambda x: -x.x_pos)
+            nodes = self._get_row(key[0])
             return nodes[key[1]]
         else:
             return super().__getitem__(key)
+
+    def _get_row(self, depth):
+        """Return the nodes at a given depth"""
+        nodes = [n for n in self.nodes if n.y_pos == depth]
+        return sorted(nodes, key=lambda x: -x.x_pos)
+
+    def _get_leafs(self):
+        """Return a list of leaf nodes"""
+        leafs = []
+        for n in self.nodes:
+            if len(n.children) == 0:
+                leafs.append(n)
+        return sorted(leafs, key=lambda x: -x.x_pos)
 
     def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
@@ -250,7 +262,7 @@ class ExpressionTree(ExpressionGraph):
         child.x_pos = x_pos
         child.y_pos = y_pos
 
-        diagram_pos = "{0},{1}!".format(child.x_pos*-1, child.y_pos*-1)
+        diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
@@ -279,6 +291,12 @@ class ExpressionTree(ExpressionGraph):
             thru_root = False
             parent_dir = parent.parent.children.index(parent)
 
+        # Adjust the y-pos
+        parent.y_pos += 1
+        plchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+        lchild.y_pos -= 1
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+
         # Disconnect the nodes
         if not thru_root:
             self.remove_edge(parent.parent, parent)
@@ -290,12 +308,17 @@ class ExpressionTree(ExpressionGraph):
 
         # If rotating through root, nodes must be morphed
         if thru_root:
-            parent.morph(self.node_defs["lspine"])
-            child.morph(self.node_defs["root"])
+            self.remove_node(parent)
+            parent = parent.morph(self.node_defs["lspine"])
+            self.add_node(parent)
 
-        # Adjust the y-pos
-        parent.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+            print(node)
+            self.remove_node(node)
+            node = node.morph(self.node_defs["root"])
+            self.add_node(node)
+            self.root = node
+            self._connect_outports(self.root)
+            print(node)
 
         # Rotate the nodes
         if not thru_root:
@@ -334,6 +357,12 @@ class ExpressionTree(ExpressionGraph):
             thru_root = False
             parent_dir = parent.parent.children.index(parent)
 
+        # Adjust the y-pos
+        parent.y_pos -= 1
+        prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        rchild.y_pos += 1
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+
         # Disconnect the nodes
         if not thru_root:
             self.remove_edge(parent.parent, parent)
@@ -345,12 +374,15 @@ class ExpressionTree(ExpressionGraph):
 
         # If rotating through root, nodes must be morphed
         if thru_root:
-            parent.morph(self.node_defs["black"])
-            child.morph(self.node_defs["root"])
+            self.remove_node(parent)
+            parent = parent.morph(self.node_defs["black"])
+            self.add_node(parent)
 
-        # Adjust the y-pos
-        parent.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+            self.remove_node(node)
+            node = node.morph(self.node_defs["root"])
+            self.add_node(node)
+            self.root = node
+            self._connect_outports(self.root)
 
         # Rotate the nodes
         if not thru_root:
@@ -363,12 +395,35 @@ class ExpressionTree(ExpressionGraph):
 
         return node
 
+    def _fix_diagram_positions(self):
+        """Fix the positions of the nodes in the diagram"""
+
+        depth = len(self)
+        leafs = self._get_leafs()
+        # Set x_pos of the leafs to consecutive numbers
+        ctr = 0
+        for leaf in leafs:
+            leaf.x_pos = ctr
+            ctr -= 1
+        leafs[-1].x_pos -= 1
+        # Adjust other nodes' x_pos based on the leafs
+        for d in range(depth-1, -1, -1):
+            for node in self._get_row(d):
+                if len(node.children) > 0:
+                    avg = sum([x.x_pos for x in node.children])/self.radix
+                    node.x_pos = avg
+                x_pos = node.x_pos
+                y_pos = node.y_pos
+                diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
+                self.nodes[node]["pos"] = diagram_pos
+
     def png(self, fname="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
 
+        # Correct the positions of the nodes
+        self._fix_diagram_positions()
         # Convert the graph to pydot
         pg = nx.drawing.nx_pydot.to_pydot(self)
-#        pg.set_rankdir("LR")
         pg.set_splines("false")
         pg.set_concentrate("true")
 
