@@ -184,7 +184,6 @@ class ExpressionNode:
         fun(self)
         for c in self.children:
             if c is not None:
-                fun(c)
                 c.iter_down(fun)
 
     ### NOTE: THIS ASSUMES THAT PARENTS AND CHILDREN ARE FULLY CONNECTED

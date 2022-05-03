@@ -282,24 +282,25 @@ class ExpressionTree(ExpressionGraph):
 
         # Get the parent and child nodes
         parent = node.parent
+        grandparent = parent.parent
         lchild = node[0]
         rchild = node[1]
         plchild = node.parent[0]
-        if parent.parent is None:
+        if grandparent is None:
             thru_root = True
         else:
             thru_root = False
-            parent_dir = parent.parent.children.index(parent)
+            parent_dir = grandparent.children.index(parent)
 
         # Adjust the y-pos
         parent.y_pos += 1
         plchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
-        lchild.y_pos -= 1
         node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        lchild.y_pos += 1
 
         # Disconnect the nodes
         if not thru_root:
-            self.remove_edge(parent.parent, parent)
+            self.remove_edge(grandparent, parent)
         self.remove_edge(parent, node)
         self.remove_edge(node, lchild)
         if thru_root:
@@ -312,21 +313,20 @@ class ExpressionTree(ExpressionGraph):
             parent = parent.morph(self.node_defs["lspine"])
             self.add_node(parent)
 
-            print(node)
             self.remove_node(node)
             node = node.morph(self.node_defs["root"])
             self.add_node(node)
             self.root = node
             self._connect_outports(self.root)
-            print(node)
 
         # Rotate the nodes
         if not thru_root:
-            self.add_edge(parent.parent, parent, parent_dir)
+            self.add_edge(grandparent, node, parent_dir)
+        if thru_root:
+            self.add_edge(parent, plchild, 0)
         self.add_edge(parent, lchild, 1)
         self.add_edge(node, parent, 0)
         if thru_root:
-            self.add_edge(parent, plchild, 0)
             self.add_edge(node, rchild, 1)
 
         return node
@@ -348,24 +348,25 @@ class ExpressionTree(ExpressionGraph):
 
         # Get the parent and child nodes
         parent = node.parent
+        grandparent = parent.parent
         rchild = node[1]
         lchild = node[0]
         prchild = node.parent[1]
-        if parent.parent is None:
+        if grandparent is None:
             thru_root = True
         else:
             thru_root = False
-            parent_dir = parent.parent.children.index(parent)
+            parent_dir = grandparent.children.index(parent)
 
         # Adjust the y-pos
-        parent.y_pos -= 1
-        prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        parent.y_pos += 1
+        prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
         rchild.y_pos += 1
-        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
 
         # Disconnect the nodes
         if not thru_root:
-            self.remove_edge(parent.parent, parent)
+            self.remove_edge(grandparent, parent)
         self.remove_edge(parent, node)
         self.remove_edge(node, rchild)
         if thru_root:
@@ -386,12 +387,13 @@ class ExpressionTree(ExpressionGraph):
 
         # Rotate the nodes
         if not thru_root:
-            self.add_edge(parent.parent, parent, parent_dir)
+            self.add_edge(grandparent, node, parent_dir)
         self.add_edge(parent, rchild, 0)
+        if thru_root:
+            self.add_edge(node, lchild, 0)
         self.add_edge(node, parent, 1)
         if thru_root:
             self.add_edge(parent, prchild, 1)
-            self.add_edge(node, lchild, 0)
 
         return node
 

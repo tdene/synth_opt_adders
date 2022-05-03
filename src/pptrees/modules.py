@@ -669,13 +669,10 @@ U1: xnor2
 end architecture;
 """
 
-ppa_lspine_pre["shape"] = "circle"
-ppa_lspine_pre["color"] = "white"
+ppa_lspine_pre["shape"] = "square"
 ppa_lspine_pre["fillcolor"] = "white"
-ppa_lspine_pre["label"] = "⊗"
-ppa_lspine_pre["style"] = "solid"
-ppa_lspine_pre["fixedsize"] = "shape"
-ppa_lspine_pre["fontsize"] = "60"
+ppa_lspine_pre["label"] = "pre"
+ppa_lspine_pre["style"] = "dashed"
 
 ppa_lspine_pre["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
 ppa_lspine_pre["outs"] = [("xout", 1), ("yout", 1)]
