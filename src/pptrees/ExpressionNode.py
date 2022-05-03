@@ -14,21 +14,21 @@ class ExpressionNode:
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
-        x_pos (int): The x-coordinate of this node's graphical representation
-        y_pos (int): The y-coordinate of this node's graphical representation
+        x_pos (float): The x-coordinate of this node's graphical representation
+        y_pos (float): The y-coordinate of this node's graphical representation
     """
     def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
 
         Args:
             value (str): The value of the node; a valid module name
-            x_pos (int): The x-coordinate of this node's graphical representation
-            y_pos (int): The y-coordinate of this node's graphical representation
+            x_pos (float): The x-coordinate of this node's graphical representation
+            y_pos (float): The y-coordinate of this node's graphical representation
         """
-        if not isinstance(x_pos, int):
-            raise TypeError("X-coordinate must be an integer")
-        if not isinstance(y_pos, int):
-            raise TypeError("Y-coordinate must be an integer")
+        if not isinstance(x_pos, (int, float)):
+            raise TypeError("X-coordinate must be a number")
+        if not isinstance(y_pos, (int, float)):
+            raise TypeError("Y-coordinate must be a number")
         if value not in modules:
             raise ValueError("Invalid module name: {}".format(value))
 
@@ -99,12 +99,12 @@ class ExpressionNode:
         if value not in modules:
             raise ValueError("Invalid module name: {}".format(value))
 
-        # Morph the node
-        self.value = value
+        # Create new node
+        new_node = ExpressionNode(value, self.x_pos, self.y_pos)
+        new_node.leafs = self.leafs
+        new_node.block = self.block
 
-        # Change HDL-related attributes
-        self.in_nets = {x: [None] * y for x, y, *z in modules[value]["ins"]}
-        self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
+        return new_node
 
     def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node
@@ -160,7 +160,11 @@ class ExpressionNode:
 
         # Reset net names in parent (inpins only!)
         for pn, pins in self.in_nets.items():
+            # Check if port is connected to this child
             vrs = verso_pin(pn)
+            if vrs not in child.out_nets:
+                continue
+            # If so, query the port pin by pin
             for pi in range(len(pins)):
                 net = pins[pi]
                 if pi is None:
@@ -181,7 +185,7 @@ class ExpressionNode:
         for c in self.children:
             if c is not None:
                 fun(c)
-            c.iter_children(fun)
+                c.iter_down(fun)
 
     ### NOTE: THIS ASSUMES THAT PARENTS AND CHILDREN ARE FULLY CONNECTED
     ### TO-DO: Handle case of partially connected nodes
