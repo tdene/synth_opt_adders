@@ -43,12 +43,12 @@ def parse_net(x):
 
 hdl_syntax = {
         "verilog": {
-            "entity": "module {0}(\n\t{1}\n\t);\n\n",
+            "entity": "module {0}(\n\n\t{1}\n\t);\n\n",
             "entity_in": "input",
             "entity_out": "output",
             "entity_port": "{0} {2} {1},",
             "port_range": "[{0}:{1}]",
-            "arch": "{1}\nendmodule // {0}",
+            "arch": "{1}\nendmodule // {0}\n",
             "inst": "{0} U0(\n{1}\n);",
             "inst_port": ".{0}({1})",
             "slice_markers": lambda x: x,
@@ -64,7 +64,7 @@ hdl_syntax = {
             "port_range": "_vector({0} downto {1})",
             "arch": ("architecture {0}_arch of {0} is"
                      "\n\tbegin\n{1}\n"
-                     "end architecture {0}_arch;"),
+                     "end architecture {0}_arch;\n"),
             "inst": ("\tU0: {0}\n"
                      "\t\tport map (\n{1}\n"
                      "\t\t);"),

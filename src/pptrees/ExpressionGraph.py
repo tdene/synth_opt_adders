@@ -1,4 +1,8 @@
 import re
+import pathlib
+import shutil
+import importlib.resources
+
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
@@ -287,6 +291,8 @@ class ExpressionGraph(nx.DiGraph):
 
     def hdl(
         self,
+        out=None,
+        mapping="behavioral",
         language="verilog",
         flat=False,
         full_flat=False,
@@ -307,16 +313,34 @@ class ExpressionGraph(nx.DiGraph):
             list: Set of HDL module definitions used in the graph
 
         """
+        # Check that output path is valid
+        if out is not None:
+            outdir = pathlib.Path(out).resolve().parent
+            if not outdir.exists():
+                raise ValueError("Output path does not exist")
+        
         # Check that the language is supported
         if language not in ["verilog", "vhdl"]:
             raise ValueError("Unsupported hardware-descriptive language")
 
+        # Set language-specific syntax
+        syntax = hdl_syntax[language]
+
+        # Verify that the mapping is supported
+        file_suffix = syntax["file_extension"]
+        with importlib.resources.path("pptrees", "mappings") as pkg_map_dir:
+            pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+            local_map_file = outdir / (mapping + "_map" + file_suffix)
+
+            if not pkg_map_file.is_file():
+                raise ValueError("Unsupported mapping requested")
+
+            # Copy the mapping file to the output directory
+            shutil.copy(pkg_map_file, local_map_file)
+
         # If module name is not defined, set it to graph's name
         if module_name is None:
             module_name = self.name
-
-        # Set language-specific syntax
-        syntax = hdl_syntax[language]
 
         # Create the HDL
 
@@ -392,12 +416,18 @@ class ExpressionGraph(nx.DiGraph):
         ## Then create the architecture
         arch = hdl_arch(module_name, hdl, language)
         ## Add the entity and architecture to the module_defs
-        module_defs.add(entity+arch)
+        file_out_hdl = entity + arch + "".join(module_defs)
+        module_defs.add(entity + arch)
         ## Create an instance of the module
         inst_ports = [[x[0][0],x[1]] for x in in_ports + out_ports]
         inst = hdl_inst(module_name, inst_ports, language)
         ## Add the instance to the HDL
         hdl = inst
+
+        # Write the HDL to file
+        if out is not None:
+            with open(out, "w") as f:
+                f.write(file_out_hdl)
 
         return hdl, module_defs
 
