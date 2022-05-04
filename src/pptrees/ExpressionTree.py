@@ -380,7 +380,7 @@ class ExpressionTree(ExpressionGraph):
         parent.y_pos += 1
         plchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
         node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        lchild.y_pos += 1
+        lchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
 
         # Disconnect the nodes
         if not thru_root:
@@ -452,7 +452,7 @@ class ExpressionTree(ExpressionGraph):
         parent.y_pos += 1
         prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
         node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        rchild.y_pos += 1
+        rchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
 
         # Disconnect the nodes
         if not thru_root:
