@@ -185,7 +185,7 @@ class ExpressionTree(ExpressionGraph):
         for n in self.nodes:
             if len(n.children) == 0:
                 leafs.append(n)
-        return sorted(leafs, key=lambda x: -x.x_pos)
+        return sorted(leafs, reverse=True)
 
     def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
