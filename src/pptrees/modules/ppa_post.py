@@ -49,6 +49,9 @@ data["style"] = "solid"
 data["fixedsize"] = "shape"
 data["fontsize"] = "60"
 
+# Footprint
+data["footprint"] = "ppa_post"
+
 data["ins"] = [("gin", 1, 0, 1), ("xin", 1, 1, 0), ("yin", 1, 1, 0)]
 data["outs"] = [("sum", 1)]
 

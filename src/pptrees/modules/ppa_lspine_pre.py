@@ -53,6 +53,9 @@ data["fillcolor"] = "white"
 data["label"] = "pre"
 data["style"] = "dashed"
 
+# Footprint
+data["footprint"] = "ppa_lspine_pre"
+
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
 data["outs"] = [("xout", 1), ("yout", 1)]
 

@@ -41,6 +41,9 @@ data["fillcolor"] = "white"
 data["label"] = "pre"
 data["style"] = "dashed"
 
+# Footprint
+data["footprint"] = "ppa_pre"
+
 data["ins"] = [("c_in", 1, 1, 0)]
 data["outs"] = [("pout", 1), ("gout", 1)]
 

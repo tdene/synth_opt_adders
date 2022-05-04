@@ -32,6 +32,9 @@ data["style"] = "solid"
 data["fixedsize"] = "shape"
 data["fontsize"] = "60"
 
+# Footprint
+data["footprint"] = "ppa_lspine"
+
 data["ins"] = [("xin", 1, 1, 0), ("yin", 1, 1, 0),
                      ("pin", 1, 0, 1), ("gin", 1, 0, 1)]
 data["outs"] = [("xout", 1), ("yout", 1)]
