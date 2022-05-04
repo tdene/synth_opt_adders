@@ -1,4 +1,4 @@
-from .modules import modules
+from .modules import *
 from .util import parse_net, verso_pin
 
 class ExpressionNode:

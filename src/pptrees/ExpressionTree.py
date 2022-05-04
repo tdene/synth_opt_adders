@@ -3,7 +3,7 @@ import pydot
 
 from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
-from .modules import modules
+from .modules import *
 from .util import lg
 from .util import get_matching_port
 
