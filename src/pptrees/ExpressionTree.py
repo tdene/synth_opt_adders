@@ -133,8 +133,10 @@ class ExpressionTree(ExpressionGraph):
             for a in range(radix):
                 ## Place pre-processing nodes
                 if a == 0 or pre_counter < radix-1:
+                    label = "t[{}]".format(pre_counter)
                     # Left spine is special
                     if pre_counter == self.width-1:
+                        label = "p[{}]".format(pre_counter)
                         pre = node_defs.get("lspine_pre", node_defs["pre"])
                     # Right-most pre- may be special
                     elif pre_counter == 0:
@@ -142,7 +144,7 @@ class ExpressionTree(ExpressionGraph):
                     else:
                         pre = node_defs["pre"]
                     pre_node = Node(pre)
-                    self.add_node(pre_node)
+                    self.add_node(pre_node, label=label)
                     self.add_edge(prev_root, pre_node, a)
                     self._connect_inports(pre_node, pre_counter)
                     pre_node._recalculate_leafs(leafs=pre_counter)
@@ -229,7 +231,7 @@ class ExpressionTree(ExpressionGraph):
         index = index % self.radix
 
         # Attempt to match the nodes' ports
-        pin_pairs = match_nodes(parent, child, index)
+        pin_pairs = match_nodes(parent.value, child.value, index)
         if pin_pairs is None:
             raise ValueError("Nodes do not have matching ports")
 
@@ -254,7 +256,52 @@ class ExpressionTree(ExpressionGraph):
         diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
 
-    def optimize_nodes(self, node):
+    def _check_fit(self, node, parent, index, valids, prev_dict={}):
+        """Recursively check if a module can fit at the given location
+
+        Args:
+            node_def (string): The node module to check
+            parent (string): The proposed parent node module
+            index (int): The index of the parent's input port
+            path (list): The path to the current node
+
+        Returns:
+            list: A list of possible combinations of children
+        """
+
+        node_def = node.value
+        children = node.children
+
+        footprint = modules[node_def]["footprint"]
+        variants = [k for k,v in modules.items()
+                    if v["footprint"] == footprint]
+
+        # Check which node variants will match the parent
+        to_remove = []
+        for k in variants:
+            if parent is not None:
+                pin_pairs = match_nodes(parent, k, index)
+                if pin_pairs is None:
+                    to_remove.append(k)
+        for k in to_remove:
+            variants.remove(k)
+
+        # For each possible variant, check if the children can match it
+        for k in variants:
+            ctr = valids['idx']
+            ctr += 1
+            valids['idx'] = ctr
+            entry = valids.get(ctr, prev_dict.copy())
+            valids[ctr] = entry
+            entry[str(node)] = k
+            for c in range(len(children)):
+                child = children[c]
+                if child is None:
+                    continue
+                prev_dict = valids[valids['idx']].copy()
+                self._check_fit(child, k, c, valids, prev_dict=prev_dict)
+
+    def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
         All node modules have a footprint attribute, clarifying which modules
@@ -270,45 +317,29 @@ class ExpressionTree(ExpressionGraph):
         Args:
             node (Node): The root node of the sub-tree to optimize
         """
-        
-        # Define recursive return function
-        def _recurs(node):
-            for n in node.children:
-                if n is not None:
-                    self.optimize_nodes(n)
 
-        # Start by checking if any higher-priority variants exist
-        footprint = modules[node.value]["footprint"]
-        priority = modules[node.value]["priority"]
-        variants = {k:v for k,v in modules.items()
-                if v["footprint"] == footprint \
-                and v["priority"] > priority}
-        if len(variants) == 0:
-            _recurs(node)
+        # Use recursive function to get all possible combinations
+        ret_dict = {'idx':0}
+        self._check_fit(self.root, None, 0, ret_dict)
+        del ret_dict['idx']
 
-        # Check which node variants will match the parent
-        parent = node.parent
-        new_variants = {}
-        if parent is not None:
-            index = parent.children.index(node)
-            for k,v in variants.items():
-                new_node = Node(k)
-                pin_pairs = match_nodes(parent, new_node, index)
-                if pin_pairs is not None:
-                    new_variants[k] = v
-        else:
-            new_variants = variants
+        # Keep only combinations that encompass all nodes
+        valid_results = []
+        num_nodes = len(self.nodes)
+        for a in ret_dict.values():
+            if len(a) == num_nodes:
+                valid_results.append(a)
 
-        # If there are any variants, swap in the highest-priority one
-        if len(new_variants) > 0:
-            # Get the highest-priority variant
-            highest_priority = max(new_variants.items(),
-                    key=lambda x: x[1]["priority"])[0]
-            # Swap in the new node
-            self._swap_node_defs(node, highest_priority)
-
-        # Recurse on the new node
-        _recurs(node)
+        # Find the result with the highest priority
+        best_result = None
+        best_priority = -1000
+        for a in valid_results:
+            priority = 0
+            for v in a.values():
+                priority += modules[v]["priority"]
+            if priority > best_priority:
+                best_result = a
+                best_priority = priority
 
     def _swap_node_defs(self, node, new_def):
         """Change a node's module definition
@@ -374,7 +405,13 @@ class ExpressionTree(ExpressionGraph):
         else:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
-        thru_lspine = self[0,parent.y_pos] == parent
+        if "lspine" in self.node_defs:
+            footprint = modules[self.node_defs["lspine"]]["footprint"]
+            if footprint == modules[parent.value]["footprint"] or \
+                    parent == self.root:
+                thru_lspine = True
+            else:
+                thru_lspine = False
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -446,7 +483,13 @@ class ExpressionTree(ExpressionGraph):
         else:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
-        thru_lspine = self[0,node.y_pos] == node
+        if "lspine" in self.node_defs:
+            footprint = modules[self.node_defs["lspine"]]["footprint"]
+            if footprint == modules[node.value]["footprint"] or \
+                    node == self.root:
+                thru_lspine = True
+            else:
+                thru_lspine = False
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -498,7 +541,6 @@ class ExpressionTree(ExpressionGraph):
         for leaf in leafs:
             leaf.x_pos = ctr
             ctr -= 1
-        leafs[-1].x_pos -= 1
         # Adjust other nodes' x_pos based on the leafs
         for d in range(depth-1, -1, -1):
             for node in self._get_row(d):
@@ -520,7 +562,6 @@ class ExpressionTree(ExpressionGraph):
         pg.set_splines("false")
         pg.set_concentrate("true")
 
-        pg.write_dot(fname.replace(".png", ".dot"))
         pg.write_png(fname, prog="neato")
 
 if __name__ == "__main__":

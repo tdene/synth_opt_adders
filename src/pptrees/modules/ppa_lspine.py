@@ -10,9 +10,9 @@ module ppa_lspine(xin, yin, pin, gin, xout, yout);
 	input xin, yin, pin, gin;
 	output xout, yout;
 
-        wire w1;
+	wire w1;
 
-        or2  U1(w1, pin, gin);
+	or2  U1(w1, pin, gin);
 	mux2 U2(xout,gin,yin,xin);
 	mux2 U3(yout,w1 ,yin,xin);
 

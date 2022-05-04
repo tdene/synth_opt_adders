@@ -17,8 +17,8 @@ def match_nodes(parent, child, index):
     """Attempts to match the ports of two nodes
 
     Args:
-        parent (Node): The parent node
-        child (Node): The child node
+        parent (string): The parent node's module
+        child (string): The child node's module
         index (int): The index of the parent's input port
     """
     # If no match is found, will return None
@@ -27,8 +27,8 @@ def match_nodes(parent, child, index):
     ret = []
     
     # Get the parent and child ports
-    parent_ports = modules[parent.value]["ins"]
-    child_ports = modules[child.value]["outs"]
+    parent_ports = modules[parent]["ins"]
+    child_ports = modules[child]["outs"]
 
     # Iterate over all input ports
     for port in parent_ports:

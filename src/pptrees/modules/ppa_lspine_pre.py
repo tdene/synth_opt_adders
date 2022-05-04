@@ -11,7 +11,7 @@ module ppa_lspine_pre(a_in, b_in, yout, xout);
 	output yout, xout;
 
 	xor2  U1(xout,a_in,b_in);
-	xnor2 U1(yout,a_in,b_in);
+	xnor2 U2(yout,a_in,b_in);
 
 endmodule
 """
@@ -38,7 +38,7 @@ U1: xor2
 		Y => xout
 	);
 
-U1: xnor2
+U2: xnor2
 	port map (
 		A => a_in,
 		B => b_in,
