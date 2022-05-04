@@ -1,4 +1,5 @@
 import re
+from .modules import *
 
 def lg(x):
     """Returns the base-2 logarithm of x, rounded up"""
@@ -11,6 +12,44 @@ def sub_brackets(x):
 def verso_pin(x):
     """Returns the verso version of a pin"""
     return x.replace("out", "in") if "out" in x else x.replace("in", "out")
+
+def match_nodes(parent, child, index):
+    """Attempts to match the ports of two nodes
+
+    Args:
+        parent (Node): The parent node
+        child (Node): The child node
+        index (int): The index of the parent's input port
+    """
+    # If no match is found, will return None
+    # Otherwise will return a list of pins to be connected
+    # List items will be of the format (parent_pin, child_pin)
+    ret = []
+    
+    # Get the parent and child ports
+    parent_ports = modules[parent.value]["ins"]
+    child_ports = modules[child.value]["outs"]
+
+    # Iterate over all input ports
+    for port in parent_ports:
+        if port[2+index] == 0:
+            continue
+        try:
+            # Get the matching output port
+            matching_port = get_matching_port(port, child_ports)
+        except:
+            return None
+        # Figure out which bits of the port to connect
+        offset = 0
+        for x in range(index):
+            offset += port[2+x]
+        # Add the matching pin pairs to the list
+        for b in range(port[2+index]):
+            pin1 = (port[0], offset+b)
+            pin2 = (matching_port[0], b)
+            ret.append((pin1, pin2))
+
+    return ret
 
 def get_matching_port(port,other_ports):
     """Returns the port in other_ports that is the verso of port

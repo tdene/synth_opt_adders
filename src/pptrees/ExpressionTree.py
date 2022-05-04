@@ -5,7 +5,7 @@ from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import lg
-from .util import get_matching_port
+from .util import match_nodes
 
 class ExpressionTree(ExpressionGraph):
     """Defines a tree of binary expressions
@@ -228,25 +228,14 @@ class ExpressionTree(ExpressionGraph):
         # Normalize index
         index = index % self.radix
 
-        # Get the parent and child ports
-        parent_ports = modules[parent.value]["ins"]
-        child_ports = modules[child.value]["outs"]
+        # Attempt to match the nodes' ports
+        pin_pairs = match_nodes(parent, child, index)
+        if pin_pairs is None:
+            raise ValueError("Nodes do not have matching ports")
 
-        # Attempt to connect all ports
-        for port in parent_ports:
-            if port[2+index] == 0:
-                continue
-            # This will raise an exception if the port is not found
-            matching_port = get_matching_port(port, child_ports)
-            # Figure out which bits of the port to connect to
-            offset = 0
-            for x in range(index):
-                offset += port[2+x]
-            # Add an edge for each bit of the port
-            for b in range(port[2+index]):
-                pin1 = (port[0], b+offset)
-                pin2 = (matching_port[0], b)
-                super().add_edge(parent, pin1, child, pin2)
+        for (p,c) in pin_pairs:
+            # Connect the ports
+            super().add_edge(parent, p, child, c)
         
         # Adjust x-pos and y-pos of the child
         ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
