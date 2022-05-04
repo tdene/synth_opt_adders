@@ -169,8 +169,8 @@ class ExpressionTree(ExpressionGraph):
         Calling tree[x,y] will return the xth node from the right at depth y
         """
         if isinstance(key, tuple) and len(key) == 2:
-            nodes = self._get_row(key[0])
-            return nodes[key[1]]
+            nodes = self._get_row(key[1])
+            return nodes[key[0]]
         else:
             return super().__getitem__(key)
 
@@ -278,13 +278,13 @@ class ExpressionTree(ExpressionGraph):
                     self.optimize_nodes(n)
 
         # Start by checking if any higher-priority variants exist
-        footprint = modules[node]["footprint"]
-        priority = modules[node]["priority"]
+        footprint = modules[node.value]["footprint"]
+        priority = modules[node.value]["priority"]
         variants = {k:v for k,v in modules.items()
                 if v["footprint"] == footprint \
                 and v["priority"] > priority}
         if len(variants) == 0:
-            recurse(node)
+            _recurs(node)
 
         # Check which node variants will match the parent
         parent = node.parent
@@ -327,7 +327,7 @@ class ExpressionTree(ExpressionGraph):
         else:
             self.root = None
         # Save the node's children
-        children = node.children
+        children = node.children.copy()
         for c in node.children:
             if c is not None:
                 self.remove_edge(node, c)
@@ -374,6 +374,7 @@ class ExpressionTree(ExpressionGraph):
         else:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
+        thru_lspine = self[0,parent.y_pos] == parent
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -386,30 +387,35 @@ class ExpressionTree(ExpressionGraph):
             self.remove_edge(grandparent, parent)
         self.remove_edge(parent, node)
         self.remove_edge(node, lchild)
-        if thru_root:
+        if thru_lspine:
             self.remove_edge(parent, plchild)
             self.remove_edge(node, rchild)
 
-        # If rotating through root, nodes must be morphed
-        if thru_root:
-            self.remove_node(parent)
-            parent = parent.morph(self.node_defs["lspine"])
-            self.add_node(parent)
+        # If rotating through lspine, nodes must be morphed
+        if thru_lspine:
+            if thru_root:
+                self.remove_node(parent)
+                parent = parent.morph(self.node_defs["lspine"])
+                self.add_node(parent)
 
             self.remove_node(node)
-            node = node.morph(self.node_defs["root"])
+            if thru_root:
+                node = node.morph(self.node_defs["root"])
+            else:
+                node = node.morph(self.node_defs["lspine"])
             self.add_node(node)
-            self.root = node
-            self._connect_outports(self.root)
+            if thru_root:
+                self.root = node
+                self._connect_outports(self.root)
 
         # Rotate the nodes
         if not thru_root:
             self.add_edge(grandparent, node, parent_dir)
-        if thru_root:
+        if thru_lspine:
             self.add_edge(parent, plchild, 0)
         self.add_edge(parent, lchild, 1)
         self.add_edge(node, parent, 0)
-        if thru_root:
+        if thru_lspine:
             self.add_edge(node, rchild, 1)
 
         return node
@@ -440,6 +446,7 @@ class ExpressionTree(ExpressionGraph):
         else:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
+        thru_lspine = self[0,node.y_pos] == node
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -452,30 +459,31 @@ class ExpressionTree(ExpressionGraph):
             self.remove_edge(grandparent, parent)
         self.remove_edge(parent, node)
         self.remove_edge(node, rchild)
-        if thru_root:
+        if thru_lspine:
             self.remove_edge(parent, prchild)
             self.remove_edge(node, lchild)
 
         # If rotating through root, nodes must be morphed
-        if thru_root:
+        if thru_lspine:
             self.remove_node(parent)
             parent = parent.morph(self.node_defs["black"])
             self.add_node(parent)
 
-            self.remove_node(node)
-            node = node.morph(self.node_defs["root"])
-            self.add_node(node)
-            self.root = node
-            self._connect_outports(self.root)
+            if thru_root:
+                self.remove_node(node)
+                node = node.morph(self.node_defs["root"])
+                self.add_node(node)
+                self.root = node
+                self._connect_outports(self.root)
 
         # Rotate the nodes
         if not thru_root:
             self.add_edge(grandparent, node, parent_dir)
         self.add_edge(parent, rchild, 0)
-        if thru_root:
+        if thru_lspine:
             self.add_edge(node, lchild, 0)
         self.add_edge(node, parent, 1)
-        if thru_root:
+        if thru_lspine:
             self.add_edge(parent, prchild, 1)
 
         return node
