@@ -260,7 +260,7 @@ class ExpressionGraph(nx.DiGraph):
         if self.in_ports is not None:
             in_ports = [x[0][0] for x in self.in_ports]
             in_nets = [x for x in in_nets if x.split("[")[0] not in in_ports]
-            out_ports = [x[0][0] for x in self.out_ports[0]]
+            out_ports = [x[0][0] for x in self.out_ports]
             out_nets = [x for x in out_nets if x.split("[")[0] not in out_ports]
 
         return (set(in_nets), set(out_nets))
