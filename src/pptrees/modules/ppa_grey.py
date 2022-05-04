@@ -47,6 +47,7 @@ data["fillcolor"] = "grey"
 
 # Footprint
 data["footprint"] = "ppa_black"
+data["priority"] = 2
 
 # List of inputs represented by (name, bits, diagonal_bits) tuple
 data["ins"] = [("gin", 2, 1, 1), ("pin", 1, 1, 0)]

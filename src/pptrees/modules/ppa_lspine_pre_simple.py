@@ -1,17 +1,16 @@
-name = "ppa_lspine_pre"
+name = "ppa_lspine_pre_simple"
 data = dict()
 
-### ppa_lspine_pre
+### ppa_lspine_pre_simple
 data[
     "verilog"
 ] = """
-module ppa_lspine_pre(a_in, b_in, yout, xout);
+module ppa_lspine_pre_simple(a_in, b_in, pout);
 
 	input a_in, b_in;
-	output yout, xout;
+	output pout;
 
-	xor2  U1(xout,a_in,b_in);
-	xnor2 U1(yout,a_in,b_in);
+	xor2  U1(pout,a_in,b_in);
 
 endmodule
 """
@@ -19,30 +18,22 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_lspine_pre is
+entity ppa_lspine_pre_simple is
 	port (
 		a_in : in std_logic;
 		b_in : in std_logic;
-		xout : out std_logic
-		yout : out std_logic
+		pout : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_lspine_pre is
+architecture behavior of ppa_lspine_pre_simple is
 begin
 
 U1: xor2
 	port map (
 		A => a_in,
 		B => b_in,
-		Y => xout
-	);
-
-U1: xnor2
-	port map (
-		A => a_in,
-		B => b_in,
-		Y => yout
+		Y => pout
 	);
 
 end architecture;
@@ -55,12 +46,12 @@ data["style"] = "dashed"
 
 # Footprint
 data["footprint"] = "ppa_lspine_pre"
-data["priority"] = 1
+data["priority"] = 2
 
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
-data["outs"] = [("xout", 1), ("yout", 1)]
+data["outs"] = [("pout", 1)]
 
-data["logic"] = lambda pin, gin: [pin ^ gin, ~(pin ^ gin)]
+data["logic"] = lambda pin, gin: [pin ^ gin]
 
 data["pd"] = 9 / 3
 data["le"] = [9 / 3, 9 / 3]

@@ -1,20 +1,20 @@
-name = "ppa_lspine"
+name = "ppa_post_plusone"
 data = dict()
 
-### ppa_lspine
+### Post-processing node
 data[
     "verilog"
 ] = """
-module ppa_lspine(xin, yin, pin, gin, xout, yout);
+module ppa_lspine(xin, yin, pin, gin, sum, sum_plus_one);
 
 	input xin, yin, pin, gin;
-	output xout, yout;
+	output sum, sum_plus_one;
 
         wire w1;
 
         or2  U1(w1, pin, gin);
-	mux2 U2(xout,gin,yin,xin);
-	mux2 U3(yout,w1 ,yin,xin);
+	mux2 U2(sum,gin,yin,xin);
+	mux2 U3(sum_plus_one,w1 ,yin,xin);
 
 endmodule
 """
@@ -33,14 +33,13 @@ data["fixedsize"] = "shape"
 data["fontsize"] = "60"
 
 # Footprint
-data["footprint"] = "ppa_lspine"
+data["footprint"] = "ppa_post"
 data["priority"] = 1
 
-data["ins"] = [("xin", 1, 1, 0), ("yin", 1, 1, 0),
-                     ("pin", 1, 0, 1), ("gin", 1, 0, 1)]
-data["outs"] = [("xout", 1), ("yout", 1)]
+data["ins"] = [("gin", 1, 0, 1), ("xin", 1, 1, 0), ("yin", 1, 1, 0)]
+data["outs"] = [("sum", 1), ("sum_plus_one", 1)]
 
-#ppa_lspine["logic"] = lambda pin, gin: [pin ^ gin, ~(pin ^ gin)]
+#data["logic"] = lambda yin, xin, gin, pin: [yin if gin else xin]
 
 data["pd"] = 9 / 3
 data["le"] = [9 / 3, 9 / 3]

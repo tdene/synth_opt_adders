@@ -1,16 +1,16 @@
-name = "ppa_pre"
+name = "ppa_pre_t"
 data = dict()
 
 ### Pre-processing node
 data[
     "verilog"
 ] = """
-module ppa_pre(a_in, b_in, pout, gout);
+module ppa_pre_t(a_in, b_in, pout, gout);
 
 	input a_in, b_in;
 	output pout, gout;
 
-	xor2 U1(pout,a_in,b_in);
+	or2 U1(pout,a_in,b_in);
 	and2 U2(gout,a_in,b_in);
 
 endmodule
@@ -19,7 +19,7 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_pre is
+entity ppa_pre_t is
 	port (
 		a_in : in std_logic;
 		b_in : in std_logic;
@@ -28,10 +28,10 @@ entity ppa_pre is
 	);
 end entity;
 
-architecture behavior of ppa_pre is
+architecture behavior of ppa_pre_t is
 begin
 
-U1: xor2
+U1: or2
 	port map (
 		A => a_in,
 		B => b_in,
@@ -55,12 +55,12 @@ data["style"] = "dashed"
 
 # Footprint
 data["footprint"] = "ppa_pre"
-data["priority"] = 0
+data["priority"] = 1
 
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 1, 0)]
 data["outs"] = [("pout", 1), ("gout", 1)]
 
-data["logic"] = lambda a, b: [a ^ b, a & b]
+data["logic"] = lambda a, b: [a | b, a & b]
 
-data["pd"] = 9 / 3
-data["le"] = [9 / 3, 9 / 3]
+data["pd"] = 2
+data["le"] = [5.0 / 3, 5.0 / 3]

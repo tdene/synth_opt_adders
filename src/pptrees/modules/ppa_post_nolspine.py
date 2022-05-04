@@ -1,16 +1,16 @@
-name = "ppa_post"
+name = "ppa_post_nolspine"
 data = dict()
 
 ### Post-processing node
 data[
     "verilog"
 ] = """
-module ppa_post(xin, yin, gin, sum);
+module ppa_post_nolspine(pin, gin, sum);
 
-	input xin, yin, gin;
+	input pin, gin;
 	output sum;
 
-	mux2 U1(sum,gin,yin,xin);
+	xor2 U1(sum,gin,pin);
 
 endmodule
 """
@@ -18,23 +18,21 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_post is
+entity ppa_post_nolspine is
 	port (
-		yin : in std_logic;
-		xin : in std_logic;
+		pin : in std_logic;
 		gin : in std_logic;
 		sum : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_post is
+architecture behavior of ppa_post_nolspine is
 begin
 
-U1: mux2
+U1: xor2
 	port map (
-		A => yin,
-		B => xin,
-		S => gin,
+		A => pin,
+		B => gin,
 		Y => sum
 	);
 
@@ -51,12 +49,12 @@ data["fontsize"] = "60"
 
 # Footprint
 data["footprint"] = "ppa_post"
-data["priority"] = 2
+data["priority"] = 1
 
-data["ins"] = [("gin", 1, 0, 1), ("xin", 1, 1, 0), ("yin", 1, 1, 0)]
+data["ins"] = [("gin", 1, 0, 1), ("pin", 1, 1, 0)]
 data["outs"] = [("sum", 1)]
 
-data["logic"] = lambda yin, xin, gin: [yin if gin else xin]
+data["logic"] = lambda pin, gin: [pin ^ gin]
 
 data["pd"] = 9 / 3
 data["le"] = [9 / 3, 9 / 3]
