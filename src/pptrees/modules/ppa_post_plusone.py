@@ -5,7 +5,7 @@ data = dict()
 data[
     "verilog"
 ] = """
-module ppa_lspine(xin, yin, pin, gin, sum, sum_plus_one);
+module ppa_post_plusone(xin, yin, pin, gin, sum, sum_plus_one);
 
 	input xin, yin, pin, gin;
 	output sum, sum_plus_one;

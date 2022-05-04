@@ -254,6 +254,100 @@ class ExpressionTree(ExpressionGraph):
         diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
 
+    def optimize_nodes(self, node):
+        """Greedily attempt to swap in nodes with same footprint
+
+        All node modules have a footprint attribute, clarifying which modules
+        refer to the same node concept. All node modules also have a priority
+        attribute, used to determine which module is most "optimal".
+
+        This method attempts to raise the total optimality of the tree by
+        swapping in higher-priority modules.
+
+        This can probably be safely executed at any point in time, but it is
+        advisable to only execute this once no more rotations will take place.
+
+        Args:
+            node (Node): The root node of the sub-tree to optimize
+        """
+        
+        # Define recursive return function
+        def _recurs(node):
+            for n in node.children:
+                if n is not None:
+                    self.optimize_nodes(n)
+
+        # Start by checking if any higher-priority variants exist
+        footprint = modules[node]["footprint"]
+        priority = modules[node]["priority"]
+        variants = {k:v for k,v in modules.items()
+                if v["footprint"] == footprint \
+                and v["priority"] > priority}
+        if len(variants) == 0:
+            recurse(node)
+
+        # Check which node variants will match the parent
+        parent = node.parent
+        new_variants = {}
+        if parent is not None:
+            index = parent.children.index(node)
+            for k,v in variants.items():
+                new_node = Node(k)
+                pin_pairs = match_nodes(parent, new_node, index)
+                if pin_pairs is not None:
+                    new_variants[k] = v
+        else:
+            new_variants = variants
+
+        # If there are any variants, swap in the highest-priority one
+        if len(new_variants) > 0:
+            # Get the highest-priority variant
+            highest_priority = max(new_variants.items(),
+                    key=lambda x: x[1]["priority"])[0]
+            # Swap in the new node
+            self._swap_node_defs(node, highest_priority)
+
+        # Recurse on the new node
+        _recurs(node)
+
+    def _swap_node_defs(self, node, new_def):
+        """Change a node's module definition
+
+        Args:
+            node (Node): The node to change
+            new_def (str): The new module definition
+        """
+
+        # Disconnect the node from the tree
+        parent = node.parent
+        if parent is not None:
+            # Save the index of the node in the parent's children list
+            index = parent.children.index(node)
+            self.remove_edge(parent, node)
+        else:
+            self.root = None
+        # Save the node's children
+        children = node.children
+        for c in node.children:
+            if c is not None:
+                self.remove_edge(node, c)
+
+        # Remove the node from the tree
+        self.remove_node(node)
+
+        # Create the new node
+        new_node = node.morph(new_def)
+
+        # Reconnect the node to the tree
+        if parent is not None:
+            self.add_edge(parent, new_node, index)
+        else:
+            self.root = new_node
+        for index in range(len(children)):
+            c = children[index]
+            if c is not None:
+                self.add_edge(new_node, c, index)
+
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
     ### TO-DO: Make this more general
     def left_rotate(self, node):
