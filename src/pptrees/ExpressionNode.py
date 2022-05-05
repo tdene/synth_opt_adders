@@ -264,7 +264,7 @@ class ExpressionNode:
         ### Grab only instantiated cells from the HDL definiton
 
         # Iterate over each line in the HDL definition
-        hdl_def = modules[self.value][language].splitlines()
+        hdl_def = modules[self.value]["verilog"].splitlines()
 
         # Flag whether we're currently looking at a cell
         in_std_cell = False
@@ -274,18 +274,18 @@ class ExpressionNode:
 
         for l in hdl_def:
             if "assign" in l or "<=" in l:
-                ret += l + "\n"
+                ret += l + "\n\n"
             else:
                 if "U" in l:
                     in_std_cell = True
                 if in_std_cell == True:
-                    ret += l + "\n"
+                    ret += l + "\n\n"
                 if l != "" and l[-1] == ";":
                     in_std_cell = False
 
         # Create list of all instance pins and copy in unformatted net IDs
-        pins = self.ins.copy()
-        pins.update(self.outs)
+        pins = self.in_nets.copy()
+        pins.update(self.out_nets)
 
         # Format net IDs and replace them into module's HDL
         for a in pins:
@@ -295,7 +295,8 @@ class ExpressionNode:
             else:
                 for b in range(len(pins[a])):
                     net_name = parse_net(pins[a][b])
-                    ret = ret.replace("{0}[{1}]".format(a, b), net_name)
+                    idx = len(pins[a]) - b - 1
+                    ret = ret.replace("{0}[{1}]".format(a, idx), net_name)
 
         return ret[:-1]
 

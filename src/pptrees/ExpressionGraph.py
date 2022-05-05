@@ -348,6 +348,9 @@ class ExpressionGraph(nx.DiGraph):
             module_defs.update(block_defs)
 
         # Pull in the HDL description of nodes outside of blocks
+        # If fully flattening them, need to rename "w*" internal wires
+        if full_flat:
+            w_ctr = 0
         for node in self:
             if node.block is not None:
                 continue
@@ -355,6 +358,9 @@ class ExpressionGraph(nx.DiGraph):
                     language=language,
                     flat=full_flat
             )
+            if full_flat:
+                node_hdl = node_hdl.replace("w1", "w{0}".format(w_ctr))
+                w_ctr += 1
 
             hdl += node_hdl
             module_defs.update(node_defs)
