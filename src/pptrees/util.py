@@ -142,7 +142,7 @@ def hdl_entity(name, ins, outs, language="verilog"):
                                             port_range
                                             )
         ports_str.append(next_port)
-    ports_str = "\n\t".join(ports_str)
+    ports_str = "\n\t".join(ports_str)[:-1]
     return syntax["entity"].format(name, ports_str)
 
 def hdl_arch(name, body, language="verilog"):
