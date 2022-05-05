@@ -670,7 +670,10 @@ class ExpressionTree(ExpressionGraph):
         for d in range(depth-1, -1, -1):
             for node in self._get_row(d):
                 if len(node.children) > 0:
-                    avg = sum([x.x_pos for x in node.children])/self.radix
+                    children = [x for x in node.children if x is not None]
+                    num_children = len(children)
+                    sum_children = sum([x.x_pos for x in children])
+                    avg = sum_children / num_children
                     node.x_pos = avg
                 x_pos = node.x_pos
                 y_pos = node.y_pos
