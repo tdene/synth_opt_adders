@@ -119,6 +119,24 @@ class ExpressionForest(ExpressionGraph):
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
+    def find_identical_nodes(self):
+        """Finds identical nodes amongst the forest's trees"""
+        for i1 in reversed(range(len(self.trees))):
+            t1 = self.trees[i1]
+            for i2 in range(i1):
+                t2 = self.trees[i2]
+                for n1 in t1.nodes:
+                    for n2 in t2.nodes:
+                        if n1.equiv(n2):
+                            n2.virtual = n1.out_nets
+                            self.increase_fanout(t1,n1)
+
+    def increase_fanout(self,tree,node):
+        """Increases the fanout of a node in a tree"""
+        return
+
+        print(tree[node])
+
     def hdl(
         self,
         out=None,
@@ -149,11 +167,21 @@ class ExpressionForest(ExpressionGraph):
 
         hdl = []
         module_defs = set()
-        for t in self.trees:
+        # This HDL description will have multiple cell-internal wires
+        # By default, these are named w*
+        # These names need to be made unique
+        w_ctr = 0
+        for t in reversed(self.trees):
+            desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
                             language=language,
                             flat=flat,
-                            full_flat=full_flat)
+                            full_flat=full_flat,
+                            description_string=desc)
+            w = re.findall(r"w\d+", t_hdl)
+            for x in set(w):
+                t_hdl = t_hdl.replace(x, "w{}".format(w_ctr))
+                w_ctr += 1
             hdl.append(t_hdl)
             module_defs |= t_module_defs
         hdl = "\n".join(hdl)
