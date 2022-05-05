@@ -596,32 +596,32 @@ class ExpressionTree(ExpressionGraph):
         self._fix_diagram_positions()
         return node
 
-    def insert_buffer(self, parent, child):
-        """Insert a buffer between two nodes
+    def insert_buffer(self, node):
+        """Insert a buffer on the output of a node
 
         Args:
-            parent (Node): The parent node
-            child (Node): The child node
+            node (Node): The child node
         """
-        if not isinstance(parent, Node):
-            raise TypeError("parent must be an Node")
-        if not isinstance(child, Node):
+        if not isinstance(node, Node):
             raise TypeError("child must be an Node")
+        parent = node.parent
+        if parent is None:
+            raise ValueError("Cannot insert buffer above root")
 
         buffer = Node(self.node_defs["buffer"])
 
         # Disconnect the nodes
-        index = parent.children.index(child)
-        self.remove_edge(parent, child)
+        index = parent.children.index(node)
+        self.remove_edge(parent, node)
 
         # Insert the buffer
         self.add_node(buffer)
         self.add_edge(parent, buffer, index)
-        self.add_edge(buffer, child, 0)
+        self.add_edge(buffer, node, 0)
 
         # Fix the diagram positions
-        buffer.y_pos = child.y_pos
-        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        buffer.y_pos = node.y_pos
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
 
         return buffer
 
