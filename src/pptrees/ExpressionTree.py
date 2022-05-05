@@ -617,6 +617,37 @@ class ExpressionTree(ExpressionGraph):
 
         return buffer
 
+    def remove_buffer(self, buffer):
+        """Remove a buffer between two nodes
+
+        Args:
+            buffer (Node): The buffer node
+        """
+        if not isinstance(buffer, Node):
+            raise TypeError("buffer must be an Node")
+        footprint = modules[self.node_defs["buffer"]]["footprint"]
+        this_footprint = modules[buffer.value]["footprint"]
+        if footprint != this_footprint:
+            raise ValueError("buffer must be a buffer node")
+
+        # Disconnect the nodes
+        parent = buffer.parent
+        child = buffer[0]
+        index = parent.children.index(buffer)
+
+        # Remove the buffer
+        self.remove_edge(parent, buffer)
+        self.remove_edge(buffer, child)
+        self.remove_node(buffer)
+
+        # Reconnect the nodes
+        self.add_edge(parent, child, index)
+
+        # Fix the diagram positions
+        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+
+        return child        
+
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
 

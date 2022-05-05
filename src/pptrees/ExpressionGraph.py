@@ -8,7 +8,7 @@ import networkx as nx
 from .ExpressionNode import ExpressionNode
 from .modules import *
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
-from .util import parse_net, sub_brackets
+from .util import parse_net, sub_brackets, sub_ports
 from .util import natural_keys
 
 class ExpressionGraph(nx.DiGraph):
@@ -394,6 +394,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # If flat HDL is desired, it can returned here
         if flat:
+            hdl = sub_ports(hdl, self.in_ports + self.out_ports)
             return hdl, module_defs
 
         # Otherwise, return the HDL module definition

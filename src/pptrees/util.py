@@ -169,6 +169,19 @@ def hdl_inst(name, ports, language="verilog"):
     ports_list = [syntax["inst_port"].format(port[0], port[1]) for port in ports]
     return syntax["inst"].format(name, ",\n".join(ports_list))
 
+def sub_ports(hdl, ports):
+    """Substitutes port in an HDL string with corresponding module ports"""
+    for port in ports:
+        ((local, num), remote) = port
+        if num == 1:
+            hdl = hdl.replace(local, remote)
+        ### NOTE: This is a complete 2 AM hack
+        ### It assumes that all ports are zero-indexed, forever
+        else:
+            remote = remote.split("[")[0]
+            hdl = hdl.replace(local, remote)
+    return hdl
+
 def atoi(x):
     """Converts a string to an integer"""
     return int(x) if x.isdigit() else x
