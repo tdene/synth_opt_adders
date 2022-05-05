@@ -369,6 +369,14 @@ class ExpressionTree(ExpressionGraph):
                 best_result = a
                 best_priority = priority
 
+        ### NOTE: TEMPORARY 4 AM CODE
+        for node in self.nodes:
+            if node.value != "ppa_lspine":
+                continue
+            if modules[node.children[1].value]["footprint"] != "ppa_pre":
+                continue
+            best_result[str(node)] = "ppa_lspine_single"
+
         # Replace the nodes with the best result
         self._swap_all_nodes(self.root, None, 0, best_result)
 

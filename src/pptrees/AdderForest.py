@@ -63,7 +63,7 @@ class AdderForest(ExpressionForest):
                         (('b_in', width), 'b_in')
                        ]
             out_ports = [
-                         (('sum', 8), 'sum')
+                         (('sum', width), 'sum')
                         ]
 
         # Initialize the expression tree
