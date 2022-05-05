@@ -11,6 +11,7 @@ class ExpressionNode:
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): An integer encoding all leafs reachable from this node
+        virtual (list): List of output nets that are virtual
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
@@ -42,6 +43,7 @@ class ExpressionNode:
         self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
 
         # Graph-related attributes
+        self.virtual = None
         self.leafs = 0
         self.block = None
 
@@ -78,6 +80,28 @@ class ExpressionNode:
             bool: Whether or not this node is further left than the other node
         """
         return self.leafs > other.leafs
+
+    def equiv(self, other):
+        """Checks if this node is equivalent to another node
+        Cannot do this with __eq__ because NetworkX uses __eq__
+
+        Args:
+            other (ExpressionNode): The node to compare to
+        """
+        if not isinstance(other, ExpressionNode):
+            raise TypeError("Cannot compare to non-ExpressionNode")
+
+        ret = (not (self > other) and not (self < other) \
+                and self.value == other.value)
+        for a in range(len(self.children)):
+            if self.children[a] is not None:
+                try:
+                    other_c = other.children[a]
+                except:
+                    return False
+                ret = ret and self.children[a].equiv(other_c)
+
+        return ret
 
     def __iter__(self):
         """Iterates over the children of this node"""
@@ -260,6 +284,19 @@ class ExpressionNode:
 
     def _verilog_flat(self):
         """Return Verilog consisting of the module's internal logic"""
+
+        # If this node has been virtualized, create assign statements
+        if self.virtual is not None:
+            ret = ""
+            for v in self.virtual:
+                port = self.virtual[v]
+                for a in range(len(port)):
+                    net = port[a]
+                    n = ExpressionNode("invis")
+                    n.in_nets['A'][0] = net
+                    n.out_nets['Y'][0] = self.out_nets[v][a]
+                    ret += n.hdl(language="verilog", flat=True)[0]
+            return ret
 
         ### Grab only instantiated cells from the HDL definiton
 
