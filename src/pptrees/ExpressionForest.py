@@ -1,3 +1,4 @@
+import re
 from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
 
@@ -88,16 +89,25 @@ class ExpressionForest(ExpressionGraph):
 
         # Initialize the trees
         self.trees = []
-        ### NOTE: TREE OUTPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
-        ### TO-DO: Allow for arbitrary input shape
-        ### Need to check whole file for this implicit assumption
-        tree_out_ports = [((x[0][0],1),x[1]) for x in out_ports]
 
         for a in range(1,width+1):
             ### NOTE: INPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
             ### TO-DO: Allow for arbitrary input shape
             ### Need to check whole file for this implicit assumption
-            tree_in_ports = [((x[0][0],a),x[1]) for x in in_ports]
+            if a == 1:
+                bit_s = "[{0}]".format(a-1)
+            else:
+                bit_s = "[{0}:0]".format(a-1)
+            tree_in_ports = [((x[0][0],a),x[1]+bit_s) for x in in_ports]
+
+            ### NOTE: TREE OUTPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
+            ### TO-DO: Allow for arbitrary input shape
+            ### Need to check whole file for this implicit assumption
+            bit_s = "[{0}]".format(a-1)
+            tree_out_ports = [((x[0][0],1),x[1]+bit_s) for x in out_ports]
+
+            print(tree_in_ports)
+            print(tree_out_ports)
 
             t = self.tree_type(
                     a,
@@ -112,6 +122,65 @@ class ExpressionForest(ExpressionGraph):
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
+    def hdl(
+        self,
+        out=None,
+        mapping="behavioral",
+        language="verilog",
+        flat=False,
+        full_flat=False,
+        module_name=None,
+        description_string="start of unnamed graph"
+    ):
+        """Creates a HDL description of the forest
+
+        Args:
+            language (str): The language in which to generate the HDL
+            flat (bool): If True, flatten the graph's HDL
+            full_flat (bool): If True, flatten all modules in the graph's HDL
+            module_name (str): The name of the module to generate
+            description_string (str): String commend to prepend to the HDL
+
+        Returns:
+            str: HDL module definition representing the graph
+            list: Set of HDL module definitions used in the graph
+
+        """
+        # If module name is not defined, set it to graph's name
+        if module_name is None:
+            module_name = self.name
+
+        hdl = []
+        module_defs = set()
+        for t in self.trees:
+            t_hdl, t_module_defs = t.hdl(
+                            language=language,
+                            flat=flat,
+                            full_flat=full_flat)
+            hdl.append(t_hdl)
+            module_defs |= t_module_defs
+        hdl = "\n".join(hdl)
+
+        # This HDL description will have multiple instances in it
+        # By default, util.hdl_inst names all instances "U0"
+        # These names need to be made unique
+        U_count = 0
+        good_hdl = ""
+        while True:
+            # Find the next instance name
+            U = re.search(r"U\d+", hdl)
+            if U is None:
+                break
+            # Replace it with the next name
+            good_hdl += hdl[:U.start()] + "U" + str(U_count)
+            hdl = hdl[U.end():]
+            U_count += 1
+        hdl = good_hdl + hdl
+
+        hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
+                language, module_name)
+        if out is not None:
+            self._write_hdl(file_out_hdl, out, language, mapping)
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

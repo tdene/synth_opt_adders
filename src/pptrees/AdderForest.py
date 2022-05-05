@@ -59,8 +59,8 @@ class AdderForest(ExpressionForest):
         # Provide defaults for in_ports and out_ports
         if in_ports is None or out_ports is None:
             in_ports = [
-                        (('a_in', width), 'a'),
-                        (('b_in', width), 'b')
+                        (('a_in', width), 'a_in'),
+                        (('b_in', width), 'b_in')
                        ]
             out_ports = [
                          (('sum', 8), 'sum')

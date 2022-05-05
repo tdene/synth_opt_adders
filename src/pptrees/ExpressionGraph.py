@@ -391,11 +391,12 @@ class ExpressionGraph(nx.DiGraph):
             return hdl, module_defs
 
         # Otherwise, return the HDL module definition
-        hdl, module_defs = self._wrap_hdl(hdl, module_defs, language, module_name)
+        hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
+                language, module_name)
 
         # Write the HDL to file
         if out is not None:
-            self._write_hdl(hdl, out, mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping)
 
         return hdl, module_defs
 
@@ -420,13 +421,18 @@ class ExpressionGraph(nx.DiGraph):
         ## Add the instance to the HDL
         hdl = inst
 
-        return hdl, module_defs
+        return hdl, module_defs, file_out_hdl
 
-    def _write_hdl(self, out=None, mapping="behavioral"):
+    def _write_hdl(self, file_out_hdl, out=None, language="verilog",
+            mapping="behavioral"):
         """Writes the HDL to a file"""
         # Check that output path is valid
         if out is None:
             raise ValueError("Output path must be defined")
+
+        # Set language-specific syntax
+        syntax = hdl_syntax[language]
+        
         outdir = pathlib.Path(out).resolve().parent
         if not outdir.exists():
             raise ValueError("Output path does not exist")
