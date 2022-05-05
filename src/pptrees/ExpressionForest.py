@@ -1,5 +1,5 @@
 from .ExpressionTree import ExpressionTree
-from .ExpressionGraph import ExpressionTree
+from .ExpressionGraph import ExpressionGraph
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -94,18 +94,21 @@ class ExpressionForest(ExpressionGraph):
         ### NOTE: TREE OUTPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
         ### TO-DO: Allow for arbitrary input shape
         ### Need to check whole file for this implicit assumption
-        tree_out_ports = [(x[0],1),x[1] for x in out_ports]
+        tree_out_ports = [((x[0][0],1),x[1]) for x in out_ports]
 
-        for a in range(width):
+        for a in range(1,width+1):
+            ### NOTE: INPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
+            ### TO-DO: Allow for arbitrary input shape
+            ### Need to check whole file for this implicit assumption
+            tree_in_ports = [((x[0][0],a),x[1]) for x in in_ports]
+
             t = self.tree_type(
-                    a+1,
-                    in_ports,
-                    out_ports,
-                    name="tree_{}".format(t),
+                    a,
+                    tree_in_ports,
+                    tree_out_ports,
+                    name="tree_{}".format(a),
                     start_point=start_point,
                     radix=radix,
-                    idem=idem,
-                    node_defs=node_defs
             )
             self.trees.append(t)
 

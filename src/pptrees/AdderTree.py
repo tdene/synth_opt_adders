@@ -69,6 +69,7 @@ class AdderTree(ExpressionTree):
                          name = name,
                          start_point = start_point,
                          radix = radix,
+                         idem = True,
                          node_defs = node_defs
                         )
 
