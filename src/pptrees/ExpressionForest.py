@@ -1,6 +1,8 @@
 import re
+
 from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
+from .modules import *
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -133,9 +135,11 @@ class ExpressionForest(ExpressionGraph):
 
     def increase_fanout(self,tree,node):
         """Increases the fanout of a node in a tree"""
-        return
 
-        print(tree[node])
+        e_data = tree.get_edge_data(node.parent,node)
+        index = node.parent.children.index(node)
+        g = modules[node.value]["le"][index]
+        e_data["weight"] += g 
 
     def hdl(
         self,

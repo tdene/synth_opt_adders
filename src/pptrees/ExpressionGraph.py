@@ -129,9 +129,9 @@ class ExpressionGraph(nx.DiGraph):
             "edge_nets": [net_name]
         }
 
-        # Initialize weight to 1
+        # Initialize weight to parasitc delay
         # This is later modified by logical effort
-        kwargs["weight"] = 1
+        kwargs["weight"] = modules[child.value]["pd"]
 
         # If the two nodes are already connnected, simply update the pins
         if self.has_edge(parent, child):
