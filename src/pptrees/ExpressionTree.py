@@ -401,8 +401,6 @@ class ExpressionTree(ExpressionGraph):
 
         # Reconnect the node to its parent
         if parent is not None:
-            print(new_node)
-            print(parent)
             self.add_edge(parent, new_node, index)
         else:
             self.root = new_node
@@ -505,6 +503,7 @@ class ExpressionTree(ExpressionGraph):
         if thru_lspine:
             self.add_edge(node, rchild, 1)
 
+        self._fix_diagram_positions()
         return node
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
@@ -579,6 +578,7 @@ class ExpressionTree(ExpressionGraph):
         if thru_lspine:
             self.add_edge(parent, prchild, 1)
 
+        self._fix_diagram_positions()
         return node
 
     def _fix_diagram_positions(self):
