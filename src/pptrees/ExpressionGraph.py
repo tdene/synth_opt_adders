@@ -314,30 +314,12 @@ class ExpressionGraph(nx.DiGraph):
             list: Set of HDL module definitions used in the graph
 
         """
-        # Check that output path is valid
-        if out is not None:
-            outdir = pathlib.Path(out).resolve().parent
-            if not outdir.exists():
-                raise ValueError("Output path does not exist")
-        
         # Check that the language is supported
         if language not in ["verilog", "vhdl"]:
             raise ValueError("Unsupported hardware-descriptive language")
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
-
-        # Verify that the mapping is supported
-        file_suffix = syntax["file_extension"]
-        with importlib.resources.path("pptrees", "mappings") as pkg_map_dir:
-            pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
-            local_map_file = outdir / (mapping + "_map" + file_suffix)
-
-            if not pkg_map_file.is_file():
-                raise ValueError("Unsupported mapping requested")
-
-            # Copy the mapping file to the output directory
-            shutil.copy(pkg_map_file, local_map_file)
 
         # If module name is not defined, set it to graph's name
         if module_name is None:
@@ -408,6 +390,18 @@ class ExpressionGraph(nx.DiGraph):
         if flat:
             return hdl, module_defs
 
+        # Otherwise, return the HDL module definition
+        hdl, module_defs = self._wrap_hdl(hdl, module_defs, language, module_name)
+
+        # Write the HDL to file
+        if out is not None:
+            self._write_hdl(hdl, out, mapping)
+
+        return hdl, module_defs
+
+    def _wrap_hdl(self, hdl, module_defs, language="verilog", module_name=None):
+        """Wraps the HDL in a module definition"""
+
         # If flat HDL is not desired, wrap the graph in a module
         ## First get in_ports and out_ports
         (in_ports, out_ports) = self._get_ports()
@@ -426,12 +420,32 @@ class ExpressionGraph(nx.DiGraph):
         ## Add the instance to the HDL
         hdl = inst
 
-        # Write the HDL to file
-        if out is not None:
-            with open(out, "w") as f:
-                f.write(file_out_hdl)
-
         return hdl, module_defs
+
+    def _write_hdl(self, out=None, mapping="behavioral"):
+        """Writes the HDL to a file"""
+        # Check that output path is valid
+        if out is None:
+            raise ValueError("Output path must be defined")
+        outdir = pathlib.Path(out).resolve().parent
+        if not outdir.exists():
+            raise ValueError("Output path does not exist")
+
+        # Verify that the mapping is supported
+        file_suffix = syntax["file_extension"]
+        mappings_path = importlib.resources.path("pptrees", "mappings")
+        with mappings_path as pkg_map_dir:
+            pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+            local_map_file = outdir / (mapping + "_map" + file_suffix)
+
+            if not pkg_map_file.is_file():
+                raise ValueError("Unsupported mapping requested")
+
+            # Copy the mapping file to the output directory
+            shutil.copy(pkg_map_file, local_map_file)
+    
+        with open(out, "w") as f:
+            f.write(file_out_hdl)
 
 if __name__ == "__main__":
     raise RuntimeError("This module is not intended to be run directly")
