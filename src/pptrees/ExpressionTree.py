@@ -133,6 +133,8 @@ class ExpressionTree(ExpressionGraph):
             for a in range(radix):
                 ## Place pre-processing nodes
                 if a == 0 or pre_counter < radix-1:
+                    if pre_counter < 0:
+                        break
                     label = "pg[{}]".format(pre_counter)
                     # Left spine is special
                     if pre_counter == self.width-1:

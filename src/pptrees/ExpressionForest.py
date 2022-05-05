@@ -86,9 +86,6 @@ class ExpressionForest(ExpressionGraph):
         self.idem = idem
         self.node_defs = node_defs
 
-        # Initialize the graph
-        super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
-
         # Initialize the trees
         self.trees = []
         ### NOTE: TREE OUTPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
@@ -111,6 +108,9 @@ class ExpressionForest(ExpressionGraph):
                     radix=radix,
             )
             self.trees.append(t)
+
+        # Initialize the graph
+        super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
 
 if __name__ == "__main__":
