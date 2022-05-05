@@ -280,7 +280,6 @@ class ExpressionTree(ExpressionGraph):
         to_remove = []
         for k in variants:
             if parent is not None:
-                print(parent)
                 pin_pairs = match_nodes(parent, k, index)
                 if pin_pairs is None:
                     to_remove.append(k)
@@ -296,6 +295,7 @@ class ExpressionTree(ExpressionGraph):
             variants.remove(k)
 
         # For each possible variant, check if the children can match it
+        flag = True
         for k in variants:
             ctr = valids['idx']
             ctr += 1
@@ -308,7 +308,15 @@ class ExpressionTree(ExpressionGraph):
                 if child is None:
                     continue
                 prev_dict = valids[valids['idx']].copy()
-                self._check_fit(child, k, c, valids, prev_dict=prev_dict)
+                ret = self._check_fit(child, k, c, valids, prev_dict=prev_dict)
+                if not ret:
+                    del valids[valids['idx']]
+                    valids['idx'] -= 1
+                    break
+
+        if len(variants) == 0:
+            return False
+        return flag
 
 
     def optimize_nodes(self):
