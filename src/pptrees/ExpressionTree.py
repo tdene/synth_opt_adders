@@ -133,7 +133,7 @@ class ExpressionTree(ExpressionGraph):
             for a in range(radix):
                 ## Place pre-processing nodes
                 if a == 0 or pre_counter < radix-1:
-                    label = "t[{}]".format(pre_counter)
+                    label = "pg[{}]".format(pre_counter)
                     # Left spine is special
                     if pre_counter == self.width-1:
                         label = "p[{}]".format(pre_counter)
@@ -280,8 +280,17 @@ class ExpressionTree(ExpressionGraph):
         to_remove = []
         for k in variants:
             if parent is not None:
+                print(parent)
                 pin_pairs = match_nodes(parent, k, index)
                 if pin_pairs is None:
+                    to_remove.append(k)
+            # If this is a leaf node, check if the shape matches
+            if len(children) == 0:
+                if modules[k]["ins"] != modules[node_def]["ins"]:
+                    to_remove.append(k)
+            # If this is a root node, check if the shape matches
+            if parent is None:
+                if modules[k]["outs"] != modules[node_def]["outs"]:
                     to_remove.append(k)
         for k in to_remove:
             variants.remove(k)
@@ -301,6 +310,7 @@ class ExpressionTree(ExpressionGraph):
                 prev_dict = valids[valids['idx']].copy()
                 self._check_fit(child, k, c, valids, prev_dict=prev_dict)
 
+
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
@@ -317,6 +327,9 @@ class ExpressionTree(ExpressionGraph):
         Args:
             node (Node): The root node of the sub-tree to optimize
         """
+
+        # First fix node positions
+        self._fix_diagram_positions()
 
         # Use recursive function to get all possible combinations
         ret_dict = {'idx':0}
@@ -341,22 +354,28 @@ class ExpressionTree(ExpressionGraph):
                 best_result = a
                 best_priority = priority
 
-    def _swap_node_defs(self, node, new_def):
+        # Replace the nodes with the best result
+        self._swap_all_nodes(self.root, None, 0, best_result)
+
+        # Connect root to outports
+        self._connect_outports(self.root)
+
+        # Connect all leafs to inports
+        leafs = list(reversed(self._get_leafs()))
+        for a in range(len(leafs)):
+            leaf = leafs[a]
+            self._connect_inports(leaf, a)
+
+    def _swap_node_defs(self, node, parent, index, new_def):
         """Change a node's module definition
 
         Args:
             node (Node): The node to change
+            parent (Node): The parent node (already disconnected)
+            index (int): The index of the parent's input port
             new_def (str): The new module definition
         """
 
-        # Disconnect the node from the tree
-        parent = node.parent
-        if parent is not None:
-            # Save the index of the node in the parent's children list
-            index = parent.children.index(node)
-            self.remove_edge(parent, node)
-        else:
-            self.root = None
         # Save the node's children
         children = node.children.copy()
         for c in node.children:
@@ -369,15 +388,38 @@ class ExpressionTree(ExpressionGraph):
         # Create the new node
         new_node = node.morph(new_def)
 
-        # Reconnect the node to the tree
+        # Add the new node to the tree
+        self.add_node(new_node)
+
+        # Reconnect the node to its parent
         if parent is not None:
+            print(new_node)
+            print(parent)
             self.add_edge(parent, new_node, index)
         else:
             self.root = new_node
+        return new_node, children
+
+    def _swap_all_nodes(self, node, parent, index, new_defs):
+        """Swap all node module definitions
+
+        Args:
+            node (Node): The node to start recursion from
+            parent (Node): The parent node (already disconnected)
+            index (int): The index of the parent's input port
+            new_defs (dict): A dictionary mapping node names to new modules
+        """
+
+        # Swap the node's module definition
+        new_node, children = self._swap_node_defs(node, parent, index,
+                new_defs[str(node)])
+
+        # Recurse on the node's children
         for index in range(len(children)):
             c = children[index]
             if c is not None:
-                self.add_edge(new_node, c, index)
+                self._swap_all_nodes(c, new_node, index, new_defs)
+
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
     ### TO-DO: Make this more general

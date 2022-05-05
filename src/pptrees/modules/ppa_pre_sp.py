@@ -5,13 +5,12 @@ data = dict()
 data[
     "verilog"
 ] = """
-module ppa_pre_sp(cin, pout, gout);
+module ppa_pre_sp(a_in, b_in, gout);
 
-	input cin;
-	output pout, gout;
+	input a_in, b_in;
+	output gout;
 
-	assign pout=1'b0;
-	assign gout=cin;
+	and2 U2(gout,a_in,b_in);
 
 endmodule
 """
@@ -21,8 +20,8 @@ data[
 ] = """
 entity ppa_pre_sp is
 	port (
-		cin : in std_logic;
-		pout : out std_logic;
+		a_in : in std_logic;
+		b_in : in std_logic;
 		gout : out std_logic
 	);
 end entity;
@@ -30,8 +29,12 @@ end entity;
 architecture behavior of ppa_pre_sp is
 begin
 
-	pout <= '0';
-	gout <= cin;
+U2: and2
+	port map (
+		A => a_in,
+		B => b_in,
+		Y => gout
+	);
 
 end architecture;
 """
@@ -45,10 +48,10 @@ data["style"] = "dashed"
 data["footprint"] = "ppa_pre"
 data["priority"] = 2
 
-data["ins"] = [("c_in", 1, 1, 0)]
-data["outs"] = [("pout", 1), ("gout", 1)]
+data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 1, 0)]
+data["outs"] = [("gout", 1)]
 
-data["logic"] = lambda a, b: [0, cin]
+data["logic"] = lambda a, b: [0, a & b]
 
-data["pd"] = 0
-data["le"] = [0, 0]
+data["pd"] = 2
+data["le"] = [4.0 / 3, 4.0 / 3]
