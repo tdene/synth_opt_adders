@@ -10,7 +10,7 @@ module ppa_post(xin, yin, gin, sum);
 	input xin, yin, gin;
 	output sum;
 
-	mux2 U1(sum,gin,yin,xin);
+	mux2 U1(sum,gin,xin,yin);
 
 endmodule
 """
@@ -32,8 +32,8 @@ begin
 
 U1: mux2
 	port map (
-		A => yin,
-		B => xin,
+		A => xin,
+		B => yin,
 		S => gin,
 		Y => sum
 	);

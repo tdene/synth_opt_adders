@@ -207,7 +207,10 @@ class ExpressionTree(ExpressionGraph):
         """Connect the tree's input ports to a pre-processing node"""
         for a in range(len(self.in_shape)):
             port_name = self.in_ports[a][0][0]
-            net_name = "${}[{}]".format(port_name,index)
+            if self.width == 1:
+                net_name = "${}".format(port_name)
+            else:
+                net_name = "${}[{}]".format(port_name,index)
             node.in_nets[port_name][0] = net_name
 
     def add_edge(self, parent, child, index):
@@ -281,6 +284,8 @@ class ExpressionTree(ExpressionGraph):
         # Check which node variants will match the parent
         to_remove = []
         for k in variants:
+            if k == "ppa_post_no_g" and self.width > 1:
+                to_remove.append(k)
             if parent is not None:
                 pin_pairs = match_nodes(parent, k, index)
                 if pin_pairs is None:

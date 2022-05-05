@@ -106,9 +106,6 @@ class ExpressionForest(ExpressionGraph):
             bit_s = "[{0}]".format(a-1)
             tree_out_ports = [((x[0][0],1),x[1]+bit_s) for x in out_ports]
 
-            print(tree_in_ports)
-            print(tree_out_ports)
-
             t = self.tree_type(
                     a,
                     tree_in_ports,
