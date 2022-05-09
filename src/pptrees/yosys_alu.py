@@ -14,6 +14,14 @@ class yosys_alu(adder_tree):
 
         Refer to the adder_tree's docstring for a full description.
         """
+        if network == "very_slow":
+            network = "ripple"
+        elif network == "slow":
+            network = "brent-kung"
+        elif network == "fast":
+            network = "sklansky"
+        elif network == "very_fast":
+            network = "kogge-stone"
         super().__init__(width, network)
 
     def yosys_map(self, out=None, mapping="behavioral"):
