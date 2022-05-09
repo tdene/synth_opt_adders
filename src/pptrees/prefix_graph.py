@@ -651,8 +651,8 @@ class prefix_graph(nx.MultiDiGraph):
             file_suffix = ".vhd"
 
         # Locate mapping file and check its existence
-        with importlib.resources.path("pptrees", "mappings") as pkg_map_dir:
-            pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+        map_file = mapping + "_map" + file_suffix
+        with importlib.resources.path("pptrees.mappings", map_file) as pkg_map_file:
             local_map_file = outdir / (mapping + "_map" + file_suffix)
 
             if not pkg_map_file.is_file():
