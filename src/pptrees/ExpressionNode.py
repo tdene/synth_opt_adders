@@ -11,12 +11,14 @@ class ExpressionNode:
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): An integer encoding all leafs reachable from this node
-        virtual (list): List of output nets that are virtual
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
         x_pos (float): The x-coordinate of this node's graphical representation
         y_pos (float): The y-coordinate of this node's graphical representation
+        equiv_class (int): The equivalence class this node belongs to, if any
+        equiv_rep (boolean): Whether this is the node chosen to
+            be the main representative of its equivalence class
     """
     def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
@@ -43,9 +45,10 @@ class ExpressionNode:
         self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
 
         # Graph-related attributes
-        self.virtual = None
         self.leafs = 0
         self.block = None
+        self.equiv_class = None
+        self.equiv_rep = False
 
         # Visualization-related attributes
         self.x_pos = x_pos
@@ -285,10 +288,12 @@ class ExpressionNode:
     def _verilog_flat(self):
         """Return Verilog consisting of the module's internal logic"""
 
-        # If this node has been virtualized, create assign statements
-        if self.virtual is not None:
+        # If this node is part of an equivalence class,
+        # but not the main representative,
+        # replace its HDL by assign statements.
+        if self.equiv_class is not None and not self.equiv_rep:
             ret = ""
-            for v in self.virtual:
+            for v in self.out_nets:
                 port = self.virtual[v]
                 for a in range(len(port)):
                     net = port[a]

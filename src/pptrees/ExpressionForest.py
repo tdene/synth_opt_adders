@@ -121,7 +121,7 @@ class ExpressionForest(ExpressionGraph):
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
-    def find_identical_nodes(self):
+    def find_equivalent_nodes(self):
         """Finds identical nodes amongst the forest's trees"""
         for i1 in reversed(range(len(self.trees))):
             t1 = self.trees[i1]
