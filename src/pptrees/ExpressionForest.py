@@ -121,8 +121,14 @@ class ExpressionForest(ExpressionGraph):
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
+    ### NOTE: Equivalence requires nodes to be fully equivalent
+    ### It is possible for two nodes to be partially equivalent
+    ### For example, if their subtrees are identical
+    ### But one node's expression is a subset of the other
+    ### Such as (+,-) vs (+) or (-)
+    ### This should be accounted for
     def find_equivalent_nodes(self):
-        """Finds identical nodes amongst the forest's trees"""
+        """Finds equivalent nodes amongst the forest's trees"""
         for i1 in reversed(range(len(self.trees))):
             t1 = self.trees[i1]
             for i2 in range(i1):
@@ -130,16 +136,54 @@ class ExpressionForest(ExpressionGraph):
                 for n1 in t1.nodes:
                     for n2 in t2.nodes:
                         if n1.equiv(n2):
-                            n2.virtual = n1.out_nets
-                            self.increase_fanout(t1,n1)
+                            n1.set_equiv(n2)
 
-    def increase_fanout(self,tree,node):
-        """Increases the fanout of a node in a tree"""
+    ### NOTE: Improve fanout estimate
+    def _calc_node_fanout(self, node, tree):
+        """Calculates the fanout of a node in a tree
+        
+        A node has fanout of k if:
+         - node is the representation of an equivalence class
+         - There are k nodes in the forest that belong to node's equivalence
+           class, but whose parents belong to unique equivalence classes
 
+        For example, if an equivalence class contains the nodes
+        n1, n2, n3, n4; with n1 being the representative
+        And there is an equivalence relation between n1.parent and n2.parent
+        but not between any other parents
+
+        n1 has a fan-out of 3
+        The other nodes do not matter
+        """
+
+        # Grab the node's equivalence class
+        ec = node.equiv_class
+        # If node is not ec's representative, do nothing
+        if ec[0] is not node:
+            return
+
+        # Count the fanout
+        ctr = set()
+        for n in ec:
+            ctr += n.parent.equiv_class[0]
+        fanout = len(ctr)
+
+        # Modify the relevant edge's data
         e_data = tree.get_edge_data(node.parent,node)
         index = node.parent.children.index(node)
         g = modules[node.value]["le"][index]
-        e_data["weight"] += g 
+        ### This is a bad estimate of the fanout's effect on delay
+        e_data["fanout"] = g*fanout
+        self.update_weight(e_data)
+
+    def calculate_fanout(self):
+        """Calculates the fanout of all nodes in the forest
+
+        See the description of _calc_node_fanout for details
+        """
+        for t in self.trees:
+            for n in t:
+                self._calc_node_fanout(n,t)
 
     def hdl(
         self,

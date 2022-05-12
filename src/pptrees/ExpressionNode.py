@@ -16,9 +16,9 @@ class ExpressionNode:
         out_nets (list): A list of output nets
         x_pos (float): The x-coordinate of this node's graphical representation
         y_pos (float): The y-coordinate of this node's graphical representation
-        equiv_class (int): The equivalence class this node belongs to, if any
-        equiv_rep (boolean): Whether this is the node chosen to
-            be the main representative of its equivalence class
+        equiv_class (list of ExpressionNode): The list of all nodes equivalent
+            to this one. The first node in the list is special, and is known
+            as the representative of the equivalence class.
     """
     def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
@@ -47,8 +47,7 @@ class ExpressionNode:
         # Graph-related attributes
         self.leafs = 0
         self.block = None
-        self.equiv_class = None
-        self.equiv_rep = False
+        self.equiv_class = [self]
 
         # Visualization-related attributes
         self.x_pos = x_pos
@@ -84,6 +83,9 @@ class ExpressionNode:
         """
         return self.leafs > other.leafs
 
+    ### NOTE: This should just convert the subtrees each node generates
+    ### into their labels, and then compare the two strings
+    ### TO-DO: Implement the above
     def equiv(self, other):
         """Checks if this node is equivalent to another node
         Cannot do this with __eq__ because NetworkX uses __eq__
@@ -94,8 +96,11 @@ class ExpressionNode:
         if not isinstance(other, ExpressionNode):
             raise TypeError("Cannot compare to non-ExpressionNode")
 
+        # Check whether self and other are equivalent
         ret = (not (self > other) and not (self < other) \
                 and self.value == other.value)
+
+        # Check whether their subtrees are also equivalent
         for a in range(len(self.children)):
             if self.children[a] is not None:
                 try:
@@ -105,6 +110,23 @@ class ExpressionNode:
                 ret = ret and self.children[a].equiv(other_c)
 
         return ret
+
+    def set_equiv(self, other):
+        """Sets two nodes as equivalent
+
+        If either already has an equivalence class assigned,
+        the two classes are merged with self's taking priority.
+        """
+        # Grab both nodes' equivalence classes
+        ec1 = self.equiv_class
+        ec2 = other.equiv_class
+        # Merge them
+        ec1.extend(ec2)
+        # Set both nodes' equivalence classes to the result
+        self.equiv_class = ec1
+        other.equiv_class = ec1
+        # Return the final equivalence class
+        return ec1
 
     def __iter__(self):
         """Iterates over the children of this node"""
@@ -290,8 +312,8 @@ class ExpressionNode:
 
         # If this node is part of an equivalence class,
         # but not the main representative,
-        # replace its HDL by assign statements.
-        if self.equiv_class is not None and not self.equiv_rep:
+        # replace its HDL by assign statements
+        if self is not self.equiv_class[0]:
             ret = ""
             for v in self.out_nets:
                 port = self.virtual[v]

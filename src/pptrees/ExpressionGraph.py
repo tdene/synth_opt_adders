@@ -130,8 +130,11 @@ class ExpressionGraph(nx.DiGraph):
         }
 
         # Initialize weight to parasitc delay
-        # This is later modified by logical effort
-        kwargs["weight"] = modules[child.value]["pd"]
+        # This is later modified by logical effort and cross-track cap
+        kwargs["fanout"] = 1
+        kwargs["tracks"] = 0
+        kwargs["delay"] = modules[child.value]["pd"]
+        kwargs["weight"] = kwargs["delay"]
 
         # If the two nodes are already connnected, simply update the pins
         if self.has_edge(parent, child):
@@ -149,8 +152,8 @@ class ExpressionGraph(nx.DiGraph):
         """Removes an edge from the graph
 
         Args:
-            parent (ExpressionNode): The name of the first node
-            child (ExpressionNode): The name of the second node
+            parent (ExpressionNode): The parent node
+            child (ExpressionNode): The child node
         """
 
         if not isinstance(parent, ExpressionNode):
@@ -171,6 +174,32 @@ class ExpressionGraph(nx.DiGraph):
 
         # Return the edge data
         return edge_data
+
+    ### NOTE: Improve the heuristic used herein
+    def update_edge_weight(self, parent, child):
+        """Updates the weight of an edge from parent to child
+
+        Args:
+            parent (ExpressionNode): The parent node
+            child (ExpressionNode): The child node
+        """
+
+        if not isinstance(parent, ExpressionNode):
+            raise TypeError("Node1 must be an ExpressionNode")
+        if not isinstance(child, ExpressionNode):
+            raise TypeError("Node2 must be an ExpressionNode")
+        if not self.has_edge(parent, child):
+            raise ValueError("Edge does not exist")
+
+        edge_data = self.get_edge_data(parent, child)
+
+        ### This is a bad estimate of delay
+        weight = edge_data["delay"] * edge_data["fanout"]
+            + edge_data["delay"] * edge_data["tracks"]
+
+        edge_data["weight"] = weight
+
+        return weight
 
     def add_block(self, *nodes):
         """Creates a new module block of nodes
