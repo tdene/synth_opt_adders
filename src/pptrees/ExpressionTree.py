@@ -492,18 +492,16 @@ class ExpressionTree(ExpressionGraph):
         lchild = node[0]
         rchild = node[1]
         plchild = node.parent[0]
-        if grandparent is None:
-            thru_root = True
-        else:
+
+        # Check for special cases
+        thru_root = True
+        if grandparent is not None:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
-        if "lspine" in self.node_defs:
-            footprint = modules[self.node_defs["lspine"]]["footprint"]
-            if footprint == modules[parent.value]["footprint"] or \
-                    parent == self.root:
-                thru_lspine = True
-            else:
-                thru_lspine = False
+
+        thru_lspine = False
+        if "lspine" in self.node_defs and self._on_lspine(parent):
+            thru_lspine = True
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -571,18 +569,16 @@ class ExpressionTree(ExpressionGraph):
         rchild = node[1]
         lchild = node[0]
         prchild = node.parent[1]
-        if grandparent is None:
-            thru_root = True
-        else:
+
+        # Check for special cases
+        thru_root = True
+        if grandparent is not None:
             thru_root = False
             parent_dir = grandparent.children.index(parent)
-        if "lspine" in self.node_defs:
-            footprint = modules[self.node_defs["lspine"]]["footprint"]
-            if footprint == modules[node.value]["footprint"] or \
-                    node == self.root:
-                thru_lspine = True
-            else:
-                thru_lspine = False
+
+        thru_lspine = False
+        if "lspine" in self.node_defs and self._on_lspine(parent):
+            thru_lspine = True
 
         # Adjust the y-pos
         parent.y_pos += 1
@@ -629,29 +625,35 @@ class ExpressionTree(ExpressionGraph):
     ### TO-DO: Make this more general
     def left_shift(self, node):
         """Shifts a node left out of its local subtree"""
+        # If the node sits on the left spine, it can no longer be shifted
+        if self._on_lspine(node):
+            return None
 
         # If the node can rotate left, simply do so
         try:
-            self.left_rotate(node)
+            return self.left_rotate(node)
         # NOTE: This error should only catch wrong-index issues
         # TO-DO: Perhaps make a custom, WrongChild, error?
         except ValueError:
-            self.right_rotate(node)
-            self.left_shift(node)
+            node = self.right_rotate(node)
+            return self.left_shift(node)
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
     ### TO-DO: Make this more general
     def right_shift(self, node):
         """Shifts a node right out of its local subtree"""
+        # If the node sits on the right spine, it can no longer be shifted
+        if self._on_rspine(node):
+            return None
 
         # If the node can rotate right, simply do so
         try:
-            self.right_rotate(node)
+            return self.right_rotate(node)
         # NOTE: This error should only catch wrong-index issues
         # TO-DO: Perhaps make a custom, WrongChild, error?
         except ValueError:
-            self.left_rotate(node)
-            self.right_shift(node)
+            node = self.left_rotate(node)
+            return self.right_shift(node)
 
     def insert_buffer(self, node):
         """Insert a buffer on the output of a node
