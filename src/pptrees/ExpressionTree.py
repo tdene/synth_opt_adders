@@ -342,7 +342,6 @@ class ExpressionTree(ExpressionGraph):
             return False
         return flag
 
-
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
@@ -458,6 +457,19 @@ class ExpressionTree(ExpressionGraph):
             if c is not None:
                 self._swap_all_nodes(c, new_node, index, new_defs)
 
+    def _on_lspine(self, node):
+        """Checks if a node is on the left spine of this tree"""
+        if node not in self:
+            raise ValueError("Node is not part of this tree")
+
+        return node.leafs >= 2**(self.width-1)
+
+    def _on_rspine(self, node):
+        """Checks if a node is on the right spine of this tree"""
+        if node not in self:
+            raise ValueError("Node is not part of this tree")
+
+        return (node.leafs & (node.leafs + 1) == 0) 
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
     ### TO-DO: Make this more general
