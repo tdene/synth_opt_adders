@@ -149,7 +149,7 @@ class ExpressionTree(ExpressionGraph):
                     self.add_node(pre_node, label=label)
                     self.add_edge(prev_root, pre_node, a)
                     self._connect_inports(pre_node, pre_counter)
-                    pre_node._recalculate_leafs(leafs=pre_counter)
+                    pre_node._recalculate_leafs(leafs=2**pre_counter)
                     pre_counter -= 1
                 else:
                     black_node = Node(node_defs["black"])
@@ -170,11 +170,28 @@ class ExpressionTree(ExpressionGraph):
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
-        Calling tree[x,y] will return the xth node from the right at depth y
+        This method is defined to correspond to a classic view of hardware
+        prefix tree structures. In a way, this is upside-down from the natural,
+        tree, view. For example, the root node corresponds to x = tree.width,
+        y = len(tree), as opposed to the x = 0, y = 0 that would be expected.
+
+        Calling tree[x,y] will return the node in the xth column and yth row.
+        The columns are 0-indexed starting from the LSB.
+        The rows are 0-indexed starting from the leaves.
         """
         if isinstance(key, tuple) and len(key) == 2:
-            nodes = self._get_row(key[1])
-            return nodes[key[0]]
+            # Find the branch that corresponds to the desired column
+            col = self._get_leafs()[key[0]]
+            # Find the correct row in the desired column
+            target = col
+            for a in range(key[1]):
+                if target is not None:
+                    parent = target.parent
+                    if parent.children[0] == target:
+                        target = target.parent
+                    else:
+                        target = None
+            return target
         else:
             return super().__getitem__(key)
 
@@ -189,7 +206,7 @@ class ExpressionTree(ExpressionGraph):
         for n in self.nodes:
             if len(n.children) == 0:
                 leafs.append(n)
-        return sorted(leafs, reverse=True)
+        return sorted(leafs)
 
     def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
@@ -384,7 +401,7 @@ class ExpressionTree(ExpressionGraph):
         self._connect_outports(self.root)
 
         # Connect all leafs to inports
-        leafs = list(reversed(self._get_leafs()))
+        leafs = self._get_leafs()
         for a in range(len(leafs)):
             leaf = leafs[a]
             self._connect_inports(leaf, a)
@@ -596,6 +613,34 @@ class ExpressionTree(ExpressionGraph):
         self._fix_diagram_positions()
         return node
 
+    ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
+    ### TO-DO: Make this more general
+    def left_shift(self, node):
+        """Shifts a node left out of its local subtree"""
+
+        # If the node can rotate left, simply do so
+        try:
+            self.left_rotate(node)
+        # NOTE: This error should only catch wrong-index issues
+        # TO-DO: Perhaps make a custom, WrongChild, error?
+        except ValueError:
+            self.right_rotate(node)
+            self.left_shift(node)
+
+    ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
+    ### TO-DO: Make this more general
+    def right_shift(self, node):
+        """Shifts a node right out of its local subtree"""
+
+        # If the node can rotate right, simply do so
+        try:
+            self.right_rotate(node)
+        # NOTE: This error should only catch wrong-index issues
+        # TO-DO: Perhaps make a custom, WrongChild, error?
+        except ValueError:
+            self.left_rotate(node)
+            self.right_shift(node)
+
     def insert_buffer(self, node):
         """Insert a buffer on the output of a node
 
@@ -660,7 +705,7 @@ class ExpressionTree(ExpressionGraph):
         """Fix the positions of the nodes in the diagram"""
 
         depth = len(self)
-        leafs = self._get_leafs()
+        leafs = list(reversed(self._get_leafs()))
         # Set x_pos of the leafs to consecutive numbers
         ctr = 0
         for leaf in leafs:

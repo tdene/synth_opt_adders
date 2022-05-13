@@ -53,6 +53,10 @@ class ExpressionNode:
         self.tracks_class = set(self)
 
         # Visualization-related attributes
+        ### NOTE: The use of these attributes is no longer restricted to
+        ### visualization. Somehow these attributes now play an integral
+        ### role in the function of the library. Code rot has begun to
+        ### set in before the official release of V1.0
         self.x_pos = x_pos
         self.y_pos = y_pos
 

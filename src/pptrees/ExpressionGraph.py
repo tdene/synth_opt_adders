@@ -194,8 +194,8 @@ class ExpressionGraph(nx.DiGraph):
         edge_data = self.get_edge_data(parent, child)
 
         ### This is a bad estimate of delay
-        weight = edge_data["delay"] * edge_data["fanout"]
-            + edge_data["delay"] * edge_data["tracks"]
+        weight = edge_data["delay"] * edge_data["fanout"] + \
+            edge_data["delay"] * edge_data["tracks"]
 
         edge_data["weight"] = weight
 
