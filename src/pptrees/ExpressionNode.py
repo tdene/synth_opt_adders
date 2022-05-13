@@ -19,6 +19,8 @@ class ExpressionNode:
         equiv_class (list of ExpressionNode): The list of all nodes equivalent
             to this one. The first node in the list is special, and is known
             as the representative of the equivalence class.
+        tracks_class (list of ExpressionNode): The list of all nodes that cause
+            parallel wires in the layout. No node in this list is special.
     """
     def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
@@ -48,6 +50,7 @@ class ExpressionNode:
         self.leafs = 0
         self.block = None
         self.equiv_class = [self]
+        self.tracks_class = set(self)
 
         # Visualization-related attributes
         self.x_pos = x_pos
@@ -116,17 +119,68 @@ class ExpressionNode:
 
         If either already has an equivalence class assigned,
         the two classes are merged with self's taking priority.
+
+        Args:
+            other (ExpressionNode): The node to compare to
         """
+        if not isinstance(other, ExpressionNode):
+            raise TypeError("Cannot compare to non-ExpressionNode")
+        if not self.equiv(other):
+            raise ValueError("Nodes are not equivalent")
+
         # Grab both nodes' equivalence classes
         ec1 = self.equiv_class
         ec2 = other.equiv_class
         # Merge them
-        ec1.extend(ec2)
+        ec = ec1.copy()
+        for n in ec2:
+            if n not in ec:
+                ec.append(n)
         # Set both nodes' equivalence classes to the result
-        self.equiv_class = ec1
-        other.equiv_class = ec1
+        self.equiv_class = ec
+        other.equiv_class = ec
         # Return the final equivalence class
-        return ec1
+        return ec
+
+    ### NOTE: Where this logic belongs is an open question
+    def tracks(self, other):
+        """Checks if self and other cause a need for parallel wires
+
+        Args:
+            other (ExpressionNode): The node to compare to
+        """
+        if not isinstance(other, ExpressionNode):
+            raise TypeError("Cannot compare to non-ExpressionNode")
+
+        # If the two nodes have different y_pos, they cannot result
+        # in a need for increased wire tracks???
+        # NOTE: Requires further investigation
+        # This makes sense classically, but does it make sense in general?
+        if self.y_pos != other.y_pos:
+            return False
+
+        # If either node is not the representative of its equivalence class
+        # There is no physical meaning to this metric
+        if (self.equiv_class[0] is not self) or \
+           (other.equiv_class[0] is not other):
+            return False
+
+        # Check if the edges lead to parallel routes
+        if node < other and other < node.parent and node.parent < other.parent:
+            return True
+        if node > other and other > node.parent and node.parent > other.parent:
+            return True
+        return False
+
+    ### NOTE: Where this logic belongs is an open question
+    def set_tracks(self, other):
+        """Sets two nodes as causing parallel wires for each other"""
+        if not self.tracks(other):
+            raise ValueError("Nodes do not cause parallel routes")
+        
+        tr = self.tracks_class
+        tr.update(other.tracks_class)
+        other.tracks_class = tr
 
     def __iter__(self):
         """Iterates over the children of this node"""

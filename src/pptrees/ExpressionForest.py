@@ -138,14 +138,27 @@ class ExpressionForest(ExpressionGraph):
                         if n1.equiv(n2):
                             n1.set_equiv(n2)
 
+    ### NOTE: Where this logic belongs is an open question
+    def find_parallel_tracks(self):
+        """Finds parallel tracks amongst the forest's trees"""
+        for i1 in reversed(range(len(self.trees))):
+            t1 = self.trees[i1]
+            for i2 in range(i1):
+                t2 = self.trees[i2]
+                for n1 in t1.nodes:
+                    for n2 in t2.nodes:
+                        if n1.tracks(n2):
+                            n1.set_tracks(n2)
+
     ### NOTE: Improve fanout estimate
     def _calc_node_fanout(self, node, tree):
-        """Calculates the fanout of a node in a tree
+        """Estimates the delay caused by fanout for a node
         
         A node has fanout of k if:
-         - node is the representation of an equivalence class
-         - There are k nodes in the forest that belong to node's equivalence
-           class, but whose parents belong to unique equivalence classes
+         - node is the representative of an equivalence class
+         - There are k nodes in the forest such that
+             - They belong to node's equivalence class
+             - Their parents belong to unique equivalence classes
 
         For example, if an equivalence class contains the nodes
         n1, n2, n3, n4; with n1 being the representative
@@ -172,9 +185,11 @@ class ExpressionForest(ExpressionGraph):
         e_data = tree.get_edge_data(node.parent,node)
         index = node.parent.children.index(node)
         g = modules[node.value]["le"][index]
-        ### This is a bad estimate of the fanout's effect on delay
+        ### This is a bad estimate of fanout's effect on delay
         e_data["fanout"] = g*fanout
-        self.update_weight(e_data)
+        self.update_weight(node.parent, node)
+
+        return fanout
 
     def calculate_fanout(self):
         """Calculates the fanout of all nodes in the forest
@@ -185,6 +200,46 @@ class ExpressionForest(ExpressionGraph):
             for n in t:
                 self._calc_node_fanout(n,t)
 
+    ### NOTE: Improve cross-coupling capacitance estimate
+    def _calc_node_tracks(self, node, tree):
+        """Estimates the delay caused by parallel wires for a node
+
+        A node has tracks of k if:
+         - node is the representative of an equivalence class
+         - There are k nodes in the forest such that
+            - They are the heads of their own equivalence classes
+            - node.y_pos = other.y_pos
+            - node < other, other < node.parent, node.parent < other.parent
+            or
+            - node > other, node < other.parent, other.parent > node.parent
+        """
+
+        # Grab the node's tracks class
+        tr = node.tracks_class
+        # If node is not its equivalence class representative, do nothing
+        if node.equiv_class[0] is not node:
+            return
+
+        # Count the tracks
+        tracks = len(tr)
+
+        # Modify the relevant edge's data
+        e_data = tree.get_edge_data(node.parent,node)
+        ### This is a bad estimate of tracks' effect on delay
+        e_data["tracks"] = tracks
+        self.update_weight(node.parent, node)
+
+        return tracks
+
+    def calculate_fanout(self):
+        """Calculates the fanout of all nodes in the forest
+
+        See the description of _calc_node_fanout for details
+        """
+        for t in self.trees:
+            for n in t:
+                self._calc_node_tracks(n,t)
+        
     def hdl(
         self,
         out=None,
