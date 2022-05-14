@@ -175,19 +175,28 @@ class ExpressionTree(ExpressionGraph):
         The columns are 0-indexed starting from the LSB.
         The rows are 0-indexed starting from the leaves.
         """
+        # Don't overwrite the parent __getitem__
         if isinstance(key, tuple) and len(key) == 2:
             # Find the branch that corresponds to the desired column
             col = self._get_leafs()[key[0]]
             # Find the correct row in the desired column
             target = col
-            for a in range(key[1]):
-                if target is not None:
+            # Iterate through nodes in the column
+            while True:
+                # If all nodes have been checked, return None
+                if target == None:
+                    return None
+                # If this node has the correct depth, return it
+                if len(target) == key[1]:
+                    return target
+                # Otherwise, proceed to check its parent
+                else:
                     parent = target.parent
-                    if parent.children[0] == target:
-                        target = target.parent
-                    else:
-                        target = None
-            return target
+                    # But if the node is not its parent's left-most child
+                    # the iteration has left the desired column
+                    if parent.children[0] != target:
+                        return None
+                target = parent
         else:
             return super().__getitem__(key)
 
