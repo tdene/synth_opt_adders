@@ -4,7 +4,6 @@ import pydot
 from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
-from .util import lg
 from .util import match_nodes
 
 class ExpressionTree(ExpressionGraph):

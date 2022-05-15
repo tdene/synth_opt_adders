@@ -2,7 +2,7 @@ import re
 from .modules import *
 
 def lg(x):
-    """Returns the base-2 logarithm of x, rounded up"""
+    """Returns the base-2 logarithm of x, rounded down"""
     return x.bit_length() - 1
 
 def sub_brackets(x):
