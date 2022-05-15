@@ -161,7 +161,7 @@ class ExpressionTree(ExpressionGraph):
 
     def __len__(self):
         """Redefine the len() function to return the depth of the tree"""
-        return len(self.root)
+        return len(self.root)+1
 
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
