@@ -486,7 +486,7 @@ class ExpressionTree(ExpressionGraph):
         """
         if not isinstance(node, Node):
             raise TypeError("node must be an Node")
-        if node.parent is None or len(node.parent.children) != self.radix:
+        if node.parent is None or len(node.children) != self.radix:
             raise ValueError("Can only rotate nodes with full families")
         if node.parent[1] != node:
             raise ValueError("Can only rotate right children")
@@ -563,7 +563,7 @@ class ExpressionTree(ExpressionGraph):
         """
         if not isinstance(node, Node):
             raise TypeError("node must be an Node")
-        if node.parent is None or len(node.parent.children) != self.radix:
+        if node.parent is None or len(node.children) != self.radix:
             raise ValueError("Can only rotate nodes with full families")
         if node.parent[0] != node:
             raise ValueError("Can only rotate left children")
