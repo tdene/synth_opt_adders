@@ -724,7 +724,7 @@ class ExpressionTree(ExpressionGraph):
         # Fix the diagram positions
         child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
 
-        return child        
+        return child
 
     def reduce_height(self, node, target_height=None):
         """Attempts to reduce the height of the subtree given by a node"""
@@ -748,7 +748,7 @@ class ExpressionTree(ExpressionGraph):
         bad_children = [x for x in range(len(c_heights)) \
                 if c_heights[x] == height-1]
         good_children = [x for x in range(len(c_heights)) \
-                if c_heights[x] < height-1]
+                if c_heights[x] < height-2]
 
         # Reduce the height of bad children
         for a in bad_children:

@@ -27,8 +27,8 @@ class ExpressionNode:
 
         Args:
             value (str): The value of the node; a valid module name
-            x_pos (float): The x-coordinate of this node's graphical representation
-            y_pos (float): The y-coordinate of this node's graphical representation
+            x_pos (float): The x-coord of this node's graphical representation
+            y_pos (float): The y-coord of this node's graphical representation
         """
         if not isinstance(x_pos, (int, float)):
             raise TypeError("X-coordinate must be a number")

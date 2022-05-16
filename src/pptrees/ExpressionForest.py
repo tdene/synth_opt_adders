@@ -254,6 +254,7 @@ class ExpressionForest(ExpressionGraph):
                 attempt = t.LF(x, y)
                 if attempt is not None:
                     x, y = attempt
+        return x, y
 
     def FL(self, x, y = None):
         """Performs an FL transform on the specified node in all trees
@@ -269,6 +270,7 @@ class ExpressionForest(ExpressionGraph):
                 attempt = t.FL(x, y)
                 if attempt is not None:
                     x, y = attempt
+        return x, y
 
     def TF(self, x, y = None):
         """Performs a TF transform on the specified node in all trees
@@ -284,6 +286,7 @@ class ExpressionForest(ExpressionGraph):
                 attempt = t.TF(x, y)
                 if attempt is not None:
                     x, y = attempt
+        return x, y
 
     def FT(self, x, y = None):
         """Performs an FT transform on the specified node in all trees
@@ -299,6 +302,7 @@ class ExpressionForest(ExpressionGraph):
                 attempt = t.FT(x, y)
                 if attempt is not None:
                     x, y = attempt
+        return x, y
 
     def hdl(
         self,
