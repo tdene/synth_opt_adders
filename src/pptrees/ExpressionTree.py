@@ -726,8 +726,24 @@ class ExpressionTree(ExpressionGraph):
 
         return child
 
-    def reduce_height(self, node, target_height=None):
-        """Attempts to reduce the height of the subtree given by a node"""
+    def reduce_height(self, node, target_height=None, original_node=None):
+        """Attempts to reduce the height of the subtree given by a node
+
+        Args:
+            node (Node): The node generating the subtree
+            target_height (int): The target height of the subtree
+                If this is not specified, the height is reduced by 1
+            original_node (Node, index): Information to refind subtree root
+                This is used in recursion, and should not be specified
+        """
+        # Save the identity of the original node's parent
+        if original_node is None:
+            parent = node.parent
+            index = None
+            if parent is not None:
+                index = parent.children.index(node)
+            original_node = (parent, index)
+
         # Avoid repeated height calculations (to some degree)
         c_heights = [len(c) for c in node]
         height = 1 + max(c_heights)
@@ -738,7 +754,11 @@ class ExpressionTree(ExpressionGraph):
 
         # If the target height is already reached, we are done
         if target_height >= height:
-            return node
+            # Find the new root of the subtree
+            if original_node[0] is None:
+                return self.root
+            else:
+                return original_node[0][original_node[1]]
 
         # Check whether the height can be reduced
         if 1<<(target_height) < bin(node.leafs).count("1"):
@@ -767,11 +787,50 @@ class ExpressionTree(ExpressionGraph):
                 self.right_shift(c.rightmost_leaf().parent)
             # Otherwise try to iterate down the child
             else:
-                self.reduce_height(c)
+                self.reduce_height(c, original_node=original_node)
 
         # After iterating, the desired height may not be reached
         # If so, try again. We know it can be done.
-        return self.reduce_height(node, target_height)
+        return self.reduce_height(node, target_height, original_node)
+
+    def equalize_depths(self, node):
+        """Equalizes the leaf depths of the subtree given by a node"""
+
+        # Iterate over the children
+        for c in node:
+            # If the child is a leaf, we are at the end of an iteration
+            if len(c) == 0:
+                # Insert enough buffers to balance the depth
+                for a in range(len(node)-1):
+                    self.insert_buffer(c)
+            # Otherwise, iterate down the child if needed
+            if not c.is_proper():
+                self.equalize_depths(c)
+
+        return node
+
+    def balance(self, node, with_buffers = False):
+        """Balances a node's subtree
+
+        Note that this does not create a complete tree.
+        To do so, refer to the rbalance and lbalance methods.
+
+        Args:
+            node (Node): The node to balance
+            with_buffers (bool): Whether to use buffers to balance leaf depth
+        """
+        old_node = node
+        while True:
+            node = self.reduce_height(node)
+            if node is None:
+                node = old_node
+                break
+            old_node = node
+        del old_node
+
+        if not with_buffers:
+            return node
+        return self.equalize_depths(node)
 
     def LF(self, x, y = None, find_y = False):
         """Performs an LF transform on the specified node, if possible
