@@ -239,7 +239,67 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             for n in t:
                 self._calc_node_tracks(n,t)
-        
+
+    def LF(self, x, y = None):
+        """Performs an LF transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.LF(x, y)
+                if attempt is not None:
+                    x, y = attempt
+
+    def FL(self, x, y = None):
+        """Performs an FL transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.FL(x, y)
+                if attempt is not None:
+                    x, y = attempt
+
+    def TF(self, x, y = None):
+        """Performs a TF transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.TF(x, y)
+                if attempt is not None:
+                    x, y = attempt
+
+    def FT(self, x, y = None):
+        """Performs an FT transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.FT(x, y)
+                if attempt is not None:
+                    x, y = attempt
+
     def hdl(
         self,
         out=None,

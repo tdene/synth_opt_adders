@@ -162,6 +162,9 @@ class ExpressionTree(ExpressionGraph):
         """Redefine the len() function to return the height of the tree"""
         return len(self.root)+1
 
+    ### NOTE: This is meant to work with the classic representation of n-rooted
+    ### prefix tree structures, with no regard for post-processing nodes. How 
+    ### does this interact with post-processing nodes?
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
@@ -186,8 +189,12 @@ class ExpressionTree(ExpressionGraph):
                 if target == None:
                     return None
                 # If this node has the correct height, return it
-                if len(target) == key[1]:
+                height = len(target)
+                if height == key[1]:
                     return target
+                # If we have moved beyond the target height, return None
+                elif height > key[1]:
+                    return None
                 # Otherwise, proceed to check its parent
                 else:
                     parent = target.parent
@@ -777,7 +784,7 @@ class ExpressionTree(ExpressionGraph):
         node that can be transformed.
 
         If the transform is not possible, the function returns None.
-        Otherwise, the function returns the node used as a pivot.
+        Otherwise, the function returns the coordinates used to pivot.
 
         Args:
             x (int): The x-coordinate to use as a pivot for the LF transform
@@ -808,7 +815,7 @@ class ExpressionTree(ExpressionGraph):
         new_node = self.reduce_height(node)
         if new_node is None and find_y:
             return self.LF(x, y-1, find_y = True)
-        return new_node
+        return (x,y)
 
     def FL(self, x, y = None, find_y = False):
         """Performs an FL transform on the specified node, if possible
@@ -821,7 +828,7 @@ class ExpressionTree(ExpressionGraph):
         node that can be transformed.
 
         If the transform is not possible, the function returns None.
-        Otherwise, the function returns the node used as a pivot.
+        Otherwise, the function returns the coordinates used to pivot.
 
         Args:
             x (int): The x-coordinate to use as a pivot for the LF transform
@@ -850,7 +857,7 @@ class ExpressionTree(ExpressionGraph):
         # attempt to apply an FL transform
         node = self[x,y]
         new_node = self.insert_buffer(node)
-        return new_node
+        return (x,y)
 
     def FT(self, x, y = None, find_y = False):
         """Performs an FT transform on the specified node, if possible
@@ -863,7 +870,7 @@ class ExpressionTree(ExpressionGraph):
         node that can be transformed.
 
         If the transform is not possible, the function returns None.
-        Otherwise, the function returns the node used as a pivot.
+        Otherwise, the function returns the coordinates used to pivot.
 
         Args:
             x (int): The x-coordinate to use as a pivot for the LF transform
@@ -895,7 +902,7 @@ class ExpressionTree(ExpressionGraph):
         new_node = self.left_shift(node[1].leftmost_leaf().parent)
         if new_node is None and find_y:
             return self.FT(x, y-1, find_y = True)
-        return new_node
+        return (x,y)
 
     def TF(self, x, y = None, find_y = False):
         """Performs a TF transform on the specified node, if possible
@@ -908,7 +915,7 @@ class ExpressionTree(ExpressionGraph):
         node that can be transformed.
 
         If the transform is not possible, the function returns None.
-        Otherwise, the function returns the node used as a pivot.
+        Otherwise, the function returns the coordinates used to pivot.
 
         Args:
             x (int): The x-coordinate to use as a pivot for the LF transform
@@ -940,7 +947,7 @@ class ExpressionTree(ExpressionGraph):
         new_node = self.right_shift(node[0].rightmost_leaf().parent)
         if new_node is None and find_y:
             return self.TF(x, y-1, find_y = True)
-        return new_node
+        return (x,y)
 
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
