@@ -766,6 +766,182 @@ class ExpressionTree(ExpressionGraph):
         # If so, try again. We know it can be done.
         return self.reduce_height(node, target_height)
 
+    def LF(self, x, y = None, find_y = False):
+        """Performs an LF transform on the specified node, if possible
+
+        This method is maintained solely for backwards compatibility.
+        Using this method is morally hazardous. It masks the underlying truth.
+
+        The node is specified using its (x,y) classic coordinate.
+        Witholding the y-coordinate will perform the transform on the highest-y
+        node that can be transformed.
+
+        If the transform is not possible, the function returns None.
+        Otherwise, the function returns the node used as a pivot.
+
+        Args:
+            x (int): The x-coordinate to use as a pivot for the LF transform
+            y (int): The y-coordinate to use as a pivot for the LF transform
+            find_y (bool): If True, the y-coordinate will be found automatically
+        """
+        if not isinstance(x, int):
+            raise TypeError("x must be an integer")
+        if y is not None and not isinstance(y, int):
+            raise TypeError("y must be an integer")
+
+        # If no y-coordinate is specified, attempt the highest-y node
+        # Except for the post-processing node. Arbitrarily.
+        # Remember: using this method is morally hazardous.
+        if y is None:
+            return self.LF(x, len(self)-2, find_y = True)
+
+        # If the node is not in the tree, either iterate or return None
+        if self[x,y] is None:
+            if find_y and y > 1:
+                return self.LF(x, y-1, find_y = True)
+            else:
+                return None
+
+        # Now that the node is known to be in the tree,
+        # attempt to apply an LF transform
+        node = self[x,y]
+        new_node = self.reduce_height(node)
+        if new_node is None and find_y:
+            return self.LF(x, y-1, find_y = True)
+        return new_node
+
+    def FL(self, x, y = None, find_y = False):
+        """Performs an FL transform on the specified node, if possible
+
+        This method is maintained solely for backwards compatibility.
+        Using this method is morally hazardous. It masks the underlying truth.
+
+        The node is specified using its (x,y) classic coordinate.
+        Witholding the y-coordinate will perform the transform on the highest-y
+        node that can be transformed.
+
+        If the transform is not possible, the function returns None.
+        Otherwise, the function returns the node used as a pivot.
+
+        Args:
+            x (int): The x-coordinate to use as a pivot for the LF transform
+            y (int): The y-coordinate to use as a pivot for the LF transform
+            find_y (bool): If True, the y-coordinate will be found automatically
+        """
+        if not isinstance(x, int):
+            raise TypeError("x must be an integer")
+        if y is not None and not isinstance(y, int):
+            raise TypeError("y must be an integer")
+
+        # If no y-coordinate is specified, attempt the highest-y node
+        # Except for the post-processing node. Arbitrarily.
+        # Remember: using this method is morally hazardous.
+        if y is None:
+            return self.FL(x, len(self)-2, find_y = True)
+
+        # If the node is not in the tree, either iterate or return None
+        if self[x,y] is None:
+            if find_y and y > 1:
+                return self.FL(x, y-1, find_y = True)
+            else:
+                return None
+
+        # Now that the node is known to be in the tree,
+        # attempt to apply an FL transform
+        node = self[x,y]
+        new_node = self.insert_buffer(node)
+        return new_node
+
+    def FT(self, x, y = None, find_y = False):
+        """Performs an FT transform on the specified node, if possible
+
+        This method is maintained solely for backwards compatibility.
+        Using this method is morally hazardous. It masks the underlying truth.
+
+        The node is specified using its (x,y) classic coordinate.
+        Witholding the y-coordinate will perform the transform on the highest-y
+        node that can be transformed.
+
+        If the transform is not possible, the function returns None.
+        Otherwise, the function returns the node used as a pivot.
+
+        Args:
+            x (int): The x-coordinate to use as a pivot for the LF transform
+            y (int): The y-coordinate to use as a pivot for the LF transform
+            find_y (bool): If True, the y-coordinate will be found automatically
+        """
+        if not isinstance(x, int):
+            raise TypeError("x must be an integer")
+        if y is not None and not isinstance(y, int):
+            raise TypeError("y must be an integer")
+
+        # If no y-coordinate is specified, attempt the highest-y node
+        # Except for the post-processing node. Arbitrarily.
+        # Remember: using this method is morally hazardous.
+        if y is None:
+            return self.FT(x, len(self)-2, find_y = True)
+
+        # If the node is not in the tree, either iterate or return None
+        if self[x,y] is None:
+            if find_y and y > 1:
+                return self.FT(x, y-1, find_y = True)
+            else:
+                return None
+
+        # Now that the node is known to be in the tree,
+        # attempt to apply an FT transform
+        node = self[x,y]
+        original_height = len(node)
+        new_node = self.left_shift(node[1].leftmost_leaf().parent)
+        if new_node is None and find_y:
+            return self.FT(x, y-1, find_y = True)
+        return new_node
+
+    def TF(self, x, y = None, find_y = False):
+        """Performs a TF transform on the specified node, if possible
+
+        This method is maintained solely for backwards compatibility.
+        Using this method is morally hazardous. It masks the underlying truth.
+
+        The node is specified using its (x,y) classic coordinate.
+        Witholding the y-coordinate will perform the transform on the highest-y
+        node that can be transformed.
+
+        If the transform is not possible, the function returns None.
+        Otherwise, the function returns the node used as a pivot.
+
+        Args:
+            x (int): The x-coordinate to use as a pivot for the LF transform
+            y (int): The y-coordinate to use as a pivot for the LF transform
+            find_y (bool): If True, the y-coordinate will be found automatically
+        """
+        if not isinstance(x, int):
+            raise TypeError("x must be an integer")
+        if y is not None and not isinstance(y, int):
+            raise TypeError("y must be an integer")
+
+        # If no y-coordinate is specified, attempt the highest-y node
+        # Except for the post-processing node. Arbitrarily.
+        # Remember: using this method is morally hazardous.
+        if y is None:
+            return self.TF(x, len(self)-2, find_y = True)
+
+        # If the node is not in the tree, either iterate or return None
+        if self[x,y] is None:
+            if find_y and y > 1:
+                return self.TF(x, y-1, find_y = True)
+            else:
+                return None
+
+        # Now that the node is known to be in the tree,
+        # attempt to apply an TF transform
+        node = self[x,y]
+        original_height = len(node)
+        new_node = self.right_shift(node[0].rightmost_leaf().parent)
+        if new_node is None and find_y:
+            return self.TF(x, y-1, find_y = True)
+        return new_node
+
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
 
