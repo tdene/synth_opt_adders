@@ -159,7 +159,7 @@ class ExpressionTree(ExpressionGraph):
                     prev_root = prev_root.children[1]
 
     def __len__(self):
-        """Redefine the len() function to return the depth of the tree"""
+        """Redefine the len() function to return the height of the tree"""
         return len(self.root)+1
 
     def __getitem__(self, key):
@@ -185,7 +185,7 @@ class ExpressionTree(ExpressionGraph):
                 # If all nodes have been checked, return None
                 if target == None:
                     return None
-                # If this node has the correct depth, return it
+                # If this node has the correct height, return it
                 if len(target) == key[1]:
                     return target
                 # Otherwise, proceed to check its parent
@@ -199,9 +199,9 @@ class ExpressionTree(ExpressionGraph):
         else:
             return super().__getitem__(key)
 
-    def _get_row(self, depth):
-        """Return the nodes at a given depth"""
-        nodes = [n for n in self.nodes if n.y_pos == depth]
+    def _get_row(self, height):
+        """Return the nodes at a given height"""
+        nodes = [n for n in self.nodes if n.y_pos == height]
         return sorted(nodes, key=lambda x: -x.x_pos)
 
     def _get_leafs(self):
@@ -660,7 +660,7 @@ class ExpressionTree(ExpressionGraph):
             return self.right_shift(node)
 
     def insert_buffer(self, node):
-        """Insert a buffer on the output of a node
+        """Insert a buffer as the parent of a node
 
         Args:
             node (Node): The child node
@@ -719,10 +719,57 @@ class ExpressionTree(ExpressionGraph):
 
         return child        
 
+    def reduce_height(self, node, target_height=None):
+        """Attempts to reduce the height of the subtree given by a node"""
+        # Avoid repeated height calculations (to some degree)
+        c_heights = [len(c) for c in node]
+        height = 1 + max(c_heights)
+
+        # If the target height is not specified, reduce the height by 1
+        if target_height is None:
+            target_height = height - 1
+
+        # If the target height is already reached, we are done
+        if target_height >= height:
+            return node
+
+        # Check whether the height can be reduced
+        if 1<<(target_height) < bin(node.leafs).count("1"):
+            return None
+
+        # Separate the children into bad and good
+        bad_children = [x for x in range(len(c_heights)) \
+                if c_heights[x] == height-1]
+        good_children = [x for x in range(len(c_heights)) \
+                if c_heights[x] < height-1]
+
+        # Reduce the height of bad children
+        for a in bad_children:
+            c = node[a]
+            # If bad child is a leaf, we are at the end of an iteration
+            if len(c) == 0:
+                continue
+            # If bad child is a buffer, remove it
+            elif c.value == self.node_defs["buffer"]:
+                self.remove_buffer(c)
+            # If bad child can shift left, do so
+            elif a-1 in good_children:
+                self.left_shift(c.leftmost_leaf().parent)
+            # If bad child can shift right, do so
+            elif a+1 in good_children:
+                self.right_shift(c.rightmost_leaf().parent)
+            # Otherwise try to iterate down the child
+            else:
+                self.reduce_height(c)
+
+        # After iterating, the desired height may not be reached
+        # If so, try again. We know it can be done.
+        return self.reduce_height(node, target_height)
+
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
 
-        depth = len(self)
+        height = len(self)
         leafs = list(reversed(self._get_leafs()))
         # Set x_pos of the leafs to consecutive numbers
         ctr = 0
@@ -730,7 +777,7 @@ class ExpressionTree(ExpressionGraph):
             leaf.x_pos = ctr
             ctr -= 1
         # Adjust other nodes' x_pos based on the leafs
-        for d in range(depth-1, -1, -1):
+        for d in range(height-1, -1, -1):
             for node in self._get_row(d):
                 if len(node.children) > 0:
                     children = [x for x in node.children if x is not None]
