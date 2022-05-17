@@ -882,6 +882,11 @@ class ExpressionTree(ExpressionGraph):
             node (Node): The node to balance
             with_buffers (bool): Whether to use buffers to balance leaf depth
         """
+        # If the node is a leaf, we are at the end of an iteration
+        if len(node) == 0:
+            return node
+
+        # Reduce the height of the subtree until it cannot be further reduced
         old_node = node
         while True:
             node = self.reduce_height(node)
@@ -890,6 +895,10 @@ class ExpressionTree(ExpressionGraph):
                 break
             old_node = node
         del old_node
+        
+        # Balance each child, recursively
+        for c in node:
+            self.balance(c)
 
         # If we are not using buffers, we are done
         if not with_buffers:
@@ -960,9 +969,6 @@ class ExpressionTree(ExpressionGraph):
         while True:
             # Characterize the leafs by depth
             depths = [x.y_pos for x in leafs]
-            print('hi')
-            print(depths)
-            print(target_depths)
             # If the subtree is complete, we are done
             if target_depths == depths:
                 break
