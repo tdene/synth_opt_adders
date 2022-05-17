@@ -245,13 +245,13 @@ class ExpressionNode:
                     idx = c.children.index(None)
                 except ValueError:
                     return True
-                return idx == bin(c.leafs).count('1')
+                return idx == bin(c.leafs).count("1")
         # Fall-through case if all children are proper and have the same height
         return True
 
     def is_proper(self):
         """Checks if the subtree rooted at this node is proper"""
-        return 1<<len(self) == bin(self.leafs).count('1')
+        return 1<<len(self) == bin(self.leafs).count("1")
 
     def rightmost_leaf(self):
         """Finds the least significant leaf descendant of this node"""

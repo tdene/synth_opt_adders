@@ -5,6 +5,7 @@ from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import match_nodes
+from .util import lg
 
 class ExpressionTree(ExpressionGraph):
     """Defines a tree of binary expressions
@@ -164,7 +165,7 @@ class ExpressionTree(ExpressionGraph):
         elif start_point == "sklansky":
             return self.rbalance(self.root)
         elif start_point == "brent-kung":
-            return self.brent_kung(self.root)
+            return self._brent_kung(self.root)
         elif start_point == "kogge-stone":
             return self.lbalance(self.root, with_buffers=True)
 
@@ -781,6 +782,12 @@ class ExpressionTree(ExpressionGraph):
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
+        def reconstruct_node(parent, index):
+            """Reconstruct the original node"""
+            if parent is None:
+                return self.root
+            return parent[index]
+
         # Save the identity of the original node's parent
         if original_node is None:
             parent = node.parent
@@ -799,43 +806,47 @@ class ExpressionTree(ExpressionGraph):
 
         # If the target height is already reached, we are done
         if target_height >= height:
-            # Find the new root of the subtree
-            if original_node[0] is None:
-                return self.root
-            else:
-                return original_node[0][original_node[1]]
+            return reconstruct_node(*original_node)
 
         # Check whether the height can be reduced
         if 1<<(target_height) < bin(node.leafs).count("1"):
             return None
 
-        # Separate the children into bad and good
-        bad_children = [x for x in range(len(c_heights)) \
-                if c_heights[x] == height-1]
-        good_children = [x for x in range(len(c_heights)) \
-                if c_heights[x] < height-2]
+        # Characterize each child as under_full, just_full, or over_full
+        under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") \
+                for c in node]
+        just_full = [1 << (target_height - 1) == bin(c.leafs).count("1") \
+                for c in node]
+        over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") \
+                for c in node]
 
         # Reduce the height of bad children
-        for a in bad_children:
+        for a in range(len(c_heights)):
             c = node[a]
-            # If bad child is a leaf, we are at the end of an iteration
+            # If child is a leaf, we are at the end of an iteration
             if len(c) == 0:
                 continue
-            # If bad child is a buffer, remove it
-            elif c.value == self.node_defs["buffer"]:
+            # If child is a buffer, remove it
+            if c.value == self.node_defs["buffer"]:
                 self.remove_buffer(c)
-            # If bad child can shift left, do so
-            elif a-1 in good_children:
+                continue
+
+            # If child is under the requisite height, continue
+            if c_heights[a] <= target_height - 1:
+                continue
+            # If child is over_full and can shift a node left, do so
+            elif a > 0 and over_full[a] and under_full[a-1]:
                 self.left_shift(c.leftmost_leaf().parent)
-            # If bad child can shift right, do so
-            elif a+1 in good_children:
+            # If child is over_full and can shift a node right, do so
+            elif a < len(c_heights) - 1 and over_full[a] and under_full[a+1]:
                 self.right_shift(c.rightmost_leaf().parent)
             # Otherwise try to iterate down the child
             else:
-                self.reduce_height(c, original_node=original_node)
+                self.reduce_height(c, target_height-1)
 
         # After iterating, the desired height may not be reached
         # If so, try again. We know it can be done.
+        node = reconstruct_node(*original_node)
         return self.reduce_height(node, target_height, original_node)
 
     def equalize_depths(self, node):
@@ -881,7 +892,7 @@ class ExpressionTree(ExpressionGraph):
     def lbalance(self, node, with_buffers = False):
         """Balances the subtree rooted at this node to the left
 
-        If the subtree contains buffer, this method will actively destroy them.
+        If the subtree contains buffers, this method will actively destroy them.
 
         Args:
             node (Node): The node to balance
@@ -909,7 +920,7 @@ class ExpressionTree(ExpressionGraph):
             # Otherwise, shift shallowness to the left
             for a in range(len(leafs)-1):
                 if depths[a] and not depths[a+1]:
-                    self.left_shift(leafs[a].parent)
+                    node = self.left_shift(leafs[a].parent)
                     # After a shift, re-balance the subtree
                     node = self.balance(node)
 
@@ -921,7 +932,7 @@ class ExpressionTree(ExpressionGraph):
     def rbalance(self, node, with_buffers = False):
         """Balances the subtree rooted at this node to the right
 
-        If the subtree contains buffer, this method will actively destroy them.
+        If the subtree contains buffers, this method will actively destroy them.
 
         Args:
             node (Node): The node to balance
@@ -949,7 +960,7 @@ class ExpressionTree(ExpressionGraph):
             # Otherwise, shift shallowness to the right
             for a in range(len(leafs)-1):
                 if depths[a] and not depths[a+1]:
-                    self.right_shift(leafs[a].parent)
+                    node = self.right_shift(leafs[a].parent)
                     # After a shift, re-balance the subtree
                     node = self.balance(node)
 
