@@ -740,6 +740,44 @@ class ExpressionTree(ExpressionGraph):
 
         return child
 
+    def _fix_diagram_positions(self):
+        """Fix the positions of the nodes in the diagram"""
+
+        height = len(self)
+        leafs = self._get_reversed_leafs(self.root)
+        # Set x_pos of the leafs to consecutive numbers
+        ctr = 0
+        for leaf in leafs:
+            leaf.x_pos = ctr
+            ctr -= 1
+        # Adjust other nodes' x_pos based on the leafs
+        for d in range(height-1, -1, -1):
+            for node in self._get_row(d):
+                if len(node.children) > 0:
+                    children = [x for x in node.children if x is not None]
+                    num_children = len(children)
+                    sum_children = sum([x.x_pos for x in children])
+                    avg = sum_children / num_children
+                    node.x_pos = avg
+                x_pos = node.x_pos
+                y_pos = node.y_pos
+                diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
+                self.nodes[node]["pos"] = diagram_pos
+
+    def png(self, fname="tree.png"):
+        """Generate a PNG representation of the tree using GraphViz"""
+
+        # Correct the positions of the nodes
+        self._fix_diagram_positions()
+        # Convert the graph to pydot
+        pg = nx.drawing.nx_pydot.to_pydot(self)
+        pg.set_splines("false")
+        pg.set_concentrate("true")
+
+        pg.write_png(fname, prog="neato")
+
+    ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
+
     def reduce_height(self, node, target_height=None, original_node=None):
         """Attempts to reduce the height of the subtree rooted at this node
 
@@ -1103,41 +1141,7 @@ class ExpressionTree(ExpressionGraph):
             return self.TF(x, y-1, find_y = True)
         return (x,y)
 
-    def _fix_diagram_positions(self):
-        """Fix the positions of the nodes in the diagram"""
-
-        height = len(self)
-        leafs = self._get_reversed_leafs(self.root)
-        # Set x_pos of the leafs to consecutive numbers
-        ctr = 0
-        for leaf in leafs:
-            leaf.x_pos = ctr
-            ctr -= 1
-        # Adjust other nodes' x_pos based on the leafs
-        for d in range(height-1, -1, -1):
-            for node in self._get_row(d):
-                if len(node.children) > 0:
-                    children = [x for x in node.children if x is not None]
-                    num_children = len(children)
-                    sum_children = sum([x.x_pos for x in children])
-                    avg = sum_children / num_children
-                    node.x_pos = avg
-                x_pos = node.x_pos
-                y_pos = node.y_pos
-                diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
-                self.nodes[node]["pos"] = diagram_pos
-
-    def png(self, fname="tree.png"):
-        """Generate a PNG representation of the tree using GraphViz"""
-
-        # Correct the positions of the nodes
-        self._fix_diagram_positions()
-        # Convert the graph to pydot
-        pg = nx.drawing.nx_pydot.to_pydot(self)
-        pg.set_splines("false")
-        pg.set_concentrate("true")
-
-        pg.write_png(fname, prog="neato")
+    ### NOTE: END LEGACY METHODS ###
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
