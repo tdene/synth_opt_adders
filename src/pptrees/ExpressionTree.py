@@ -915,18 +915,18 @@ class ExpressionTree(ExpressionGraph):
 
         # Next, get all leafs that are part of this subtree
         leafs = self._get_leafs(node)
-        max_depth = max([x.y_pos for x in leafs])
+        target_depths = sorted([x.y_pos for x in leafs])
         # Shift nodes until the subtree is balanced
         while True:
             # Characterize the leafs by depth
-            depths = [x.y_pos == max_depth for x in leafs]
-            sorted_depths = sorted(depths)
+            depths = [x.y_pos for x in leafs]
             # If the subtree is complete, we are done
-            if sorted_depths == depths:
+            if target_depths == depths:
                 break
             # Otherwise, shift shallowness to the left
             for a in range(len(leafs)-1):
-                if depths[a] and not depths[a+1]:
+                if depths[a] >= target_depths[a] and \
+                        depths[a+1] < target_depths[a+1]:
                     node = self.left_shift(leafs[a].parent)
                     # After a shift, re-balance the subtree
                     node = self.balance(node)
@@ -955,18 +955,21 @@ class ExpressionTree(ExpressionGraph):
 
         # Next, get all leafs that are part of this subtree
         leafs = self._get_reversed_leafs(node)
-        max_depth = max([x.y_pos for x in leafs])
+        target_depths = sorted([x.y_pos for x in leafs])
         # Shift nodes until the subtree is balanced
         while True:
             # Characterize the leafs by depth
-            depths = [x.y_pos == max_depth for x in leafs]
-            sorted_depths = sorted(depths)
-            # If the subtree is mirror-complete, we are done
-            if sorted_depths == depths:
+            depths = [x.y_pos for x in leafs]
+            print('hi')
+            print(depths)
+            print(target_depths)
+            # If the subtree is complete, we are done
+            if target_depths == depths:
                 break
-            # Otherwise, shift shallowness to the right
+            # Otherwise, shift shallowness to the left
             for a in range(len(leafs)-1):
-                if depths[a] and not depths[a+1]:
+                if depths[a] >= target_depths[a] and \
+                        depths[a+1] < target_depths[a+1]:
                     node = self.right_shift(leafs[a].parent)
                     # After a shift, re-balance the subtree
                     node = self.balance(node)
