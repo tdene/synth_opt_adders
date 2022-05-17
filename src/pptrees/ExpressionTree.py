@@ -704,6 +704,10 @@ class ExpressionTree(ExpressionGraph):
         self.add_edge(parent, buffer, index)
         self.add_edge(buffer, node, 0)
 
+        # Fix the diagram positions
+        buffer[0].y_pos -= 1
+        buffer[0].iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+
         return buffer
 
     def remove_buffer(self, buffer):
@@ -731,6 +735,10 @@ class ExpressionTree(ExpressionGraph):
 
         # Reconnect the nodes
         self.add_edge(parent, child, index)
+
+        # Fix the diagram positions
+        child.y_pos += 1
+        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
 
         return child
 
@@ -849,8 +857,16 @@ class ExpressionTree(ExpressionGraph):
         node = reconstruct_node(*original_node)
         return self.reduce_height(node, target_height, original_node)
 
-    def equalize_depths(self, node, desired_depth = None):
-        """Equalizes the leaf depths of the rooted at this node"""
+    def equalize_depths(self, node, desired_depth = None, exclude_left = True):
+        """Equalizes the leaf depths of the rooted at this node
+
+        Args:
+            node (Node): The node that roots the subtree
+            desired_depth (int): The desired depth of the subtree
+                If not specified, this is set to the maximum leaf depth
+            exclude_left (bool): Whether to exclude leftmost children
+                This is backwards compatibility with classic structures
+        """
 
         # If desired_depth is None, set it to the maximum depth
         if desired_depth is None:
@@ -860,13 +876,11 @@ class ExpressionTree(ExpressionGraph):
         for c in node:
             # Avoid repeated height calculations (to some degree)
             height = len(c)
-            # If the child is a leaf, we are at the end of an iteration
-            if height == 0:
+            # If the child is proper, we are at the end of an iteration
+            if c.is_proper():
                 # Insert enough buffers to balance the depth
-                for a in range(desired_depth-1):
+                for a in range(desired_depth-height-1):
                     self.insert_buffer(c)
-            # Otherwise, iterate down the child if needed
-            if c.is_proper() and height == desired_depth:
                 continue
             self.equalize_depths(c, desired_depth-1)
 
