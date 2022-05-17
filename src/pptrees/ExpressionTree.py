@@ -741,7 +741,7 @@ class ExpressionTree(ExpressionGraph):
         return child
 
     def reduce_height(self, node, target_height=None, original_node=None):
-        """Attempts to reduce the height of the subtree given by a node
+        """Attempts to reduce the height of the subtree rooted at this node
 
         Args:
             node (Node): The node generating the subtree
@@ -808,7 +808,7 @@ class ExpressionTree(ExpressionGraph):
         return self.reduce_height(node, target_height, original_node)
 
     def equalize_depths(self, node):
-        """Equalizes the leaf depths of the subtree given by a node"""
+        """Equalizes the leaf depths of the rooted at this node"""
 
         # Iterate over the children
         for c in node:
@@ -824,7 +824,7 @@ class ExpressionTree(ExpressionGraph):
         return node
 
     def balance(self, node, with_buffers = False):
-        """Balances a node's subtree
+        """Balances the subtree rooted at this node
 
         Note that this does not create a complete tree.
         To do so, refer to the rbalance and lbalance methods.
@@ -842,6 +842,87 @@ class ExpressionTree(ExpressionGraph):
             old_node = node
         del old_node
 
+        # If we are not using buffers, we are done
+        if not with_buffers:
+            return node
+        return self.equalize_depths(node)
+
+    def lbalance(self, node, with_buffers = False):
+        """Balances the subtree rooted at this node to the left
+
+        If the subtree contains buffer, this method will actively destroy them.
+
+        Args:
+            node (Node): The node to balance
+            with_buffers (bool): Whether to use buffers to balance leaf depth
+        """
+        
+        # First, reduce the subtree's height as much as possible
+        node = self.balance(node)
+
+        # If the subtree is proper, there is no difference between right/left
+        if node.is_proper():
+            return node
+
+        # Next, get all leafs that are part of this subtree
+        leafs = self._get_leafs(node)
+        max_depth = max([x.y_pos for x in leafs])
+        # Shift nodes until the subtree is balanced
+        while True:
+            # Characterize the leafs by depth
+            depths = [x.y_pos == max_depth for x in leafs]
+            sorted_depths = sorted(depths)
+            # If the subtree is complete, we are done
+            if sorted_depths == depths:
+                break
+            # Otherwise, shift shallowness to the left
+            for a in range(len(leafs)-1):
+                if depths[a] and not depths[a+1]:
+                    self.left_shift(leafs[a].parent)
+                    # After a shift, re-balance the subtree
+                    node = self.balance(node)
+
+        # If we are not using buffers, we are done
+        if not with_buffers:
+            return node
+        return self.equalize_depths(node)
+
+    def rbalance(self, node, with_buffers = False):
+        """Balances the subtree rooted at this node to the right
+
+        If the subtree contains buffer, this method will actively destroy them.
+
+        Args:
+            node (Node): The node to balance
+            with_buffers (bool): Whether to use buffers to balance leaf depth
+        """
+        
+        # First, reduce the subtree's height as much as possible
+        node = self.balance(node)
+
+        # If the subtree is proper, there is no difference between right/left
+        if node.is_proper():
+            return node
+
+        # Next, get all leafs that are part of this subtree
+        leafs = self._get_reversed_leafs(node)
+        max_depth = max([x.y_pos for x in leafs])
+        # Shift nodes until the subtree is balanced
+        while True:
+            # Characterize the leafs by depth
+            depths = [x.y_pos == max_depth for x in leafs]
+            sorted_depths = sorted(depths)
+            # If the subtree is mirror-complete, we are done
+            if sorted_depths == depths:
+                break
+            # Otherwise, shift shallowness to the right
+            for a in range(len(leafs)-1):
+                if depths[a] and not depths[a+1]:
+                    self.right_shift(leafs[a].parent)
+                    # After a shift, re-balance the subtree
+                    node = self.balance(node)
+
+        # If we are not using buffers, we are done
         if not with_buffers:
             return node
         return self.equalize_depths(node)
