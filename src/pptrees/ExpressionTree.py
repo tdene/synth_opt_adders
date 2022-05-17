@@ -162,11 +162,11 @@ class ExpressionTree(ExpressionGraph):
         if start_point == "serial":
             return True
         elif start_point == "sklansky":
-            return self._rbalance(self.root)
+            return self.rbalance(self.root)
         elif start_point == "brent-kung":
-            return self._brent_kung(self.root)
+            return self.brent_kung(self.root)
         elif start_point == "kogge-stone":
-            return self._lbalance(self.root, with_buffers=True)
+            return self.lbalance(self.root, with_buffers=True)
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -703,10 +703,6 @@ class ExpressionTree(ExpressionGraph):
         self.add_edge(parent, buffer, index)
         self.add_edge(buffer, node, 0)
 
-        # Fix the diagram positions
-        buffer.y_pos = node.y_pos
-        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-
         return buffer
 
     def remove_buffer(self, buffer):
@@ -734,9 +730,6 @@ class ExpressionTree(ExpressionGraph):
 
         # Reconnect the nodes
         self.add_edge(parent, child, index)
-
-        # Fix the diagram positions
-        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
 
         return child
 
