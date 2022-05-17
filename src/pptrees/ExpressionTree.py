@@ -334,7 +334,7 @@ class ExpressionTree(ExpressionGraph):
                 if pin_pairs is None:
                     to_remove.append(k)
             # If this is a leaf node, check if the shape matches
-            if len(children) == 0:
+            if len(node) == 0:
                 if modules[k]["ins"] != modules[node_def]["ins"]:
                     to_remove.append(k)
             # If this is a root node, check if the shape matches
@@ -849,19 +849,26 @@ class ExpressionTree(ExpressionGraph):
         node = reconstruct_node(*original_node)
         return self.reduce_height(node, target_height, original_node)
 
-    def equalize_depths(self, node):
+    def equalize_depths(self, node, desired_depth = None):
         """Equalizes the leaf depths of the rooted at this node"""
+
+        # If desired_depth is None, set it to the maximum depth
+        if desired_depth is None:
+            desired_depth = len(node)
 
         # Iterate over the children
         for c in node:
+            # Avoid repeated height calculations (to some degree)
+            height = len(c)
             # If the child is a leaf, we are at the end of an iteration
-            if len(c) == 0:
+            if height == 0:
                 # Insert enough buffers to balance the depth
-                for a in range(len(node)-1):
+                for a in range(desired_depth-1):
                     self.insert_buffer(c)
             # Otherwise, iterate down the child if needed
-            if not c.is_proper():
-                self.equalize_depths(c)
+            if c.is_proper() and height == desired_depth:
+                continue
+            self.equalize_depths(c, desired_depth-1)
 
         return node
 
