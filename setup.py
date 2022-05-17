@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 setup(
     name="pptrees",
@@ -16,7 +16,7 @@ setup(
     ],
     keywords=["hardware adders prefix"],
     package_dir={"": "src"},
-    packages=["pptrees"],
+    packages=find_namespace_packages(where="src"),
     package_data={"pptrees": ["mappings/*.v"]},
     long_description=open("README.md").read(),
     python_requires=">=3.7.*",
