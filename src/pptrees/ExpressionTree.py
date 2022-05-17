@@ -158,6 +158,16 @@ class ExpressionTree(ExpressionGraph):
                 if a == radix-1:
                     prev_root = prev_root.children[1]
 
+        # Transform the tree towards the starting point
+        if start_point == "serial":
+            return True
+        elif start_point == "sklansky":
+            return self._rbalance(self.root)
+        elif start_point == "brent-kung":
+            return self._brent_kung(self.root)
+        elif start_point == "kogge-stone":
+            return self._lbalance(self.root, with_buffers=True)
+
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
         return len(self.root)+1
@@ -180,7 +190,7 @@ class ExpressionTree(ExpressionGraph):
         # Don't overwrite the parent __getitem__
         if isinstance(key, tuple) and len(key) == 2:
             # Find the branch that corresponds to the desired column
-            col = self._get_leafs()[key[0]]
+            col = self._get_leafs(self.root)[key[0]]
             # Find the correct row in the desired column
             target = col
             # Iterate through nodes in the column
@@ -211,13 +221,17 @@ class ExpressionTree(ExpressionGraph):
         nodes = [n for n in self.nodes if n.y_pos == height]
         return sorted(nodes, key=lambda x: -x.x_pos)
 
-    def _get_leafs(self):
-        """Return a list of leaf nodes"""
-        leafs = []
-        for n in self.nodes:
-            if len(n.children) == 0:
-                leafs.append(n)
-        return sorted(leafs)
+    def _get_reversed_leafs(self, node):
+        """Return a list of leaf nodes in the subtree rooted at node"""
+        if len(node.children) == 0:
+            return [node]
+        else:
+            return [n for c in node.children \
+                    for n in self._get_reversed_leafs(c)]
+
+    def _get_leafs(self, node):
+        """Return a sorted list of leaf nodes in the subtree rooted at node"""
+        return list(reversed(self._get_reversed_leafs(node)))
 
     def _connect_outports(self, root):
         """Connect the tree's output ports to the root node"""
@@ -411,7 +425,7 @@ class ExpressionTree(ExpressionGraph):
         self._connect_outports(self.root)
 
         # Connect all leafs to inports
-        leafs = self._get_leafs()
+        leafs = self._get_leafs(self.root)
         for a in range(len(leafs)):
             leaf = leafs[a]
             self._connect_inports(leaf, a)
@@ -1012,7 +1026,7 @@ class ExpressionTree(ExpressionGraph):
         """Fix the positions of the nodes in the diagram"""
 
         height = len(self)
-        leafs = list(reversed(self._get_leafs()))
+        leafs = self._get_reversed_leafs(self.root)
         # Set x_pos of the leafs to consecutive numbers
         ctr = 0
         for leaf in leafs:
