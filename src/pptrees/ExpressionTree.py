@@ -857,15 +857,17 @@ class ExpressionTree(ExpressionGraph):
         node = reconstruct_node(*original_node)
         return self.reduce_height(node, target_height, original_node)
 
-    def equalize_depths(self, node, desired_depth = None, exclude_left = True):
+    # NOTE: If this has not been sufficiently emphasized yet
+    # This method is solely here for legacy support
+    # It does something very specific, and arguably not generally useful
+    # Use if you prefer comfort over efficiency
+    def equalize_depths(self, node, desired_depth = None):
         """Equalizes the leaf depths of the rooted at this node
 
         Args:
             node (Node): The node that roots the subtree
             desired_depth (int): The desired depth of the subtree
                 If not specified, this is set to the maximum leaf depth
-            exclude_left (bool): Whether to exclude leftmost children
-                This is backwards compatibility with classic structures
         """
 
         # If desired_depth is None, set it to the maximum depth
@@ -876,11 +878,18 @@ class ExpressionTree(ExpressionGraph):
         for c in node:
             # Avoid repeated height calculations (to some degree)
             height = len(c)
+            # If child is leftmost, for legacy purposes, we cannot add buffers
+            # above it. But we can add a buffer above its parent.
+            if node[0] == c:
+                if height < desired_depth-1:
+                    self.insert_buffer(node)
+                    desired_depth -= 1
             # If the child is proper, we are at the end of an iteration
             if c.is_proper():
                 # Insert enough buffers to balance the depth
-                for a in range(desired_depth-height-1):
-                    self.insert_buffer(c)
+                if node[0] != c:
+                    for a in range(desired_depth-height-1):
+                        self.insert_buffer(c)
                 continue
             self.equalize_depths(c, desired_depth-1)
 
