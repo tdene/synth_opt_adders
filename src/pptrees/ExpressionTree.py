@@ -434,13 +434,18 @@ class ExpressionTree(ExpressionGraph):
                 self.remove_edge(node, c)
 
         # Remove the node from the tree
+        if not node.children:
+            label = self.nodes.data("label")[node]
         self.remove_node(node)
 
         # Create the new node
         new_node = node.morph(new_def)
 
         # Add the new node to the tree
-        self.add_node(new_node)
+        if not node.children:
+            self.add_node(new_node, **{"label": label})
+        else:
+            self.add_node(new_node)
 
         # Reconnect the node to its parent
         if parent is not None:
