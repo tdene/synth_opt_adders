@@ -52,7 +52,8 @@ class ExpressionNode:
         self.graph = None
         self.block = None
         self.equiv_class = [self]
-        self.tracks_class = set(self)
+        self.tracks_class = set()
+        self.tracks_class.add(self)
 
         # Visualization-related attributes
         ### NOTE: The use of these attributes is no longer restricted to
@@ -164,11 +165,15 @@ class ExpressionNode:
         if not isinstance(other, ExpressionNode):
             raise TypeError("Cannot compare to non-ExpressionNode")
 
-        # If the two nodes have different y_pos, they cannot result
+        # If the two nodes have different heights, they cannot lead
         # in a need for increased wire tracks???
         # NOTE: Requires further investigation
         # This makes sense classically, but does it make sense in general?
-        if self.y_pos != other.y_pos:
+        if len(self) != len(other):
+            return False
+
+        # If either node is root, they cannot cause a need for parallel wires
+        if self.parent is None or other.parent is None:
             return False
 
         # If either node is not the representative of its equivalence class
@@ -178,9 +183,9 @@ class ExpressionNode:
             return False
 
         # Check if the edges lead to parallel routes
-        if node < other and other < node.parent and node.parent < other.parent:
+        if self < other and other < self.parent and self.parent < other.parent:
             return True
-        if node > other and other > node.parent and node.parent > other.parent:
+        if self > other and other.parent > self and self.parent > other.parent:
             return True
         return False
 
@@ -191,7 +196,7 @@ class ExpressionNode:
             raise ValueError("Nodes do not cause parallel routes")
         
         tr = self.tracks_class
-        tr.update(other.tracks_class)
+        tr |= other.tracks_class
         other.tracks_class = tr
 
     def __iter__(self):

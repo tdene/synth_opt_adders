@@ -130,7 +130,9 @@ class ExpressionForest(ExpressionGraph):
                 t.rbalance(t.root[1])
         elif start_point == "kogge-stone":
             for t in self.trees[2:]:
-                t.lbalance(t.root[1], with_buffers=True)
+                t.lbalance(t.root[1])
+            self.calculate_fanout()
+            self.decouple_all_fanout()
         elif start_point == "brent-kung":
             for t in self.trees[2:]:
                 t.rbalance(t.root[1])
@@ -251,8 +253,6 @@ class ExpressionForest(ExpressionGraph):
             or
             - node > other, node < other.parent, other.parent > node.parent
         """
-        # Grab the node's tracks class
-        tr = node.tracks_class
         # If node is not its equivalence class representative, do nothing
         if node.equiv_class[0] is not node:
             return
@@ -260,8 +260,16 @@ class ExpressionForest(ExpressionGraph):
         if node.parent is None:
             return
 
+        # Compare node to all other nodes in the forest
+        for t in self.trees:
+            for n in t:
+                if n.equiv_class[0] is not n:
+                    continue
+                if node.tracks(n):
+                    node.set_tracks(n)
+
         # Count the tracks
-        tracks = len(tr)
+        tracks = len(node.tracks_class)
 
         # Modify the relevant edge's data
         e_data = tree.get_edge_data(node.parent,node)
