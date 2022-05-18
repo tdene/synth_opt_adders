@@ -962,9 +962,7 @@ class ExpressionTree(ExpressionGraph):
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.left_shift(leafs[a].parent)
-                elif depths[a] > max_depth:
-                    # If the tree falls too out of balance, rebalance it
-                    node = self.balance(node)
+            node = self.balance(node)
 
         # If we are not using buffers, we are done
         node = self.balance(node)
@@ -1005,9 +1003,7 @@ class ExpressionTree(ExpressionGraph):
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.right_shift(leafs[a].parent)
-                elif depths[a] > max_depth:
-                    # If the tree falls too out of balance, rebalance it
-                    node = self.balance(node)
+            node = self.balance(node)
 
         # If we are not using buffers, we are done
         node = self.balance(node)
