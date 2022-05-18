@@ -441,8 +441,9 @@ class ExpressionNode:
             if self.parent.equiv_class[0] != self.parent:
                 return ""
             ret = ""
-            for v in self.out_nets:
-                port = self.virtual[v]
+            virtual = self.equiv_class[0].out_nets
+            for v in virtual:
+                port = virtual[v]
                 for a in range(len(port)):
                     net = port[a]
                     n = ExpressionNode("invis")

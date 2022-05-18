@@ -283,6 +283,25 @@ class ExpressionForest(ExpressionGraph):
             for n in t:
                 self._calc_node_tracks(n,t)
 
+    def optimize_nodes(self):
+        """Greedily attempt to swap in nodes with same footprint
+
+        All node modules have a footprint attribute, clarifying which modules
+        refer to the same node concept. All node modules also have a priority
+        attribute, used to determine which module is most "optimal".
+
+        This method attempts to raise the total optimality of the forest by
+        swapping in higher-priority modules.
+
+        This can probably be safely executed at any point in time, but it is
+        advisable to only execute this once no more rotations will take place.
+
+        Args:
+            node (Node): The root node of the sub-tree to optimize
+        """
+        for t in self.trees:
+            t.optimize_nodes()
+
     def hdl(
         self,
         out=None,
