@@ -126,14 +126,16 @@ class ExpressionForest(ExpressionGraph):
         if start_point == "serial":
             pass
         elif start_point == "sklansky":
-            for t in self.trees[1:]:
+            for t in self.trees[2:]:
                 t.rbalance(t.root[1])
         elif start_point == "kogge-stone":
-            for t in self.trees[1:]:
+            for t in self.trees[2:]:
                 t.lbalance(t.root[1], with_buffers=True)
         elif start_point == "brent-kung":
-            for t in self.trees[1:]:
+            for t in self.trees[2:]:
                 t.rbalance(t.root[1])
+                while not t.root[1][0].is_proper():
+                    t.right_rotate(t.root[1][0])
 
     def __getitem__(self, key):
         """Returns the tree at the given index
@@ -411,7 +413,7 @@ class ExpressionForest(ExpressionGraph):
                     x, y = attempt
         return x, y
 
-    def decouple_fanout(self, node):
+    def decouple_fanout(self, node, maximum_fanout=2):
         """Decouples the fanout of the specified node in all trees"""
 
         # Decouple fanout from most significant to least
@@ -421,29 +423,30 @@ class ExpressionForest(ExpressionGraph):
         ec = [x for x in ec \
                 if x.parent is None or x.parent.equiv_class[0] == x.parent]
         ec = sorted(ec, key = lambda x: x.graph.width, reverse=True)
-        for n in ec:
+        for a in range(len(ec)):
+            n = ec[a]
             parent = n.parent
             if parent is None:
                 continue
-            # The last connection, to the root, does not benefit from buffer
-            if parent.parent == None:
+            # The last connection does not benefit from extra buffer
+            if a == len(ec)-1:
                 ctr -= 1
             index = parent.children.index(n)
-            for a in range(ctr):
+            for b in range(ctr//(maximum_fanout-1)):
                 for p in parent.equiv_class:
                     t = p.graph
                     t.insert_buffer(p[index])
             ctr += 1
 
-    def decouple_all_fanout(self):
+    def decouple_all_fanout(self, maximum_fanout=2):
         """Decouples the fanout of all nodes in all trees"""
-        for t in reversed(self.trees):
-            print('new_tree')
-            targets = []
+        targets = []
+        for t in reversed(self.trees[1:]):
             for n in t:
-                targets.append(n)
+                if (n.parent is not None) and (n.equiv_class[0] == n):
+                    targets.append(n)
         for n in targets:
-            self.decouple_fanout(n)
+            self.decouple_fanout(n, maximum_fanout)
 
 
     ### NOTE: END LEGACY METHODS ###
