@@ -136,6 +136,8 @@ class ExpressionForest(ExpressionGraph):
                 t.rbalance(t.root[1])
                 while not t.root[1][0].is_proper():
                     t.right_rotate(t.root[1][0])
+            self.calculate_fanout()
+            self.decouple_all_fanout()
 
     def __getitem__(self, key):
         """Returns the tree at the given index
