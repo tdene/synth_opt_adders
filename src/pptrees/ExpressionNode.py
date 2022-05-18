@@ -469,7 +469,7 @@ class ExpressionNode:
         ret = ""
 
         for l in hdl_def:
-            if "assign" in l or "<=" in l:
+            if "assign" in l:
                 ret += l + "\n\n"
             else:
                 if "U" in l:

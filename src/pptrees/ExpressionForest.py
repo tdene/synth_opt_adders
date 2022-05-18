@@ -318,6 +318,7 @@ class ExpressionForest(ExpressionGraph):
         flat=False,
         block_flat=False,
         cell_flat=False,
+        merge_mapping=False,
         module_name=None,
         description_string="start of unnamed graph"
     ):
@@ -328,6 +329,7 @@ class ExpressionForest(ExpressionGraph):
             flat (bool): If True, flatten the graph's HDL
             block_flat (bool): If True, flatten all blocks in the graph's HDL
             cell_flat (bool): If True, flatten all modules in the graph's HDL
+            merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
 
@@ -350,9 +352,11 @@ class ExpressionForest(ExpressionGraph):
             desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
                             language=language,
+                            mapping=mapping,
                             flat=flat,
                             block_flat=block_flat,
                             cell_flat=cell_flat,
+                            merge_mapping=merge_mapping,
                             description_string=desc)
             w = re.findall(r"w\d+", t_hdl)
             for x in set(w):

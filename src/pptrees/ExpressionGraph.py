@@ -10,6 +10,7 @@ from .modules import *
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
 from .util import parse_net, sub_brackets, sub_ports
 from .util import natural_keys
+from .util import parse_mapping, merge_mapping_into_cells
 
 class ExpressionGraph(nx.DiGraph):
     """Defines a di-graph of arithmetic expressions
@@ -353,17 +354,19 @@ class ExpressionGraph(nx.DiGraph):
         flat=False,
         block_flat=False,
         cell_flat=False,
+        merge_mapping=False,
         module_name=None,
         description_string="start of unnamed graph"
     ):
         """Creates a HDL description of the graph
 
         Args:
+            mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
             block_flat (bool): If True, flatten all blocks in the graph's HDL
             cell_flat (bool): If True, flatten all cells in the graph's HDL
-            top_module (bool): If True, generate a top-level module
+            merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
 
@@ -395,9 +398,11 @@ class ExpressionGraph(nx.DiGraph):
             block = self.blocks[block_id]
 
             block_hdl, block_defs = block.hdl(
+                    mapping=mapping,
                     language=language,
                     flat=block_flat,
                     cell_flat=cell_flat,
+                    merge_mapping=merge_mapping,
                     module_name=module_name + "_block_" + str(block_id),
                     description_string="block {0}".format(block_id)
             )
@@ -432,6 +437,16 @@ class ExpressionGraph(nx.DiGraph):
 
             hdl += node_hdl
             module_defs.update(node_defs)
+
+        # If the mapping file is intended to be merged in, do so
+        if merge_mapping:
+            # Parse the mapping file
+            file_suffix = syntax["file_extension"]
+            mappings_path = importlib.resources.path("pptrees", "mappings")
+            with mappings_path as pkg_map_dir:
+                pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+            mapping = parse_mapping(pkg_map_file)
+            hdl = merge_mapping_into_cells(hdl, mapping)
 
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
@@ -490,7 +505,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # Write the HDL to file
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
 
         return hdl, module_defs
 
@@ -519,7 +534,7 @@ class ExpressionGraph(nx.DiGraph):
         return hdl, module_defs, file_out_hdl
 
     def _write_hdl(self, file_out_hdl, out=None, language="verilog",
-            mapping="behavioral"):
+            mapping="behavioral", merge_mapping=True):
         """Writes the HDL to a file"""
         # Check that output path is valid
         if out is None:
@@ -542,8 +557,9 @@ class ExpressionGraph(nx.DiGraph):
             if not pkg_map_file.is_file():
                 raise ValueError("Unsupported mapping requested")
 
-            # Copy the mapping file to the output directory
-            shutil.copy(pkg_map_file, local_map_file)
+            if not merge_mapping:
+                # Copy the mapping file to the output directory
+                shutil.copy(pkg_map_file, local_map_file)
     
         with open(out, "w") as f:
             f.write(file_out_hdl)

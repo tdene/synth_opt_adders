@@ -87,7 +87,7 @@ hdl_syntax = {
             "entity_port": "{0} {2} {1},",
             "port_range": "[{0}:{1}]",
             "arch": "{1}\nendmodule // {0}\n",
-            "inst": "\n\t{0} U0(\n{1}\n);",
+            "inst": "\n\t{0} U0(\n{1}\n\t);",
             "inst_port": "\t\t.{0}({1})",
             "slice_markers": lambda x: x,
             "wire_def": "wire {0};",
@@ -189,6 +189,63 @@ def atoi(x):
 def natural_keys(text):
     """Human sorting / natural sorting"""
     return [atoi(c) for c in re.split('(\d+)', text)]
+
+### NOTE: This needs to be reworked when map files are reworked
+### THIS IS A HACK
+### Currently it assumes that all lines of map files with logic will contain
+### either "assign" or "));"
+### And that all lines of map files with ports will contain "Y, "
+def parse_mapping(mapping_file):
+    """Parses a mapping file and returns a dictionary of mappings"""
+    mapping = {}
+    with open(mapping_file, 'r') as f:
+        in_a_module = False
+        current_module = None
+        for line in f:
+            split_line = line.strip().split()
+            if len(split_line) == 0:
+                continue
+            if split_line[0] == "module":
+                in_a_module = True
+                current_module = split_line[1]
+                mapping[current_module] = [[],""]
+            elif split_line[0] == "endmodule":
+                in_a_module = False
+                current_module = None
+            elif in_a_module and "Y, " in line:
+                l = [x.strip() for x in line.strip().split(",")]
+                mapping[current_module][0] = l
+            elif in_a_module and ("));" in line or "assign" in line):
+                mapping[current_module][1] += line
+    return mapping
+
+### NOTE: This needs to be reworked when map files are reworked
+def merge_mapping_into_cells(hdl, mapping):
+    """Merges the definitions found inside a mapping into HDL cells"""
+    new_hdl = []
+    for line in hdl.split("\n"):
+        first_word = None
+        split_line = line.strip().split()
+        if len(split_line) > 0:
+            first_word = split_line[0]
+        if first_word in mapping:
+            net_string = re.search(r'\((.*?)\)',line).group(1)
+            nets = net_string.split(",")
+            data = mapping[first_word][1]
+            behav = "assign" in data
+            new_string = data
+            new_string = new_string.replace(first_word,"U0")
+            for a in range(len(nets)):
+                net_name = nets[a]
+                port_name = mapping[first_word][0][a]
+                if not behav:
+                    net_name = "({0})".format(net_name)
+                    port_name = "({0})".format(port_name)
+                new_string = new_string.replace(port_name, net_name)
+            new_hdl.append(new_string[:-1])
+        else:
+            new_hdl.append(line)
+    return '\n'.join(new_hdl)
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
