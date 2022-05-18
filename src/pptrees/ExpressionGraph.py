@@ -351,7 +351,8 @@ class ExpressionGraph(nx.DiGraph):
         mapping="behavioral",
         language="verilog",
         flat=False,
-        full_flat=False,
+        block_flat=False,
+        cell_flat=False,
         module_name=None,
         description_string="start of unnamed graph"
     ):
@@ -360,7 +361,8 @@ class ExpressionGraph(nx.DiGraph):
         Args:
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
-            full_flat (bool): If True, flatten all modules in the graph's HDL
+            block_flat (bool): If True, flatten all blocks in the graph's HDL
+            cell_flat (bool): If True, flatten all cells in the graph's HDL
             top_module (bool): If True, generate a top-level module
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
@@ -394,8 +396,8 @@ class ExpressionGraph(nx.DiGraph):
 
             block_hdl, block_defs = block.hdl(
                     language=language,
-                    flat=full_flat,
-                    full_flat=True,
+                    flat=block_flat,
+                    cell_flat=cell_flat,
                     module_name=module_name + "_block_" + str(block_id),
                     description_string="block {0}".format(block_id)
             )
@@ -406,7 +408,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # Pull in the HDL description of nodes outside of blocks
         # If fully flattening them, need to rename "w*" internal wires
-        if full_flat:
+        if cell_flat:
             w_ctr = 0
         for node in self:
             # Check whether the node is in a block, and whether this is it
@@ -422,9 +424,9 @@ class ExpressionGraph(nx.DiGraph):
                 continue
             node_hdl, node_defs = node.hdl(
                     language=language,
-                    flat=full_flat
+                    flat=cell_flat
             )
-            if full_flat:
+            if cell_flat:
                 node_hdl = node_hdl.replace("w1", "w{0}".format(w_ctr))
                 w_ctr += 1
 
@@ -447,12 +449,23 @@ class ExpressionGraph(nx.DiGraph):
             U_count += 1
         hdl = good_hdl + hdl
 
+        ### NOTE: Is this general? Improvements wanted
+        ### In general, hard-coding an is_block flag sounds like a bad idea
+        is_block = list(self.nodes)[0].graph is not self
+
+        # If the graph is a block, then it has individual ports
+        # for each bit of every input and output port.
+        # So the HDL should reflect through judicious use of net name fixing
+        if is_block:
+            (in_ports, out_ports) = self._get_ports()
+            for a in in_ports + out_ports:
+                hdl = hdl.replace(a[1], a[0][0])
+
         # Add wire definitions
         # But if this graph is a block,
         # all wires that are inputs into the module are not internal
         # all wires that are outputs from from the cells are not internal
         # therefore, no wires are internal
-        is_block = list(self.nodes)[0].graph is not self
         if not is_block:
             in_wires, out_wires = self._get_internal_nets()
             wires = in_wires | out_wires
@@ -467,7 +480,8 @@ class ExpressionGraph(nx.DiGraph):
 
         # If flat HDL is desired, it can returned here
         if flat:
-            hdl = sub_ports(hdl, self.in_ports + self.out_ports)
+            (in_ports, out_ports) = self._get_ports()
+            hdl = sub_ports(hdl, in_ports + out_ports)
             return hdl, module_defs
 
         # Otherwise, return the HDL module definition
