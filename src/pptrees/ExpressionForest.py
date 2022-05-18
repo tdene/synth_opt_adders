@@ -150,6 +150,10 @@ class ExpressionForest(ExpressionGraph):
         """
         return self.trees[key]
 
+    def __iter__(self):
+        """Iterates over the trees in the forest"""
+        return iter(self.trees)
+
     ### NOTE: Equivalence requires nodes to be fully equivalent
     ### It is possible for two nodes to be partially equivalent
     ### For example, if their subtrees are identical

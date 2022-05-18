@@ -196,8 +196,7 @@ class ExpressionNode:
 
     def __iter__(self):
         """Iterates over the children of this node"""
-        for c in self.children:
-            yield c
+        return iter(self.children)
 
     def __getitem__(self, key):
         """Returns the child node at the given index"""
