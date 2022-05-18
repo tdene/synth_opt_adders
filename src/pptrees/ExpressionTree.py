@@ -873,9 +873,10 @@ class ExpressionTree(ExpressionGraph):
 
         # If the current depth is less than the desired depth,
         # we can add buffers directly here
-        for a in range(desired_height - height):
-            self.insert_buffer(node)
-            desired_height -= 1
+        if (not no_left) or node.parent[0] != node:
+            for a in range(desired_height - height):
+                self.insert_buffer(node)
+                desired_height -= 1
 
         # Iterate over the children
         for c in node:

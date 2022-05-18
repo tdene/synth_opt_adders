@@ -435,12 +435,11 @@ class ExpressionNode:
         # If this node is part of an equivalence class,
         # but not the main representative,
         # replace its HDL by assign statements
-        rep = self.equiv_class[0]
-        if self is not rep:
+        if self is not self.equiv_class[0]:
             # But if this node is part of a bigger subtree
             # There is no need to even do assign statements
             # The equivalent subtree will take care of everything
-            if self.parent.equiv_class[0] == rep.parent.equiv_class[0]:
+            if self.parent.equiv_class[0] != self.parent:
                 return ""
             ret = ""
             for v in self.out_nets:
