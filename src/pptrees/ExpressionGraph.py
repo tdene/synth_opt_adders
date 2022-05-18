@@ -353,7 +353,7 @@ class ExpressionGraph(nx.DiGraph):
         language="verilog",
         flat=False,
         block_flat=False,
-        cell_flat=False,
+        cell_flat=True,
         merge_mapping=True,
         module_name=None,
         description_string="start of unnamed graph"
