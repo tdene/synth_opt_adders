@@ -310,6 +310,11 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             t.optimize_nodes()
 
+    def add_best_blocks(self):
+        """Calls upon the Trees' add_best_blocks methods"""
+        for t in self.trees:
+            t.add_best_blocks()
+
     def hdl(
         self,
         out=None,
