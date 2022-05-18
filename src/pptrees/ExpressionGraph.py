@@ -271,11 +271,15 @@ class ExpressionGraph(nx.DiGraph):
     def add_best_blocks(self):
         """Groups nodes into blocks based on critical paths"""
 
+        # Get valid nodes
+        valid_nodes = [node for node in self.nodes \
+                if node.block is None and node.equiv_class[0] is node]
+
+        if len(valid_nodes) < 2:
+            return
+
         # Get subgraph view with only valid nodes
-        subgraph = self.subgraph(
-                [x for x in self.nodes \
-                        if x.block is None and x.equiv_class[0] is x]
-        )
+        subgraph = self.subgraph(valid_nodes)
 
         # Find the critical path
         path = nx.dag_longest_path(subgraph)
@@ -285,7 +289,7 @@ class ExpressionGraph(nx.DiGraph):
             self.add_block(*path)
             # Recurse
             return self.add_best_blocks()
-        return True
+        return
 
     def _get_internal_nets(self):
         """Returns the internal nets of the graph"""
@@ -357,6 +361,7 @@ class ExpressionGraph(nx.DiGraph):
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
             full_flat (bool): If True, flatten all modules in the graph's HDL
+            top_module (bool): If True, generate a top-level module
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
 
@@ -443,11 +448,18 @@ class ExpressionGraph(nx.DiGraph):
         hdl = good_hdl + hdl
 
         # Add wire definitions
-        in_wires, out_wires = self._get_internal_nets()
-        wires = in_wires | out_wires
-        wires = sorted(list(wires), key=natural_keys)
-
-        wire_hdl = syntax["wire_def"].format(", ".join(wires))
+        # But if this graph is a block,
+        # all wires that are inputs into the module are not internal
+        # all wires that are outputs from from the cells are not internal
+        # therefore, no wires are internal
+        is_block = list(self.nodes)[0].graph is not self
+        if not is_block:
+            in_wires, out_wires = self._get_internal_nets()
+            wires = in_wires | out_wires
+            wires = sorted(list(wires), key=natural_keys)
+            wire_hdl = syntax["wire_def"].format(", ".join(wires))
+        else:
+            wire_hdl = ""
 
         # Assemble the HDL
         hdl = syntax["comment_string"] + description_string + "\n" + \
