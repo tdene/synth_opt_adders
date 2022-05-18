@@ -851,40 +851,45 @@ class ExpressionTree(ExpressionGraph):
     # This method is solely here for legacy support
     # It does something very specific, and arguably not generally useful
     # Use if you prefer comfort over efficiency
-    def equalize_depths(self, node, desired_depth = None):
+    def equalize_depths(self, node, desired_height = None):
         """Equalizes the leaf depths of the rooted at this node
 
         Args:
             node (Node): The node that roots the subtree
-            desired_depth (int): The desired depth of the subtree
+            desired_height (int): The desired depth of the subtree
                 If not specified, this is set to the maximum leaf depth
         """
+        # Flag to support legacy diagrams
+        no_left = True
+
         # If the node is a leaf, there is nothing to equalize
-        if len(node) == 0:
+        height = len(node)
+        if height == 0:
             return None
 
-        # If desired_depth is None, set it to the maximum depth
-        if desired_depth is None:
-            desired_depth = len(node)
+        # If desired_height is None, set it to the maximum depth
+        if desired_height is None:
+            desired_height = len(node)
+
+        # If the current depth is less than the desired depth,
+        # we can add buffers directly here
+        for a in range(desired_height - height):
+            self.insert_buffer(node)
+            desired_height -= 1
 
         # Iterate over the children
         for c in node:
             # Avoid repeated height calculations (to some degree)
             height = len(c)
-            # If child is leftmost, for legacy purposes, we cannot add buffers
-            # above it. But we can add a buffer above its parent.
-            if node[0] == c:
-                if height < desired_depth-1:
-                    self.insert_buffer(node)
-                    desired_depth -= 1
             # If the child is proper, we are at the end of an iteration
+            # If child is leftmost, for legacy purposes, we cannot add buffers
             if c.is_proper():
                 # Insert enough buffers to balance the depth
-                if node[0] != c:
-                    for a in range(desired_depth-height-1):
+                if (not no_left) or node[0] != c:
+                    for a in range(desired_height - height - 1):
                         self.insert_buffer(c)
                 continue
-            self.equalize_depths(c, desired_depth-1)
+            self.equalize_depths(c, desired_height-1)
 
         return node
 
@@ -921,7 +926,7 @@ class ExpressionTree(ExpressionGraph):
             return node
         return self.equalize_depths(node)
 
-    def lbalance(self, node, with_buffers = False):
+    def lbalance(self, node, with_buffers = False, original_node = None):
         """Balances the subtree rooted at this node to the left
 
         If the subtree contains buffers, this method will actively destroy them.
@@ -929,11 +934,27 @@ class ExpressionTree(ExpressionGraph):
         Args:
             node (Node): The node to balance
             with_buffers (bool): Whether to use buffers to balance leaf depth
+            original_node (Node, index): Information to refind subtree root
+                This is used in recursion, and should not be specified
         """
+        def reconstruct_node(parent, index):
+            """Reconstruct the original node"""
+            if parent is None:
+                return self.root
+            return parent[index]
+
         # If the node is a leaf, there is nothing to balance
         if len(node) == 0:
             return None
-        
+
+        # Save the identity of the original node's parent
+        if original_node is None:
+            parent = node.parent
+            index = None
+            if parent is not None:
+                index = parent.children.index(node)
+            original_node = (parent, index)
+
         # First, reduce the subtree's height as much as possible
         node = self.balance(node)
 
@@ -958,6 +979,7 @@ class ExpressionTree(ExpressionGraph):
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.left_shift(leafs[a].parent)
+                    node = reconstruct_node(*original_node)
             node = self.balance(node)
 
         # If we are not using buffers, we are done
@@ -966,7 +988,7 @@ class ExpressionTree(ExpressionGraph):
             return node
         return self.equalize_depths(node)
 
-    def rbalance(self, node, with_buffers = False):
+    def rbalance(self, node, with_buffers = False, original_node = None):
         """Balances the subtree rooted at this node to the right
 
         If the subtree contains buffers, this method will actively destroy them.
@@ -974,14 +996,28 @@ class ExpressionTree(ExpressionGraph):
         Args:
             node (Node): The node to balance
             with_buffers (bool): Whether to use buffers to balance leaf depth
+            original_node (Node, index): Information to refind subtree root
+                This is used in recursion, and should not be specified
         """
+        def reconstruct_node(parent, index):
+            """Reconstruct the original node"""
+            if parent is None:
+                return self.root
+            return parent[index]
+
         # If the node is a leaf, there is nothing to balance
         if len(node) == 0:
             return None
+
+        # Save the identity of the original node's parent
+        if original_node is None:
+            parent = node.parent
+            index = None
+            if parent is not None:
+                index = parent.children.index(node)
+            original_node = (parent, index)
         
         # First, reduce the subtree's height as much as possible
-        print(node)
-        print(self.width)
         node = self.balance(node)
 
         # If the subtree is proper, there is no difference between right/left
@@ -1004,6 +1040,7 @@ class ExpressionTree(ExpressionGraph):
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.right_shift(leafs[a].parent)
+                    node = reconstruct_node(*original_node)
             node = self.balance(node)
 
         # If we are not using buffers, we are done
