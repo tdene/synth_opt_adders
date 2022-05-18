@@ -297,8 +297,6 @@ def display_png(graph, *args, **kwargs):
     # Delete the PNG file
     os.remove(fname)
 
-    return ret
-
 def display_gif(graphs, *args, **kwargs):
     """Given a list of graphs, executes their png() method and displays a gif
 
@@ -328,8 +326,6 @@ def display_gif(graphs, *args, **kwargs):
         os.remove(fname)
     # Delete the GIF file
     os.remove(gif_name)
-
-    return ret
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
