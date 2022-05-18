@@ -323,7 +323,7 @@ class ExpressionForest(ExpressionGraph):
         flat=False,
         block_flat=False,
         cell_flat=False,
-        merge_mapping=False,
+        merge_mapping=True,
         module_name=None,
         description_string="start of unnamed graph"
     ):
@@ -390,7 +390,7 @@ class ExpressionForest(ExpressionGraph):
         hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
                 language, module_name)
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
 
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 

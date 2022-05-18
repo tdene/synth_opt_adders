@@ -354,7 +354,7 @@ class ExpressionGraph(nx.DiGraph):
         flat=False,
         block_flat=False,
         cell_flat=False,
-        merge_mapping=False,
+        merge_mapping=True,
         module_name=None,
         description_string="start of unnamed graph"
     ):
