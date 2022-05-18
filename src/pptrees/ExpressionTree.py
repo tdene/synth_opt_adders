@@ -981,6 +981,7 @@ class ExpressionTree(ExpressionGraph):
                         depths[a+1] < target_depths[a+1]:
                     node = self.left_shift(leafs[a].parent)
                     node = reconstruct_node(*original_node)
+                    depths = [x.y_pos for x in leafs]
             node = self.balance(node)
 
         # If we are not using buffers, we are done
@@ -1042,6 +1043,7 @@ class ExpressionTree(ExpressionGraph):
                         depths[a+1] < target_depths[a+1]:
                     node = self.right_shift(leafs[a].parent)
                     node = reconstruct_node(*original_node)
+                    depths = [x.y_pos for x in leafs]
             node = self.balance(node)
 
         # If we are not using buffers, we are done
