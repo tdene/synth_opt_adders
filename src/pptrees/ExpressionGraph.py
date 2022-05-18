@@ -83,6 +83,7 @@ class ExpressionGraph(nx.DiGraph):
         kwargs["pos"] = "{0},{1}!".format(node.x_pos*-1, node.y_pos*-1)
 
         # Add the node to the graph
+        node.graph = self
         super().add_node(node, **kwargs)
         return node
 

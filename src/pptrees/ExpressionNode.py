@@ -11,6 +11,7 @@ class ExpressionNode:
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
         leafs (int): A binary encoding of all leafs reachable from this node
+        graph (ExpressionGraph): The graph this node belongs to
         block (int): The block number of this node's HDL (if applicable)
         in_nets (list): A list of input nets
         out_nets (list): A list of output nets
@@ -48,6 +49,7 @@ class ExpressionNode:
 
         # Graph-related attributes
         self.leafs = 0
+        self.graph = None
         self.block = None
         self.equiv_class = [self]
         self.tracks_class = set(self)
