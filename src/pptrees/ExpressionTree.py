@@ -948,6 +948,7 @@ class ExpressionTree(ExpressionGraph):
         # Next, get all leafs that are part of this subtree
         leafs = self._get_leafs(node)
         target_depths = sorted([x.y_pos for x in leafs])
+        max_depth = max(target_depths)
         # Shift nodes until the subtree is balanced
         while True:
             # Characterize the leafs by depth
@@ -957,13 +958,16 @@ class ExpressionTree(ExpressionGraph):
                 break
             # Otherwise, shift shallowness to the left
             for a in range(len(leafs)-1):
+                depths = [x.y_pos for x in leafs]
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.left_shift(leafs[a].parent)
-                    # After a shift, re-balance the subtree
+                elif depths[a] > max_depth:
+                    # If the tree falls too out of balance, rebalance it
                     node = self.balance(node)
 
         # If we are not using buffers, we are done
+        node = self.balance(node)
         if not with_buffers:
             return node
         return self.equalize_depths(node)
@@ -988,6 +992,7 @@ class ExpressionTree(ExpressionGraph):
         # Next, get all leafs that are part of this subtree
         leafs = self._get_reversed_leafs(node)
         target_depths = sorted([x.y_pos for x in leafs])
+        max_depth = max(target_depths)
         # Shift nodes until the subtree is balanced
         while True:
             # Characterize the leafs by depth
@@ -1000,10 +1005,12 @@ class ExpressionTree(ExpressionGraph):
                 if depths[a] >= target_depths[a] and \
                         depths[a+1] < target_depths[a+1]:
                     node = self.right_shift(leafs[a].parent)
-                    # After a shift, re-balance the subtree
+                elif depths[a] > max_depth:
+                    # If the tree falls too out of balance, rebalance it
                     node = self.balance(node)
 
         # If we are not using buffers, we are done
+        node = self.balance(node)
         if not with_buffers:
             return node
         return self.equalize_depths(node)
