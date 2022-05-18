@@ -206,10 +206,9 @@ class ExpressionTree(ExpressionGraph):
 
     def __repr__(self):
         """Redefine __repr__ to automatically display diagrams in a Notebook"""
-        if not in_notebook():
-            return super().__repr__()
-        else:
-            return display_png(self)
+        if in_notebook():
+            display_png(self)
+        return super().__repr__()
 
     def _get_row(self, height):
         """Return the nodes at a given height"""

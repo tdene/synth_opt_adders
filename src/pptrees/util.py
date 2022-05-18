@@ -1,6 +1,6 @@
 import re
 from .modules import *
-from IPython.display import Image
+from IPython.display import Image, display
 import PIL.Image
 import os, uuid
 
@@ -293,7 +293,7 @@ def display_png(graph, *args, **kwargs):
     # Execute the function
     graph.png(*args, out = fname, **kwargs)
     # Display the PNG file
-    ret = Image(fname)
+    display(Image(fname))
     # Delete the PNG file
     os.remove(fname)
 
@@ -322,7 +322,7 @@ def display_gif(graphs, *args, **kwargs):
                      format="GIF",
                      append_images = images)
     # Display the GIF file
-    ret = Image(gif_name)
+    display(Image(gif_name))
     # Delete the PNG files
     for fname in fnames:
         os.remove(fname)
