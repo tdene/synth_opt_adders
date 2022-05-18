@@ -132,6 +132,17 @@ class ExpressionForest(ExpressionGraph):
             for t in self.trees[1:]:
                 t.lbalance(t.root[1], with_buffers=True)
 
+    def __getitem__(self, key):
+        """Returns the tree at the given index
+
+        Args:
+            key (int): The index of the tree to return
+
+        Returns:
+            ExpressionTree: The tree at the given index
+        """
+        return self.trees[key]
+
     ### NOTE: Equivalence requires nodes to be fully equivalent
     ### It is possible for two nodes to be partially equivalent
     ### For example, if their subtrees are identical
