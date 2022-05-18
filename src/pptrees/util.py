@@ -1,5 +1,8 @@
 import re
 from .modules import *
+from IPython.display import Image
+import PIL.Image
+import os, uuid
 
 def lg(x):
     """Returns the base-2 logarithm of x, rounded down"""
@@ -265,6 +268,68 @@ def increment_iname(hdl):
         hdl = hdl[U.end():]
         U_count += 1
     return good_hdl + hdl
+
+def in_notebook():
+    """Returns True if the code is being run in a Google Colab notebook"""
+    try:
+        shell = get_ipython().__class__.__module__
+        if shell == "google.colab._shell":
+            return True
+        else:
+            return False
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+def display_png(graph, *args, **kwargs):
+    """Given a graph, executes its png() method and displays the image
+
+    Args:
+        graph (ExpressionGraph): The graph to be rendered
+        *args: The arguments to pass to the graph's png() method
+        **kwargs: The keyword arguments to pass to the graph's png() method
+    """
+    # Get a temporary file name
+    fname = str(uuid.uuid4()) + ".png"
+    # Execute the function
+    graph.png(*args, out = fname, **kwargs)
+    # Display the PNG file
+    ret = Image(fname)
+    # Delete the PNG file
+    os.remove(fname)
+
+    return ret
+
+def display_gif(graphs, *args, **kwargs):
+    """Given a list of graphs, executes their png() method and displays a gif
+
+    Args:
+        graphs (list of ExpressionGraph): The graphs to be rendered
+        *args: The arguments to pass to the graphs' png() method
+        **kwargs: The keyword arguments to pass to the graphs' png() method
+    """
+    # Get temporary file names
+    fnames = [str(uuid.uuid4()) + ".png" for _ in range(len(graphs))]
+    # Execute the function
+    for graph, fname in zip(graphs, fnames):
+        graph.png(*args, out = fname, **kwargs)
+    # Collect the images
+    images = (PIL.Image.open(fname) for fname in fnames)
+    first_image = next(images)
+    # Save the GIF file
+    gif_name = str(uuid.uuid4()) + ".gif"
+    first_image.save(gif_name,
+                     save_all = True,
+                     format="GIF",
+                     append_images = images)
+    # Display the GIF file
+    ret = Image(gif_name)
+    # Delete the PNG files
+    for fname in fnames:
+        os.remove(fname)
+    # Delete the GIF file
+    os.remove(gif_name)
+
+    return ret
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

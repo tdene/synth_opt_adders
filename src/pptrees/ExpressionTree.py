@@ -6,6 +6,7 @@ from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import match_nodes
 from .util import lg
+from .util import in_notebook, display_png, display_gif
 
 class ExpressionTree(ExpressionGraph):
     """Defines a tree of binary expressions
@@ -202,6 +203,13 @@ class ExpressionTree(ExpressionGraph):
                 target = parent
         else:
             return super().__getitem__(key)
+
+    def __repr__(self):
+        """Redefine __repr__ to automatically display diagrams in a Notebook"""
+        if not in_notebook():
+            return super().__repr__()
+        else:
+            return display_png(self)
 
     def _get_row(self, height):
         """Return the nodes at a given height"""
@@ -757,7 +765,7 @@ class ExpressionTree(ExpressionGraph):
                 diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
                 self.nodes[node]["pos"] = diagram_pos
 
-    def png(self, fname="tree.png"):
+    def png(self, out="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
 
         # Correct the positions of the nodes
@@ -767,7 +775,7 @@ class ExpressionTree(ExpressionGraph):
         pg.set_splines("false")
         pg.set_concentrate("true")
 
-        pg.write_png(fname, prog="neato")
+        pg.write_png(out, prog="neato")
 
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 

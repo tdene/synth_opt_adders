@@ -5,6 +5,7 @@ from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import lg
 from .util import increment_iname
+from .util import in_notebook, display_png, display_gif
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -156,6 +157,13 @@ class ExpressionForest(ExpressionGraph):
     def __iter__(self):
         """Iterates over the trees in the forest"""
         return iter(self.trees)
+
+    def __repr__(self):
+        """Redefine __repr__ to automatically display diagrams in a Notebook"""
+        if not in_notebook():
+            return super().__repr__()
+        else:
+            return display_gif(self.trees)
 
     ### NOTE: Equivalence requires nodes to be fully equivalent
     ### It is possible for two nodes to be partially equivalent
