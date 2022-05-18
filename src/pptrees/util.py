@@ -234,7 +234,7 @@ def merge_mapping_into_cells(hdl, mapping):
             data = mapping[first_word][1]
             behav = "assign" in data
             new_string = data
-            new_string = new_string.replace(first_word,"U0")
+            new_string = new_string.replace(" {}(.".format(first_word)," U0(.")
             for a in range(len(nets)):
                 net_name = nets[a]
                 port_name = mapping[first_word][0][a]
@@ -246,6 +246,25 @@ def merge_mapping_into_cells(hdl, mapping):
         else:
             new_hdl.append(line)
     return '\n'.join(new_hdl)
+
+def increment_iname(hdl):
+    """Assigns unique instances names for all cells in the HDL block
+
+    By default, instances are named U0, U1, U2, etc.
+    These names need to be made unique.
+    """
+    U_count = 0
+    good_hdl = ""
+    while True:
+        # Find the next instance name
+        U = re.search(r"U\d+", hdl)
+        if U is None:
+            break
+        # Replace it with the next name
+        good_hdl += hdl[:U.start()] + "U" + str(U_count)
+        hdl = hdl[U.end():]
+        U_count += 1
+    return good_hdl + hdl
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

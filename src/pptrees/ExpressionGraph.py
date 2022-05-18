@@ -10,7 +10,7 @@ from .modules import *
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
 from .util import parse_net, sub_brackets, sub_ports
 from .util import natural_keys
-from .util import parse_mapping, merge_mapping_into_cells
+from .util import parse_mapping, merge_mapping_into_cells, increment_iname
 
 class ExpressionGraph(nx.DiGraph):
     """Defines a di-graph of arithmetic expressions
@@ -411,6 +411,15 @@ class ExpressionGraph(nx.DiGraph):
             hdl += "\n"
             module_defs.update(block_defs)
 
+        # If the mapping file is intended to be merged in, do so
+        if merge_mapping:
+            # Parse the mapping file
+            file_suffix = syntax["file_extension"]
+            mappings_path = importlib.resources.path("pptrees", "mappings")
+            with mappings_path as pkg_map_dir:
+                pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+            mapping = parse_mapping(pkg_map_file)
+
         # Pull in the HDL description of nodes outside of blocks
         # If fully flattening them, need to rename "w*" internal wires
         if cell_flat:
@@ -435,34 +444,22 @@ class ExpressionGraph(nx.DiGraph):
                 node_hdl = node_hdl.replace("w1", "w{0}".format(w_ctr))
                 w_ctr += 1
 
+            if merge_mapping:
+                node_hdl = merge_mapping_into_cells(node_hdl, mapping)
+                new_defs = set()
+                for a in node_defs:
+                    new_def = merge_mapping_into_cells(a, mapping)
+                    new_def = increment_iname(new_def)
+                    new_defs.add(new_def)
+                node_defs = new_defs
+
             hdl += node_hdl
             module_defs.update(node_defs)
-
-        # If the mapping file is intended to be merged in, do so
-        if merge_mapping:
-            # Parse the mapping file
-            file_suffix = syntax["file_extension"]
-            mappings_path = importlib.resources.path("pptrees", "mappings")
-            with mappings_path as pkg_map_dir:
-                pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
-            mapping = parse_mapping(pkg_map_file)
-            hdl = merge_mapping_into_cells(hdl, mapping)
 
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
-        U_count = 0
-        good_hdl = ""
-        while True:
-            # Find the next instance name
-            U = re.search(r"U\d+", hdl)
-            if U is None:
-                break
-            # Replace it with the next name
-            good_hdl += hdl[:U.start()] + "U" + str(U_count)
-            hdl = hdl[U.end():]
-            U_count += 1
-        hdl = good_hdl + hdl
+        hdl = increment_iname(hdl)
 
         ### NOTE: Is this general? Improvements wanted
         ### In general, hard-coding an is_block flag sounds like a bad idea

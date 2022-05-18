@@ -4,6 +4,7 @@ from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import lg
+from .util import increment_iname
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -374,18 +375,7 @@ class ExpressionForest(ExpressionGraph):
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
-        U_count = 0
-        good_hdl = ""
-        while True:
-            # Find the next instance name
-            U = re.search(r"U\d+", hdl)
-            if U is None:
-                break
-            # Replace it with the next name
-            good_hdl += hdl[:U.start()] + "U" + str(U_count)
-            hdl = hdl[U.end():]
-            U_count += 1
-        hdl = good_hdl + hdl
+        hdl = increment_iname(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
                 language, module_name)
