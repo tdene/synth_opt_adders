@@ -3,6 +3,7 @@ import re
 from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
+from .util import lg
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -65,8 +66,9 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Forest width must be an integer")
         if width < 1:
             raise ValueError("Forest width must be at least 1")
-        if start_point not in ["serial", "rbalanced", "balanced"]:
-            error = "Tree start point {0} is not implemented"
+        if start_point not in ["serial", "sklansky",
+                "kogge-stone", "brent-kung"]:
+            error = "Forest start point {0} is not implemented"
             error = error.format(start_point)
             raise NotImplementedError(error)
         if not isinstance(radix, int):
@@ -113,13 +115,22 @@ class ExpressionForest(ExpressionGraph):
                     tree_in_ports,
                     tree_out_ports,
                     name="tree_{}".format(a),
-                    start_point=start_point,
-                    radix=radix,
+                    radix=radix
             )
             self.trees.append(t)
 
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
+
+        # Transform the forest towards the starting point
+        if start_point == "serial":
+            pass
+        elif start_point == "sklansky" or start_point == "brent-kung":
+            for t in self.trees[1:]:
+                t.rbalance(t.root[1])
+        elif start_point == "kogge-stone":
+            for t in self.trees[1:]:
+                t.lbalance(t.root[1], with_buffers=True)
 
     ### NOTE: Equivalence requires nodes to be fully equivalent
     ### It is possible for two nodes to be partially equivalent
@@ -168,17 +179,19 @@ class ExpressionForest(ExpressionGraph):
         n1 has a fan-out of 3
         The other nodes do not matter
         """
-
         # Grab the node's equivalence class
         ec = node.equiv_class
         # If node is not ec's representative, do nothing
         if ec[0] is not node:
             return
+        # If node is root, do noting
+        if node.parent is None:
+            return
 
         # Count the fanout
         ctr = set()
         for n in ec:
-            ctr += n.parent.equiv_class[0]
+            ctr.add(n.parent.equiv_class[0])
         fanout = len(ctr)
 
         # Modify the relevant edge's data
@@ -187,7 +200,7 @@ class ExpressionForest(ExpressionGraph):
         g = modules[node.value]["le"][index]
         ### This is a bad estimate of fanout's effect on delay
         e_data["fanout"] = g*fanout
-        self.update_weight(node.parent, node)
+        tree.update_edge_weight(node.parent, node)
 
         return fanout
 
@@ -196,6 +209,9 @@ class ExpressionForest(ExpressionGraph):
 
         See the description of _calc_node_fanout for details
         """
+        # Calculate equivalence classes
+        self.find_equivalent_nodes()
+
         for t in self.trees:
             for n in t:
                 self._calc_node_fanout(n,t)
@@ -213,11 +229,13 @@ class ExpressionForest(ExpressionGraph):
             or
             - node > other, node < other.parent, other.parent > node.parent
         """
-
         # Grab the node's tracks class
         tr = node.tracks_class
         # If node is not its equivalence class representative, do nothing
         if node.equiv_class[0] is not node:
+            return
+        # If node is root, do noting
+        if node.parent is None:
             return
 
         # Count the tracks
@@ -227,82 +245,21 @@ class ExpressionForest(ExpressionGraph):
         e_data = tree.get_edge_data(node.parent,node)
         ### This is a bad estimate of tracks' effect on delay
         e_data["tracks"] = tracks
-        self.update_weight(node.parent, node)
+        tree.update_edge_weight(node.parent, node)
 
         return tracks
 
-    def calculate_fanout(self):
-        """Calculates the fanout of all nodes in the forest
+    def calculate_tracks(self):
+        """Calculates the tracks of all nodes in the forest
 
-        See the description of _calc_node_fanout for details
+        See the description of _calc_node_tracks for details
         """
+        # Calculate equivalence classes
+        self.find_equivalent_nodes()
+
         for t in self.trees:
             for n in t:
                 self._calc_node_tracks(n,t)
-
-    def LF(self, x, y = None):
-        """Performs an LF transform on the specified node in all trees
-
-        This is node by calling on the corresponding method in the Tree class.
-        See the disclaimer inside the docstring of the ExpressionTree method.
-        """
-
-        # Try to first apply transform on most significant tree
-        # Once a valid transform is applied, use x,y for all other trees
-        for t in reversed(list(self.trees)):
-            if x < t.width-1:
-                attempt = t.LF(x, y)
-                if attempt is not None:
-                    x, y = attempt
-        return x, y
-
-    def FL(self, x, y = None):
-        """Performs an FL transform on the specified node in all trees
-
-        This is node by calling on the corresponding method in the Tree class.
-        See the disclaimer inside the docstring of the ExpressionTree method.
-        """
-
-        # Try to first apply transform on most significant tree
-        # Once a valid transform is applied, use x,y for all other trees
-        for t in reversed(list(self.trees)):
-            if x < t.width-1:
-                attempt = t.FL(x, y)
-                if attempt is not None:
-                    x, y = attempt
-        return x, y
-
-    def TF(self, x, y = None):
-        """Performs a TF transform on the specified node in all trees
-
-        This is node by calling on the corresponding method in the Tree class.
-        See the disclaimer inside the docstring of the ExpressionTree method.
-        """
-
-        # Try to first apply transform on most significant tree
-        # Once a valid transform is applied, use x,y for all other trees
-        for t in reversed(list(self.trees)):
-            if x < t.width-1:
-                attempt = t.TF(x, y)
-                if attempt is not None:
-                    x, y = attempt
-        return x, y
-
-    def FT(self, x, y = None):
-        """Performs an FT transform on the specified node in all trees
-
-        This is node by calling on the corresponding method in the Tree class.
-        See the disclaimer inside the docstring of the ExpressionTree method.
-        """
-
-        # Try to first apply transform on most significant tree
-        # Once a valid transform is applied, use x,y for all other trees
-        for t in reversed(list(self.trees)):
-            if x < t.width-1:
-                attempt = t.FT(x, y)
-                if attempt is not None:
-                    x, y = attempt
-        return x, y
 
     def hdl(
         self,
@@ -373,6 +330,74 @@ class ExpressionForest(ExpressionGraph):
                 language, module_name)
         if out is not None:
             self._write_hdl(file_out_hdl, out, language, mapping)
+
+    ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
+
+    def LF(self, x, y = None):
+        """Performs an LF transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.LF(x, y)
+                if attempt is not None:
+                    x, y = attempt
+        return x, y
+
+    def FL(self, x, y = None):
+        """Performs an FL transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.FL(x, y)
+                if attempt is not None:
+                    x, y = attempt
+        return x, y
+
+    def TF(self, x, y = None):
+        """Performs a TF transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.TF(x, y)
+                if attempt is not None:
+                    x, y = attempt
+        return x, y
+
+    def FT(self, x, y = None):
+        """Performs an FT transform on the specified node in all trees
+
+        This is node by calling on the corresponding method in the Tree class.
+        See the disclaimer inside the docstring of the ExpressionTree method.
+        """
+
+        # Try to first apply transform on most significant tree
+        # Once a valid transform is applied, use x,y for all other trees
+        for t in reversed(list(self.trees)):
+            if x < t.width-1:
+                attempt = t.FT(x, y)
+                if attempt is not None:
+                    x, y = attempt
+        return x, y
+
+    ### NOTE: END LEGACY METHODS ###
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

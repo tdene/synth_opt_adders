@@ -65,10 +65,6 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Tree width must be an integer")
         if width < 1:
             raise ValueError("Tree width must be at least 1")
-        if start_point not in ["serial", "rbalanced", "balanced"]:
-            error = "Tree start point {0} is not implemented"
-            error = error.format(start_point)
-            raise NotImplementedError(error)
         if not isinstance(radix, int):
             raise TypeError("Tree radix must be an integer")
         if not isinstance(name, str):
@@ -158,16 +154,6 @@ class ExpressionTree(ExpressionGraph):
                 # Advance prev_root
                 if a == radix-1:
                     prev_root = prev_root.children[1]
-
-        # Transform the tree towards the starting point
-        if start_point == "serial":
-            return True
-        elif start_point == "sklansky":
-            return self.rbalance(self.root)
-        elif start_point == "brent-kung":
-            return self._brent_kung(self.root)
-        elif start_point == "kogge-stone":
-            return self.lbalance(self.root, with_buffers=True)
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -796,6 +782,10 @@ class ExpressionTree(ExpressionGraph):
                 return self.root
             return parent[index]
 
+        # If the node is a leaf, there is nothing to reduce
+        if len(node) == 0:
+            return None
+
         # Save the identity of the original node's parent
         if original_node is None:
             parent = node.parent
@@ -869,6 +859,9 @@ class ExpressionTree(ExpressionGraph):
             desired_depth (int): The desired depth of the subtree
                 If not specified, this is set to the maximum leaf depth
         """
+        # If the node is a leaf, there is nothing to equalize
+        if len(node) == 0:
+            return None
 
         # If desired_depth is None, set it to the maximum depth
         if desired_depth is None:
@@ -937,6 +930,9 @@ class ExpressionTree(ExpressionGraph):
             node (Node): The node to balance
             with_buffers (bool): Whether to use buffers to balance leaf depth
         """
+        # If the node is a leaf, there is nothing to balance
+        if len(node) == 0:
+            return None
         
         # First, reduce the subtree's height as much as possible
         node = self.balance(node)
@@ -979,8 +975,13 @@ class ExpressionTree(ExpressionGraph):
             node (Node): The node to balance
             with_buffers (bool): Whether to use buffers to balance leaf depth
         """
+        # If the node is a leaf, there is nothing to balance
+        if len(node) == 0:
+            return None
         
         # First, reduce the subtree's height as much as possible
+        print(node)
+        print(self.width)
         node = self.balance(node)
 
         # If the subtree is proper, there is no difference between right/left
