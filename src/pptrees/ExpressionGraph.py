@@ -227,7 +227,10 @@ class ExpressionGraph(nx.DiGraph):
             node.block = block_id
 
         # Create the block
-        new_block = self.subgraph(nodes)
+        new_block = ExpressionGraph(name = "block_{0}".format(block_id))
+        subgraph = self.subgraph(nodes)
+        new_block.add_nodes_from(subgraph.nodes(data = True))
+        new_block.add_edges_from(subgraph.edges(data = True))
         self.blocks[block_id] = new_block
         if block_id == len(self.blocks) - 1:
             self.blocks.append(None)
@@ -264,6 +267,25 @@ class ExpressionGraph(nx.DiGraph):
         # Reset the next block name
         self.next_block = 0
         self.blocks = [None]
+
+    def add_best_blocks(self):
+        """Groups nodes into blocks based on critical paths"""
+
+        # Get subgraph view with only valid nodes
+        subgraph = self.subgraph(
+                [x for x in self.nodes \
+                        if x.block is None and x.equiv_class[0] is x]
+        )
+
+        # Find the critical path
+        path = nx.dag_longest_path(subgraph)
+
+        # Add a block
+        if len(path) > 1:
+            self.add_block(*path)
+            # Recurse
+            return self.add_best_blocks()
+        return True
 
     def _get_internal_nets(self):
         """Returns the internal nets of the graph"""
@@ -311,11 +333,11 @@ class ExpressionGraph(nx.DiGraph):
         # Assume that all these retrieved nets are 1-bit
         in_internal = [(sub_brackets(x),1) for x in in_ports]
         in_external = list(in_ports)
-        in_ports = (in_internal, in_external)
+        in_ports = [(x,y) for x,y in zip(in_internal, in_external)]
 
         out_internal = [(sub_brackets(x),1) for x in out_ports]
         out_external = list(out_ports)
-        out_ports = (out_internal, out_external)
+        out_ports = [(x,y) for x,y in zip(out_internal, out_external)]
 
         return (in_ports, out_ports)
 
@@ -374,6 +396,7 @@ class ExpressionGraph(nx.DiGraph):
             )
 
             hdl += block_hdl
+            hdl += "\n"
             module_defs.update(block_defs)
 
         # Pull in the HDL description of nodes outside of blocks
@@ -381,7 +404,16 @@ class ExpressionGraph(nx.DiGraph):
         if full_flat:
             w_ctr = 0
         for node in self:
-            if node.block is not None:
+            # Check whether the node is in a block, and whether this is it
+            # If the node is not inside a block, it's automatically usable
+            usable = node.block is None
+            # Otherwise, check whether the node is inside THIS block
+            if not usable:
+                # Query the node for its graph and block ID
+                node_block = node.graph.blocks[node.block]
+                # Check whether the node's block is this graph
+                usable = (node_block is self)
+            if not usable:
                 continue
             node_hdl, node_defs = node.hdl(
                     language=language,
@@ -449,7 +481,8 @@ class ExpressionGraph(nx.DiGraph):
         ## Then create the architecture
         arch = hdl_arch(module_name, hdl, language)
         ## Add the entity and architecture to the module_defs
-        file_out_hdl = entity + arch + "".join(module_defs)
+        formatted_defs = sorted(list(module_defs), key=natural_keys)
+        file_out_hdl = entity + arch + "".join(formatted_defs)
         module_defs.add(entity + arch)
         ## Create an instance of the module
         inst_ports = [[x[0][0],x[1]] for x in in_ports + out_ports]

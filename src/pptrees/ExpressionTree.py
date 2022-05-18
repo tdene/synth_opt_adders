@@ -30,9 +30,9 @@ class ExpressionTree(ExpressionGraph):
     """
 
     def __init__(self,
-                 width,
-                 in_ports,
-                 out_ports,
+                 width=1,
+                 in_ports=None,
+                 out_ports=None,
                  name="tree",
                  start_point="serial",
                  radix=2,

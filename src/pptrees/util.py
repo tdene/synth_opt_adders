@@ -81,14 +81,14 @@ def parse_net(x):
 
 hdl_syntax = {
         "verilog": {
-            "entity": "module {0}(\n\n\t{1}\n\t);\n\n",
+            "entity": "\nmodule {0}(\n\n\t{1}\n\t);\n\n",
             "entity_in": "input",
             "entity_out": "output",
             "entity_port": "{0} {2} {1},",
             "port_range": "[{0}:{1}]",
             "arch": "{1}\nendmodule // {0}\n",
-            "inst": "{0} U0(\n{1}\n);",
-            "inst_port": ".{0}({1})",
+            "inst": "\n\t{0} U0(\n{1}\n);",
+            "inst_port": "\t\t.{0}({1})",
             "slice_markers": lambda x: x,
             "wire_def": "wire {0};",
             "comment_string": "// ",

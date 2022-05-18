@@ -23,7 +23,7 @@ class AdderTree(ExpressionTree):
     """	
 
     def __init__(self,
-                 width,
+                 width=1,
                  in_ports=None,
                  out_ports=None,
                  name="adder",
