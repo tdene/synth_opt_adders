@@ -151,6 +151,9 @@ class ExpressionTree(ExpressionGraph):
                 raise ValueError("Tree start point out of bounds")
         else:
             start_point = 0
+        # If tree width is 1, hard-code the structure
+        if self.width == 1:
+            self.add_edge(self.root, leafs[0], 0)
         self.unrank(self.root, start_point, self.width-1, leafs, lspine = True)
 
     def __len__(self):
@@ -749,6 +752,8 @@ class ExpressionTree(ExpressionGraph):
         mirror = not mirror if mirror_test else mirror
         rank = cn - 1 - rank if mirror_test else rank
 
+        ### NOTE: The current flow of the recursion is bad.
+        ### TO-DO: Add leafs in the below if-statement, not earlier
         # Width reaching zero signals the end of recursion
         if width == 0:
             return
