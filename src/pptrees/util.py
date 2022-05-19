@@ -1,6 +1,5 @@
 import re
 from .modules import *
-from IPython.display import Image, display
 import PIL.Image
 import os, uuid
 
@@ -292,10 +291,12 @@ def display_png(graph, *args, **kwargs):
     fname = str(uuid.uuid4()) + ".png"
     # Execute the function
     graph.png(*args, out = fname, **kwargs)
-    # Display the PNG file
-    display(Image(fname))
+    # Get the PNG data
+    ret = open(fname, "rb").read()
     # Delete the PNG file
     os.remove(fname)
+
+    return ret
 
 def display_gif(graphs, *args, **kwargs):
     """Given a list of graphs, executes their png() method and displays a gif
@@ -319,13 +320,15 @@ def display_gif(graphs, *args, **kwargs):
                      save_all = True,
                      format="GIF",
                      append_images = images)
-    # Display the GIF file
-    display(Image(gif_name))
+    # Get the GIF data
+    ret = open(gif_name, "rb").read()
     # Delete the PNG files
     for fname in fnames:
         os.remove(fname)
     # Delete the GIF file
     os.remove(gif_name)
+
+    return ret
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
