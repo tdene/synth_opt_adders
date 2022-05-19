@@ -312,13 +312,21 @@ def display_gif(graphs, *args, **kwargs):
     for graph, fname in zip(graphs, fnames):
         graph.png(*args, out = fname, **kwargs)
     # Collect the images
-    images = (PIL.Image.open(fname) for fname in fnames)
-    first_image = next(images)
+    images = [PIL.Image.open(fname) for fname in fnames]
+    reference_image = images[-1]
+    for a in range(len(images)):
+        im = images[a]
+        im = im.crop(reference_image.getbbox())
+        images[a] = im
     # Save the GIF file
     gif_name = str(uuid.uuid4()) + ".gif"
-    first_image.save(gif_name,
+    images[0].save(gif_name,
                      save_all = True,
                      format="GIF",
+                     duration = 200,
+                     loop = 0,
+                     disposal = 1,
+                     transparency = 255,
                      append_images = images)
     # Get the GIF data
     ret = open(gif_name, "rb").read()
