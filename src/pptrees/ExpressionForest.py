@@ -5,7 +5,7 @@ from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import lg
 from .util import increment_iname
-from .util import in_notebook, display_png, display_gif
+from .util import display_png, display_gif
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees

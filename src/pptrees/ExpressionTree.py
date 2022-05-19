@@ -5,8 +5,8 @@ from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import match_nodes
-from .util import lg
-from .util import in_notebook, display_png, display_gif
+from .util import lg, catalan
+from .util import display_png, display_gif
 
 class ExpressionTree(ExpressionGraph):
     """Defines a tree of binary expressions
@@ -47,7 +47,7 @@ class ExpressionTree(ExpressionGraph):
             in_ports (list of ((string, int), string)): List of input ports
             out_ports (list of ((string, int), string)): List of output ports
             name (string): The name of the graph
-            start_point (string): The starting structure of the tree
+            start_point (string or int): The starting structure of the tree
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
@@ -123,38 +123,35 @@ class ExpressionTree(ExpressionGraph):
         ### Connect the root node to the tree's ports
         self._connect_outports(self.root)
 
+        ## Initialize the leafs
+        leafs = []
+        for a in range(self.width):
+            # Right-most leaf may be special
+            if a == 0 and "first_pre" in node_defs:
+                label = "c[{}]".format(a)
+                node_def = node_defs["first_pre"]
+            # Left-most leaf may be special
+            elif a == self.width-1 and "lspine_pre" in node_defs:
+                label = "p[{}]".format(a)
+                node_def = node_defs["lspine_pre"]
+            else:
+                label = "pg[{}]".format(a)
+                node_def = node_defs["pre"]
+            leaf = Node(node_def)
+            leaf = self.add_node(leaf, label = label)
+            # Connect the leaf to the tree's ports
+            self._connect_inports(leaf, a)
+            leaf._recalculate_leafs(leafs=2**a)
+            leafs.append(leaf)
+
         ## Initialize the rest of the tree
-        prev_root = self.root
-        pre_counter = self.width-1
-        while pre_counter > -1:
-            for a in range(radix):
-                ## Place pre-processing nodes
-                if a == 0 or pre_counter < radix-1:
-                    if pre_counter < 0:
-                        break
-                    label = "pg[{}]".format(pre_counter)
-                    # Left spine is special
-                    if pre_counter == self.width-1:
-                        label = "p[{}]".format(pre_counter)
-                        pre = node_defs.get("lspine_pre", node_defs["pre"])
-                    # Right-most pre- may be special
-                    elif pre_counter == 0:
-                        pre = node_defs.get("first_pre", node_defs["pre"])
-                    else:
-                        pre = node_defs["pre"]
-                    pre_node = Node(pre)
-                    self.add_node(pre_node, label=label)
-                    self.add_edge(prev_root, pre_node, a)
-                    self._connect_inports(pre_node, pre_counter)
-                    pre_node._recalculate_leafs(leafs=2**pre_counter)
-                    pre_counter -= 1
-                else:
-                    black_node = Node(node_defs["black"])
-                    self.add_node(black_node)
-                    self.add_edge(prev_root, black_node, a)
-                # Advance prev_root
-                if a == radix-1:
-                    prev_root = prev_root.children[1]
+        if isinstance(start_point, int):
+            if start_point < 1 or start_point > catalan(self.width):
+                raise ValueError("Tree start point out of bounds")
+        else:
+            start_point = 0
+        self.unrank(self.root, start_point, self.width-1, leafs, lspine = True)
+        print(leafs)
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -737,6 +734,98 @@ class ExpressionTree(ExpressionGraph):
         child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
 
         return child
+
+    def unrank(self, node, rank, width, leafs, mirror = False, lspine=False):
+        """Generate a binary tree under a node by unranking it"""
+        print("leafs")
+        print(leafs)
+
+        # The unranking function is symmetrical around the midpoint
+        cn = catalan(width)
+        mirror = not mirror if rank > (cn - (cn>>1)) else mirror
+        print(rank)
+        print(cn)
+        print(cn>>1)
+        print(cn - (cn>>1))
+        print('uh')
+        rank = 1 + cn - rank if mirror else rank
+
+        # Width reaching zero signals the end of recursion
+        print("bye")
+        print(width)
+        if width == 0:
+            return
+
+        # Pre-generate node info to save time
+        if "lspine" in self.node_defs and lspine:
+            left_def = self.node_defs["lspine"]
+        else:
+            left_def = self.node_defs["black"]
+        right_def = self.node_defs["black"]
+        
+        i1, i2, ci1 = 0, 0, 0
+        for i in range((width+1)//2):
+            i1, i2 = i, width-i-1
+            ci1 = catalan(i1)
+            big_number = catalan(i1)*catalan(i2)
+            rem = rank - big_number
+            print("rem")
+            print(rem)
+            print(i)
+            print(width//2)
+            print(width)
+            print()
+            if rem < 1:
+                break
+            rank = rem
+
+        print(rank)
+        print(width)
+        print(cn)
+        print(cn>>1)
+        print(mirror)
+        print(i1)
+        print(i2)
+        print('test1')
+        print((i1 > 0 and not mirror) or (i2 > 0 and mirror))
+        print((i2 > 0 and not mirror) or (i1 > 0 and mirror))
+        print('test2')
+        print()
+        # Generate the nodes and recurse
+        if mirror:
+            if i2 > 0:
+                lchild = Node(left_def)
+                self.add_node(lchild)
+                self.add_edge(node, lchild, 0)
+                self.unrank(lchild, rank // ci1, i2, leafs, mirror, lspine)
+            else:
+                leaf = leafs.pop()
+                self.add_edge(node, leaf, 0)
+            if i1 > 0:
+                rchild = Node(right_def)
+                self.add_node(rchild)
+                self.add_edge(node, rchild, 1)
+                self.unrank(rchild, rank % ci1, i1, leafs, mirror, False)
+            else:
+                leaf = leafs.pop(0)
+                self.add_edge(node, leaf, 1)
+        else:
+            if i1 > 0:
+                lchild = Node(left_def)
+                self.add_node(lchild)
+                self.add_edge(node, lchild, 0)
+                self.unrank(lchild, rank % ci1, i1, leafs, mirror, lspine)
+            else:
+                leaf = leafs.pop()
+                self.add_edge(node, leaf, 0)
+            if i2 > 0:
+                rchild = Node(right_def)
+                self.add_node(rchild)
+                self.add_edge(node, rchild, 1)
+                self.unrank(rchild, rank // ci1, i2, leafs, mirror, False)
+            else:
+                leaf = leafs.pop(0)
+                self.add_edge(node, leaf, 1)
 
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""

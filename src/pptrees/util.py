@@ -15,6 +15,12 @@ def verso_pin(x):
     """Returns the verso version of a pin"""
     return x.replace("out", "in") if "out" in x else x.replace("in", "out")
 
+def catalan(n):
+    """Returns the nth Catalan number"""
+    if n == 0:
+        return 1
+    return catalan(n-1)*(4*n-2)//(n+1)
+
 def match_nodes(parent, child, index):
     """Attempts to match the ports of two nodes
 
@@ -267,17 +273,6 @@ def increment_iname(hdl):
         hdl = hdl[U.end():]
         U_count += 1
     return good_hdl + hdl
-
-def in_notebook():
-    """Returns True if the code is being run in a Google Colab notebook"""
-    try:
-        shell = get_ipython().__class__.__module__
-        if shell == "google.colab._shell":
-            return True
-        else:
-            return False
-    except NameError:
-        return False      # Probably standard Python interpreter
 
 def display_png(graph, *args, **kwargs):
     """Given a graph, executes its png() method and displays the image
