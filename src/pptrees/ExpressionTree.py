@@ -782,13 +782,14 @@ class ExpressionTree(ExpressionGraph):
             else:
                 leaf = leafs.pop()
                 self.add_edge(node, leaf, 0)
+                added_left_leaf = True
             if i1 > 0:
                 rchild = Node(right_def)
                 self.add_node(rchild)
                 self.add_edge(node, rchild, 1)
                 self.unrank(rchild, rank % ci1, i1, leafs, mirror, False)
             else:
-                leaf = leafs.pop(0)
+                leaf = leafs.pop()
                 self.add_edge(node, leaf, 1)
         else:
             if i1 > 0:
@@ -799,13 +800,14 @@ class ExpressionTree(ExpressionGraph):
             else:
                 leaf = leafs.pop()
                 self.add_edge(node, leaf, 0)
+                added_left_leaf = True
             if i2 > 0:
                 rchild = Node(right_def)
                 self.add_node(rchild)
                 self.add_edge(node, rchild, 1)
                 self.unrank(rchild, rank // ci1, i2, leafs, mirror, False)
             else:
-                leaf = leafs.pop(0)
+                leaf = leafs.pop()
                 self.add_edge(node, leaf, 1)
 
     def _fix_diagram_positions(self):
