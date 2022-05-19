@@ -5,7 +5,7 @@ from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
 from .modules import *
 from .util import match_nodes
-from .util import lg, catalan
+from .util import lg, catalan, catalan_mirror_point
 from .util import display_png, display_gif
 
 class ExpressionTree(ExpressionGraph):
@@ -81,6 +81,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Save constructor arguments
         self.width = width
+        self.max_id = catalan(width-1)
         self.radix = radix
         self.idem = idem
         self.node_defs = node_defs
@@ -146,12 +147,11 @@ class ExpressionTree(ExpressionGraph):
 
         ## Initialize the rest of the tree
         if isinstance(start_point, int):
-            if start_point < 1 or start_point > catalan(self.width):
+            if start_point < 0 or start_point > self.max_rank():
                 raise ValueError("Tree start point out of bounds")
         else:
             start_point = 0
         self.unrank(self.root, start_point, self.width-1, leafs, lspine = True)
-        print(leafs)
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -204,6 +204,10 @@ class ExpressionTree(ExpressionGraph):
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
         return display_png(self)
+
+    def max_rank(self):
+        """Return the maximum rank of the tree"""
+        return catalan(self.width-1)-1
 
     def _get_row(self, height):
         """Return the nodes at a given height"""
@@ -737,22 +741,15 @@ class ExpressionTree(ExpressionGraph):
 
     def unrank(self, node, rank, width, leafs, mirror = False, lspine=False):
         """Generate a binary tree under a node by unranking it"""
-        print("leafs")
-        print(leafs)
 
         # The unranking function is symmetrical around the midpoint
         cn = catalan(width)
-        mirror = not mirror if rank > (cn - (cn>>1)) else mirror
-        print(rank)
-        print(cn)
-        print(cn>>1)
-        print(cn - (cn>>1))
-        print('uh')
-        rank = 1 + cn - rank if mirror else rank
+        mid = catalan_mirror_point(width)
+        mirror_test = rank >= mid
+        mirror = not mirror if mirror_test else mirror
+        rank = cn - 1 - rank if mirror_test else rank
 
         # Width reaching zero signals the end of recursion
-        print("bye")
-        print(width)
         if width == 0:
             return
 
@@ -767,30 +764,14 @@ class ExpressionTree(ExpressionGraph):
         for i in range((width+1)//2):
             i1, i2 = i, width-i-1
             ci1 = catalan(i1)
-            big_number = catalan(i1)*catalan(i2)
+            big_number = ci1*catalan(i2)
             rem = rank - big_number
-            print("rem")
-            print(rem)
-            print(i)
-            print(width//2)
-            print(width)
-            print()
-            if rem < 1:
+            if rem < 0:
                 break
             rank = rem
 
-        print(rank)
-        print(width)
-        print(cn)
-        print(cn>>1)
-        print(mirror)
-        print(i1)
-        print(i2)
-        print('test1')
-        print((i1 > 0 and not mirror) or (i2 > 0 and mirror))
-        print((i2 > 0 and not mirror) or (i1 > 0 and mirror))
-        print('test2')
-        print()
+        print(rank, i1, i2, ci1, width, mirror, ci1)
+
         # Generate the nodes and recurse
         if mirror:
             if i2 > 0:

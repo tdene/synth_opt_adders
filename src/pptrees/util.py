@@ -21,6 +21,17 @@ def catalan(n):
         return 1
     return catalan(n-1)*(4*n-2)//(n+1)
 
+def catalan_mirror_point(n):
+    """Returns the first safe mirror mark for the nth Catalan number"""
+    # Get the halfway mark
+    half = catalan(n) >> 1
+    # If n is odd, there's no clean split
+    if n & 1:
+        return half + (catalan(n//2)**2)/2
+    # If n is even, there's a clean split
+    else:
+        return half
+
 def match_nodes(parent, child, index):
     """Attempts to match the ports of two nodes
 
