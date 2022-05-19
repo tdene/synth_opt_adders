@@ -323,7 +323,7 @@ def display_gif(graphs, *args, **kwargs):
     images[0].save(gif_name,
                      save_all = True,
                      format="GIF",
-                     duration = 200,
+                     duration = 800,
                      loop = 0,
                      disposal = 1,
                      transparency = 255,
