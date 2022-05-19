@@ -158,11 +158,9 @@ class ExpressionForest(ExpressionGraph):
         """Iterates over the trees in the forest"""
         return iter(self.trees)
 
-    def __repr__(self):
-        """Redefine __repr__ to automatically display diagrams in a Notebook"""
-        if in_notebook():
-            display_gif(self.trees)
-        return super().__repr__()
+    def _repr_png_(self):
+        """Automatically display diagrams in a Notebook"""
+        return display_gif(self.trees)
 
     ### NOTE: Equivalence requires nodes to be fully equivalent
     ### It is possible for two nodes to be partially equivalent
