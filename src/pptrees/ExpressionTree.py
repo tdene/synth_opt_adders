@@ -770,8 +770,6 @@ class ExpressionTree(ExpressionGraph):
                 break
             rank = rem
 
-        print(rank, i1, i2, ci1, width, mirror, ci1)
-
         # Generate the nodes and recurse
         if mirror:
             if i2 > 0:
