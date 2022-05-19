@@ -32,6 +32,10 @@ def catalan_mirror_point(n):
     else:
         return half
 
+def catalan_bounds(n):
+    """Returns the first n catalan numbers, minus one"""
+    return [catalan(x)-1 for x in range(n)]
+
 def match_nodes(parent, child, index):
     """Attempts to match the ports of two nodes
 
