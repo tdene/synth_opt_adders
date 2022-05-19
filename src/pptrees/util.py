@@ -323,10 +323,21 @@ def display_gif(graphs, *args, **kwargs):
         graph.png(*args, out = fname, **kwargs)
     # Collect the images
     images = [PIL.Image.open(fname) for fname in fnames]
-    reference_image = images[-1]
+    # Get maximum width and height
+    max_bbox = [0, 0, 0, 0]
+    for a in images:
+        bbox = a.getbbox()
+        if bbox[0] < max_bbox[0]:
+            max_bbox[0] = bbox[0]
+        if bbox[1] < max_bbox[1]:
+            max_bbox[1] = bbox[1]
+        if bbox[2] > max_bbox[2]:
+            max_bbox[2] = bbox[2]
+        if bbox[3] > max_bbox[3]:
+            max_bbox[3] = bbox[3]
     for a in range(len(images)):
         im = images[a]
-        im = im.crop(reference_image.getbbox())
+        im = im.crop(max_bbox)
         images[a] = im
     # Save the GIF file
     gif_name = str(uuid.uuid4()) + ".gif"
