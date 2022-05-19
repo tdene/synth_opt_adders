@@ -30,7 +30,8 @@ class AdderForest(ExpressionForest):
                  out_ports=None,
                  tree_type=AdderTree,
                  name="adder",
-                 start_point="serial",
+                 start_point=None,
+                 tree_start_points=None,
                  radix=2
                 ):
         """Initializes the AdderForest
@@ -73,6 +74,7 @@ class AdderForest(ExpressionForest):
                          tree_type=tree_type,
                          name = name,
                          start_point = start_point,
+                         tree_start_points = tree_start_points,
                          radix = radix,
                          node_defs = node_defs
                         )
@@ -80,4 +82,3 @@ class AdderForest(ExpressionForest):
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")
-

@@ -36,7 +36,8 @@ class ExpressionForest(ExpressionGraph):
                  out_ports,
                  tree_type=ExpressionTree,
                  name="forest",
-                 start_point="serial",
+                 start_point=None,
+                 tree_start_points=None,
                  radix=2,
                  idem=False,
                  node_defs={}
@@ -49,7 +50,8 @@ class ExpressionForest(ExpressionGraph):
             out_ports (list of ((string, int), string)): List of output ports
             tree_type (class): The type of tree to use
             name (string): The name of the graph
-            start_point (string): The starting structure of the tree
+            start_point (string): The starting structure of the forest [LEGACY]
+            tree_start_points (list of int): Catalan IDs for each tree
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
@@ -68,9 +70,11 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Forest width must be an integer")
         if width < 1:
             raise ValueError("Forest width must be at least 1")
-        if start_point not in ["serial", "sklansky",
+        if start_point not in [None, "serial", "sklansky",
                 "kogge-stone", "brent-kung"]:
-            error = "Forest start point {0} is not implemented"
+            error = "Forest start point {0} is not implemented.\n"
+            error += "Consider using non-legacy start points.\n"
+            error += "These correspond to the trees' Catalan IDs."
             error = error.format(start_point)
             raise NotImplementedError(error)
         if not isinstance(radix, int):
@@ -85,6 +89,11 @@ class ExpressionForest(ExpressionGraph):
             if required not in node_defs:
                 raise ValueError(("Tree node definitions must contain"
                                   " the node {}").format(required))
+
+        # If both kinds of start points are specified,
+        # Use the non-legacy kind
+        if start_point is not None and tree_start_points is not None:
+            start_point = None
 
         # Save constructor arguments
         self.width = width
@@ -112,12 +121,18 @@ class ExpressionForest(ExpressionGraph):
             bit_s = "[{0}]".format(a-1)
             tree_out_ports = [((x[0][0],1),x[1]+bit_s) for x in out_ports]
 
+            if tree_start_points is not None and len(tree_start_points) > a-1:
+                catalan_id = tree_start_points[a-1]
+            else:
+                catalan_id = 0
+
             t = self.tree_type(
                     a,
                     tree_in_ports,
                     tree_out_ports,
                     name="tree_{}".format(a-1),
-                    radix=radix
+                    radix=radix,
+                    start_point=catalan_id
             )
             self.trees.append(t)
 

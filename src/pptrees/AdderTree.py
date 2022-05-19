@@ -27,7 +27,7 @@ class AdderTree(ExpressionTree):
                  in_ports=None,
                  out_ports=None,
                  name="adder",
-                 start_point="serial",
+                 start_point=0,
                  radix=2
                 ):
         """Initializes the AdderTree

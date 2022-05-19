@@ -35,7 +35,7 @@ class ExpressionTree(ExpressionGraph):
                  in_ports=None,
                  out_ports=None,
                  name="tree",
-                 start_point="serial",
+                 start_point=0,
                  radix=2,
                  idem=False,
                  node_defs={}
@@ -47,7 +47,7 @@ class ExpressionTree(ExpressionGraph):
             in_ports (list of ((string, int), string)): List of input ports
             out_ports (list of ((string, int), string)): List of output ports
             name (string): The name of the graph
-            start_point (string or int): The starting structure of the tree
+            start_point (int): The starting Catalan ID of the tree
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
