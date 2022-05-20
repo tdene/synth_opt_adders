@@ -154,7 +154,7 @@ class ExpressionTree(ExpressionGraph):
         # If tree width is 1, hard-code the structure
         if self.width == 1:
             self.add_edge(self.root, leafs[0], 0)
-        self.unrank(self.root, start_point, self.width-1, leafs, lspine = True)
+        self.unrank(None, 0, start_point, self.width-1, leafs, lspine = True)
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -742,7 +742,8 @@ class ExpressionTree(ExpressionGraph):
 
         return child
 
-    def unrank(self, node, rank, width, leafs, mirror = False, lspine=False):
+    def unrank(self, parent, index, rank, width, leafs,
+            mirror=False, lspine=False):
         """Generate a binary tree under a node by unranking it"""
 
         # The unranking function is symmetrical around the midpoint
@@ -752,19 +753,29 @@ class ExpressionTree(ExpressionGraph):
         mirror = not mirror if mirror_test else mirror
         rank = cn - 1 - rank if mirror_test else rank
 
-        ### NOTE: The current flow of the recursion is bad.
-        ### TO-DO: Add leafs in the below if-statement, not earlier
-        # Width reaching zero signals the end of recursion
-        if width == 0:
-            return
-
-        # Pre-generate node info to save time
+        # Check which kind of node to add
+        node_defs = [None,None]
         if "lspine" in self.node_defs and lspine:
-            left_def = self.node_defs["lspine"]
+            node_defs[0] = self.node_defs["lspine"]
         else:
-            left_def = self.node_defs["black"]
-        right_def = self.node_defs["black"]
+            node_defs[0] = self.node_defs["black"]
+        node_defs[1] = self.node_defs["black"]
+
+        # Width reaching zero signals the bottom of the tree
+        if width == 0:
+            leaf = leafs.pop()
+            self.add_edge(parent, leaf, index)
+            return leaf
+        # Initial recursion start case
+        if parent is None:
+            node = self.root
+        # Normal operation; add new node
+        else:
+            node = Node(node_defs[index])
+            self.add_node(node)
+            self.add_edge(parent, node, index)
         
+        # Take advantage of Catalan properties
         i1, i2, ci1 = 0, 0, 0
         for i in range((width+1)//2):
             i1, i2 = i, width-i-1
@@ -775,43 +786,13 @@ class ExpressionTree(ExpressionGraph):
                 break
             rank = rem
 
-        # Generate the nodes and recurse
+        # Recurse
         if mirror:
-            if i2 > 0:
-                lchild = Node(left_def)
-                self.add_node(lchild)
-                self.add_edge(node, lchild, 0)
-                self.unrank(lchild, rank // ci1, i2, leafs, mirror, lspine)
-            else:
-                leaf = leafs.pop()
-                self.add_edge(node, leaf, 0)
-                added_left_leaf = True
-            if i1 > 0:
-                rchild = Node(right_def)
-                self.add_node(rchild)
-                self.add_edge(node, rchild, 1)
-                self.unrank(rchild, rank % ci1, i1, leafs, mirror, False)
-            else:
-                leaf = leafs.pop()
-                self.add_edge(node, leaf, 1)
+            self.unrank(node, 0, rank // ci1, i2, leafs, mirror, lspine)
+            self.unrank(node, 1, rank % ci1, i1, leafs, mirror, False)
         else:
-            if i1 > 0:
-                lchild = Node(left_def)
-                self.add_node(lchild)
-                self.add_edge(node, lchild, 0)
-                self.unrank(lchild, rank % ci1, i1, leafs, mirror, lspine)
-            else:
-                leaf = leafs.pop()
-                self.add_edge(node, leaf, 0)
-                added_left_leaf = True
-            if i2 > 0:
-                rchild = Node(right_def)
-                self.add_node(rchild)
-                self.add_edge(node, rchild, 1)
-                self.unrank(rchild, rank // ci1, i2, leafs, mirror, False)
-            else:
-                leaf = leafs.pop()
-                self.add_edge(node, leaf, 1)
+            self.unrank(node, 0, rank % ci1, i1, leafs, mirror, lspine)
+            self.unrank(node, 1, rank // ci1, i2, leafs, mirror, False)
 
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
