@@ -1,4 +1,5 @@
 from .modules import *
+from .util import lg
 from .util import parse_net, verso_pin
 
 class ExpressionNode:
@@ -261,25 +262,27 @@ class ExpressionNode:
 
     def rightmost_leaf(self):
         """Finds the least significant leaf descendant of this node"""
-        idx = len(self.children)-1
+        # Get the target leaf
+        target = 1<<(len(bin(self.leafs)) - len(bin(self.leafs).rstrip("0")))
+        # Iterate over all children
         for c in self:
-            if self[idx] is None:
-                idx -= 1
-        # Child-less nodes return self
-        if idx == -1:
-            return self
-        return self[idx].rightmost_leaf()
+            if c is None:
+                continue
+            if c.leafs & target:
+                return c.rightmost_leaf()
+        return self
 
     def leftmost_leaf(self):
         """Finds the most significant leaf descendant of this node"""
-        idx = 0
+        # Get the target leaf
+        target = 1<<lg(self.leafs)
+        # Iterate over all children
         for c in self:
-            if self[idx] is None:
-                idx += 1
-        # Child-less nodes return self
-        if idx == len(self.children):
-            return self
-        return self[idx].leftmost_leaf()
+            if c is None:
+                continue
+            if c.leafs & target:
+                return c.rightmost_leaf()
+        return self
 
     def add_child(self, child, pin1, pin2, net_name):
         """Adds a child node to this node
