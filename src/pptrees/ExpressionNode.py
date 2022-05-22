@@ -131,8 +131,11 @@ class ExpressionNode:
     def set_equiv(self, other):
         """Sets two nodes as equivalent
 
-        If either already has an equivalence class assigned,
-        the two classes are merged with self's taking priority.
+        If either already has an equivalence class assigned, the two classes are merged.
+
+        If the nodes are in a graph that possesses a width attribute,
+        priority is given to the nodes with higher width.
+        Otherwise, priority is given to self.
 
         Args:
             other (ExpressionNode): The node to compare to
@@ -150,6 +153,9 @@ class ExpressionNode:
         for n in ec2:
             if n not in ec:
                 ec.append(n)
+        # If the two nodes' graphs have a width attribute, sort the nodes by width
+        if hasattr(self.graph, "width") and hasattr(other.graph, "width"):
+            ec.sort(key=lambda x: x.graph.width, reverse=True)
         # Set both nodes' equivalence classes to the result
         self.equiv_class = ec
         other.equiv_class = ec
