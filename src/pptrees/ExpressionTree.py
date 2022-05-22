@@ -797,7 +797,7 @@ class ExpressionTree(ExpressionGraph):
             self.unrank(node, 0, rank % ci1, i1, leafs, mirror, lspine)
             self.unrank(node, 1, rank // ci1, i2, leafs, mirror, False)
 
-    def rank(self, node, parent_width, mirror=False):
+    def rank(self, node, mirror=False):
         """Classifies a binary tree under a node by ranking it"""
 
         # Special case for 1-bit tree
@@ -823,8 +823,8 @@ class ExpressionTree(ExpressionGraph):
             lwidth, rwidth = rwidth, lwidth
 
         # Get information from the children
-        lrank = self.rank(lchild, width, new_mirror)
-        rrank = self.rank(rchild, width, new_mirror)
+        lrank = self.rank(lchild, new_mirror)
+        rrank = self.rank(rchild, new_mirror)
 
         # Calculate rank stub
         rank = lrank + rrank * catalan(lwidth)
@@ -1038,14 +1038,13 @@ class ExpressionTree(ExpressionGraph):
             return node
         return self.equalize_depths(node)
 
-    def lbalance(self, node, with_buffers = False, original_node = None):
+    def lbalance(self, node):
         """Balances the subtree rooted at this node to the left
 
         If the subtree contains buffers, this method will actively destroy them.
 
         Args:
             node (Node): The node to balance
-            with_buffers (bool): Whether to use buffers to balance leaf depth
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
@@ -1059,56 +1058,43 @@ class ExpressionTree(ExpressionGraph):
         if len(node) == 0:
             return None
 
-        # Save the identity of the original node's parent
-        if original_node is None:
-            parent = node.parent
-            index = None
-            if parent is not None:
-                index = parent.children.index(node)
-            original_node = (parent, index)
+        # Save the identity of the node's parent
+        parent = node.parent
+        index = None
+        if parent is not None:
+            index = parent.children.index(node)
+        original_node = (parent, index)
 
         # First, reduce the subtree's height as much as possible
         node = self.balance(node)
 
         # If the subtree is proper, there is no difference between right/left
         if node.is_proper():
-            return node
+            return
 
-        # Next, get all leafs that are part of this subtree
-        leafs = self._get_leafs(node)
-        target_depths = sorted([x.y_pos for x in leafs])
-        max_depth = max(target_depths)
-        # Shift nodes until the subtree is balanced
-        while True:
-            # Characterize the leafs by depth
-            depths = [x.y_pos for x in leafs]
-            # If the subtree is complete, we are done
-            if target_depths == depths:
-                break
-            # Otherwise, shift shallowness to the left
-            for a in range(len(leafs)-1):
-                depths = [x.y_pos for x in leafs]
-                if depths[a] >= target_depths[a] and \
-                        depths[a+1] < target_depths[a+1]:
-                    node = self.left_shift(leafs[a].parent)
-                    node = reconstruct_node(*original_node)
-                    depths = [x.y_pos for x in leafs]
-            node = self.balance(node)
+        full_leafs = 1<<(len(node)-1)
+        lleafs = bin(node[0].leafs).count("1")
+        rleafs = bin(node[1].leafs).count("1")
 
-        # If we are not using buffers, we are done
-        node = self.balance(node)
-        if not with_buffers:
-            return node
-        return self.equalize_depths(node)
+        # Check if the right child has too many leafs
+        # If so, it needs to shift leafs to the left
+        if lleafs < full_leafs and rleafs > 1:
+            self.left_shift(node[1].leftmost_leaf().parent)
+            node = reconstruct_node(*original_node)
+            self.lbalance(node)
+        # Otherwise recurse over the children
+        else:
+            self.balance(node[0])
+            self.lbalance(node[0])
+            self.lbalance(node[1])
 
-    def rbalance(self, node, with_buffers = False, original_node = None):
+    def rbalance(self, node):
         """Balances the subtree rooted at this node to the right
 
         If the subtree contains buffers, this method will actively destroy them.
 
         Args:
             node (Node): The node to balance
-            with_buffers (bool): Whether to use buffers to balance leaf depth
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
@@ -1122,46 +1108,35 @@ class ExpressionTree(ExpressionGraph):
         if len(node) == 0:
             return None
 
-        # Save the identity of the original node's parent
-        if original_node is None:
-            parent = node.parent
-            index = None
-            if parent is not None:
-                index = parent.children.index(node)
-            original_node = (parent, index)
-        
+        # Save the identity of the node's parent
+        parent = node.parent
+        index = None
+        if parent is not None:
+            index = parent.children.index(node)
+        original_node = (parent, index)
+
         # First, reduce the subtree's height as much as possible
         node = self.balance(node)
 
         # If the subtree is proper, there is no difference between right/left
         if node.is_proper():
-            return node
+            return
 
-        # Next, get all leafs that are part of this subtree
-        leafs = self._get_reversed_leafs(node)
-        target_depths = sorted([x.y_pos for x in leafs])
-        max_depth = max(target_depths)
-        # Shift nodes until the subtree is balanced
-        while True:
-            # Characterize the leafs by depth
-            depths = [x.y_pos for x in leafs]
-            # If the subtree is complete, we are done
-            if target_depths == depths:
-                break
-            # Otherwise, shift shallowness to the left
-            for a in range(len(leafs)-1):
-                if depths[a] >= target_depths[a] and \
-                        depths[a+1] < target_depths[a+1]:
-                    node = self.right_shift(leafs[a].parent)
-                    node = reconstruct_node(*original_node)
-                    depths = [x.y_pos for x in leafs]
-            node = self.balance(node)
+        full_leafs = 1<<(len(node)-1)
+        lleafs = bin(node[0].leafs).count("1")
+        rleafs = bin(node[1].leafs).count("1")
 
-        # If we are not using buffers, we are done
-        node = self.balance(node)
-        if not with_buffers:
-            return node
-        return self.equalize_depths(node)
+        # Check if the left child has too many leafs
+        # If so, it needs to shift leafs to the right
+        if rleafs < full_leafs and lleafs > 1:
+            self.right_shift(node[0].rightmost_leaf().parent)
+            node = reconstruct_node(*original_node)
+            self.rbalance(node)
+        # Otherwise recurse over the children
+        else:
+            self.balance(node[0])
+            self.rbalance(node[0])
+            self.rbalance(node[1])
 
     def LF(self, x, y = None, find_y = False):
         """Performs an LF transform on the specified node, if possible

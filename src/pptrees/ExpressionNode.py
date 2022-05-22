@@ -281,7 +281,7 @@ class ExpressionNode:
             if c is None:
                 continue
             if c.leafs & target:
-                return c.rightmost_leaf()
+                return c.leftmost_leaf()
         return self
 
     def add_child(self, child, pin1, pin2, net_name):
