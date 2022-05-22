@@ -794,6 +794,45 @@ class ExpressionTree(ExpressionGraph):
             self.unrank(node, 0, rank % ci1, i1, leafs, mirror, lspine)
             self.unrank(node, 1, rank // ci1, i2, leafs, mirror, False)
 
+    def rank(self, node, parent_width, mirror=False):
+        """Classifies a binary tree under a node by ranking it"""
+
+        # If the node is a leaf, its rank is zero
+        if not len(node):
+            return 0
+
+        # Calculate info that this node needs
+        lchild, rchild = node[0], node[1]
+        lwidth = bin(lchild.leafs).count("1") - 1
+        rwidth = bin(rchild.leafs).count("1") - 1
+
+        # Calculate info that the children need
+        height = len(node)
+        width = lwidth + rwidth + 1
+        new_mirror = lwidth > rwidth
+
+        # Account for mirroring
+        if new_mirror:
+            lchild, rchild = rchild, lchild
+            lwidth, rwidth = rwidth, lwidth
+
+        # Get information from the children
+        lrank = self.rank(lchild, width, new_mirror)
+        rrank = self.rank(rchild, width, new_mirror)
+
+        # Calculate rank stub
+        rank = lrank + rrank * catalan(lwidth)
+        # Add rest of rank
+        for i in range(lwidth):
+            i1, i2 = i, width-i-1
+            big_number = catalan(i1) * catalan(i2)
+            rank += big_number
+
+        # Account for mirroring
+        dir_switched = (new_mirror != mirror)
+        rank = catalan(width) - 1 - rank if dir_switched else rank
+        return rank
+
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
 
