@@ -761,16 +761,19 @@ class ExpressionTree(ExpressionGraph):
             node_defs[0] = self.node_defs["black"]
         node_defs[1] = self.node_defs["black"]
 
+        # Initial recursion start case
+        if parent is None:
+            node = self.root
+            # Special case for 1-bit tree
+            if len(leafs) == 1:
+                parent = node
         # Width reaching zero signals the bottom of the tree
         if width == 0:
             leaf = leafs.pop()
             self.add_edge(parent, leaf, index)
             return leaf
-        # Initial recursion start case
-        if parent is None:
-            node = self.root
         # Normal operation; add new node
-        else:
+        if parent is not None:
             node = Node(node_defs[index])
             self.add_node(node)
             self.add_edge(parent, node, index)
@@ -797,6 +800,9 @@ class ExpressionTree(ExpressionGraph):
     def rank(self, node, parent_width, mirror=False):
         """Classifies a binary tree under a node by ranking it"""
 
+        # Special case for 1-bit tree
+        if (node is self.root) and len(node.children) == 1:
+            return 0
         # If the node is a leaf, its rank is zero
         if not len(node):
             return 0
