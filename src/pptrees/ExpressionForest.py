@@ -148,8 +148,7 @@ class ExpressionForest(ExpressionGraph):
         elif start_point == "kogge-stone":
             for t in self.trees[2:]:
                 t.lbalance(t.root[1])
-            self.calculate_fanout()
-            self.decouple_all_fanout()
+                t.equalize_depths(t.root[1])
         elif start_point == "brent-kung":
             for t in self.trees[2:]:
                 t.rbalance(t.root[1])
@@ -207,7 +206,7 @@ class ExpressionForest(ExpressionGraph):
                             n1.set_tracks(n2)
 
     ### NOTE: Improve fanout estimate
-    def _calc_node_fanout(self, node, tree):
+    def _calc_node_fanout(self, node):
         """Estimates the delay caused by fanout for a node
         
         A node has fanout of k if:
@@ -224,6 +223,7 @@ class ExpressionForest(ExpressionGraph):
         n1 has a fan-out of 3
         The other nodes do not matter
         """
+        tree = node.graph
         # Grab the node's equivalence class
         ec = node.equiv_class
         # If node is not ec's representative, do nothing
@@ -259,10 +259,10 @@ class ExpressionForest(ExpressionGraph):
 
         for t in self.trees:
             for n in t:
-                self._calc_node_fanout(n,t)
+                self._calc_node_fanout(n)
 
     ### NOTE: Improve cross-coupling capacitance estimate
-    def _calc_node_tracks(self, node, tree):
+    def _calc_node_tracks(self, node):
         """Estimates the delay caused by parallel wires for a node
 
         A node has tracks of k if:
@@ -274,6 +274,7 @@ class ExpressionForest(ExpressionGraph):
             or
             - node > other, node < other.parent, other.parent > node.parent
         """
+        tree = node.graph
         # If node is not its equivalence class representative, do nothing
         if node.equiv_class[0] is not node:
             return
@@ -310,7 +311,45 @@ class ExpressionForest(ExpressionGraph):
 
         for t in self.trees:
             for n in t:
-                self._calc_node_tracks(n,t)
+                self._calc_node_tracks(n)
+
+    def decouple_fanout(self, node, tree):
+        """Decouples the fanout of the specified node in the specified tree"""
+
+        # Check if arguments are valid
+        if not (node in node.graph):
+            raise ValueError("Node is not in its graph. This should not happen.")
+        if not (node.graph in self.trees):
+            raise ValueError("Node graph is not in this forest. This should not happen.")
+        if not (tree in self.trees):
+            raise ValueError("Trying to decouple fanout in an invalid tree.")
+
+        # Look inside the node's equivalence class for an other_node from tree
+        other_node = None
+        ec = node.equiv_class
+        for a in ec:
+            if a.graph is tree:
+                other_node = a
+                break
+        if other_node is None:
+            raise ValueError("Trying to decouple fanout in an innapropriate tree.")
+
+        # Decouple fanout
+        buffer = tree.insert_buffer(other_node)
+
+        # Fix equivalence classes
+        buffer.equiv_class = [buffer]
+        for a in ec:
+            parent = a.parent
+            # Try to add new buffer to other equivalence classes
+            if a is not other_node and parent.equiv(buffer):
+                parent.set_equiv(buffer)
+
+        # Fix fanout
+        for a in ec:
+            self._calc_node_fanout(a)
+        for a in buffer.equiv_class:
+            self._calc_node_fanout(a)
 
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
@@ -468,16 +507,16 @@ class ExpressionForest(ExpressionGraph):
                     x, y = attempt
         return x, y
 
-    def decouple_fanout(self, node, maximum_fanout=2):
+    def legacy_decouple_node_fanout(self, node, maximum_fanout = 2):
         """Decouples the fanout of the specified node in all trees"""
 
-        # Decouple fanout from most significant to least
-        ec = sorted(node.equiv_class,
-                key = lambda x: x.graph.width, reverse=True)
-        ctr = 0
+        # Get node's equivalence class
+        ec = node.equiv_class
+        # Filter out nodes whose parents are equivalent
         ec = [x for x in ec \
-                if x.parent is None or x.parent.equiv_class[0] == x.parent]
-        ec = sorted(ec, key = lambda x: x.graph.width, reverse=True)
+                if x.parent is None or x.parent.equiv_class[0] is x.parent]
+        # Decouple fanout
+        ctr = 0
         for a in range(len(ec)):
             n = ec[a]
             parent = n.parent
@@ -501,7 +540,7 @@ class ExpressionForest(ExpressionGraph):
                 if (n.parent is not None) and (n.equiv_class[0] == n):
                     targets.append(n)
         for n in targets:
-            self.decouple_fanout(n, maximum_fanout)
+            self.legacy_decouple_node_fanout(n, maximum_fanout)
 
 
     ### NOTE: END LEGACY METHODS ###
