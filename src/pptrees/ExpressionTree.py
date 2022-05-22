@@ -163,6 +163,7 @@ class ExpressionTree(ExpressionGraph):
     ### NOTE: This is meant to work with the classic representation of n-rooted
     ### prefix tree structures, with no regard for post-processing nodes. How 
     ### does this interact with post-processing nodes?
+    ### TO-DO: Consider replacing this legacy method with non-legacy code
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
@@ -203,6 +204,30 @@ class ExpressionTree(ExpressionGraph):
                 target = parent
         else:
             return super().__getitem__(key)
+
+    def __gt__(self, other):
+        """Define order by rank"""
+        return self.rank(self.root) > other.rank(other.root)
+
+    def __lt__(self, other):
+        """Define order by rank"""
+        return self.rank(self.root) < other.rank(other.root)
+
+    def is_strictly_left_of(self, other):
+        """Determine if this tree is strictly left of another
+
+        This is used to determine whether two trees can be stereoscopically combined.
+        """
+        node_a = self.root
+        node_b = other.root
+        while True:
+            if (not node_a.children) or (not node_b.children):
+                break
+            if self.rank(node_a) < self.rank(node_b):
+                return False
+            node_a = node_a[0]
+            node_b = node_b[0]
+        return True
 
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
