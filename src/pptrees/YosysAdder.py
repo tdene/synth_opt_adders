@@ -34,7 +34,7 @@ class YosysAdder(AdderForest):
         block_flat=False,
         cell_flat=True,
         merge_mapping=True,
-        module_name=None,
+        top_module=None,
         description_string="start of unnamed graph"
     ):
 
@@ -46,12 +46,12 @@ class YosysAdder(AdderForest):
             block_flat=block_flat,
             cell_flat=cell_flat,
             merge_mapping=merge_mapping,
-            module_name=module_name,
+            module_name=top_module,
             description_string=description_string
         )
         # If module name is not defined, set it to graph's name
-        if module_name is None:
-            module_name = self.name
+        if top_module is None:
+            top_module = self.name
 
         alu_hdl = """(* techmap_celltype = "$alu" *)
 module _{0}_alu (A, B, CI, BI, X, Y, CO);
@@ -87,7 +87,7 @@ module _{0}_alu (A, B, CI, BI, X, Y, CO);
     {0} U1(.cout(CO[Y_WIDTH-1]), .sum(Y), .a(AA), .b(BB), .cin(CI));
 endmodule
 """.format(
-            module_name
+            top_module
         )
 
         file_out_hdl = alu_hdl + file_out_hdl
