@@ -38,6 +38,7 @@ class ExpressionTree(ExpressionGraph):
                  start_point=0,
                  radix=2,
                  idem=False,
+                 leaf_label="pg",
                  node_defs={}
                 ):
         """Initializes the ExpressionTree
@@ -50,6 +51,7 @@ class ExpressionTree(ExpressionGraph):
             start_point (int): The starting Catalan ID of the tree
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
+            leaf_label (string): The label of the leaf nodes
             node_defs (dict): A dictionary that must define these nodes:
                 - "pre": Pre-processing node
                 - "root": Root node
@@ -129,14 +131,18 @@ class ExpressionTree(ExpressionGraph):
         for a in range(self.width):
             # Right-most leaf may be special
             if a == 0 and "first_pre" in node_defs:
-                label = "c[{}]".format(a)
+                stem = leaf_label[0]
+                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["first_pre"]
             # Left-most leaf may be special
             elif a == self.width-1 and "lspine_pre" in node_defs:
-                label = "p[{}]".format(a)
+                if len(leaf_label) > 0:
+                    stem = leaf_label[1]
+                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["lspine_pre"]
             else:
-                label = "pg[{}]".format(a)
+                stem = leaf_label
+                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["pre"]
             leaf = Node(node_def)
             leaf = self.add_node(leaf, label = label)
