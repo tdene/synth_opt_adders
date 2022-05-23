@@ -8,6 +8,14 @@ class yosys_alu(YosysAdder):
 
         Refer to the adder_tree's docstring for a full description.
         """
+        if network == "very_slow":
+            network = "ripple"
+        elif network == "slow":
+            network = "brent-kung"
+        elif network == "fast":
+            network = "sklansky"
+        elif network == "very_fast":
+            network = "kogge-stone"
         super().__init__(width, network)
 
 if __name__ == "__main__":
