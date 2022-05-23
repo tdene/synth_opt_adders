@@ -100,6 +100,14 @@ class ExpressionNode:
         """
         return self.leafs > other.leafs
 
+    def __copy__(self):
+        """Redefine __copy__"""
+        return ExpressionNode(self.value)
+
+    def copy(self):
+        """Shorthand for __copy__"""
+        return self.__copy__()
+
     ### NOTE: This should just convert the subtrees each node roots
     ### into their labels, and then compare the two strings
     ### TO-DO: Implement the above
