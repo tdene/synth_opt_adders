@@ -20,5 +20,5 @@ setup(
     package_data={"pptrees": ["mappings/*.v"]},
     long_description=open("README.md").read(),
     python_requires=">=3.7.*",
-    install_requires=["networkx", "pydot", "graphviz"],
+    install_requires=["networkx", "pydot", "graphviz", "Pillow"],
 )
