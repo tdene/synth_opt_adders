@@ -452,6 +452,8 @@ class ExpressionForest(ExpressionGraph):
         if out is not None:
             self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
 
+        return hdl, module_defs, file_out_hdl
+
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 
     def LF(self, x, y = None):

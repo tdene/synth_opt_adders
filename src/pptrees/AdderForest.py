@@ -79,6 +79,5 @@ class AdderForest(ExpressionForest):
                          node_defs = node_defs
                         )
 
-
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

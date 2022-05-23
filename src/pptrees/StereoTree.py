@@ -48,7 +48,7 @@ class StereoTree(ExpressionTree):
             - The same in_shape and out_shape
             - The same in_ports and out_ports
 
-        Furthermore, the trees must not have been subdivided into blocks.
+        Furthermore, the trees must not have remapped nodes or been subdivided into blocks
         """
 
         # Save constructor arguments
