@@ -34,13 +34,14 @@ class ExpressionForest(ExpressionGraph):
                  width,
                  in_ports,
                  out_ports,
-                 tree_type=ExpressionTree,
-                 name="forest",
-                 start_point=None,
-                 tree_start_points=None,
-                 radix=2,
-                 idem=False,
-                 node_defs={}
+                 initialized_trees = None,
+                 tree_type = ExpressionTree,
+                 name = "forest",
+                 start_point = None,
+                 tree_start_points = None,
+                 radix = 2,
+                 idem = False,
+                 node_defs = {}
                 ):
         """Initializes the ExpressionForest
 
@@ -48,6 +49,8 @@ class ExpressionForest(ExpressionGraph):
             width (int): The number of leaves in the forest
             in_ports (list of ((string, int), string)): List of input ports
             out_ports (list of ((string, int), string)): List of output ports
+            initialized_trees (list): A list of trees to initialize the forest with
+                If this parameter is set, the forest will undergo an alternate constructor
             tree_type (class): The type of tree to use
             name (string): The name of the graph
             start_point (string): The starting structure of the forest [LEGACY]
@@ -101,8 +104,16 @@ class ExpressionForest(ExpressionGraph):
         self.radix = radix
         self.idem = idem
         self.node_defs = node_defs
+        
+        # If initialized trees are provided, simply use them
+        if isinstance(initialized_trees, list):
+            if len(initialized_trees) != width:
+                raise ValueError("Number of trees in a forest must equal width")
+            self.trees = initialized_trees
+            super().__init__(name = name, in_ports = in_ports, out_ports = out_ports)
+            return
 
-        # Initialize the trees
+        # Otherwise, initialize the trees
         self.trees = []
 
         for a in range(1,width+1):
