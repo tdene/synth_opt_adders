@@ -250,8 +250,10 @@ class ExpressionTree(ExpressionGraph):
             return [n for c in node.children \
                     for n in self._get_reversed_leafs(c)]
 
-    def _get_leafs(self, node):
+    def _get_leafs(self, node = None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
+        if node == None:
+            node = self.root
         return list(reversed(self._get_reversed_leafs(node)))
 
     def _connect_outports(self, root):
@@ -1030,7 +1032,7 @@ class ExpressionTree(ExpressionGraph):
 
         return node
 
-    def balance(self, node, with_buffers = False):
+    def balance(self, node):
         """Balances the subtree rooted at this node
 
         Note that this does not create a complete tree.
@@ -1038,7 +1040,6 @@ class ExpressionTree(ExpressionGraph):
 
         Args:
             node (Node): The node to balance
-            with_buffers (bool): Whether to use buffers to balance leaf depth
         """
         # If the node is a leaf, we are at the end of an iteration
         if len(node) == 0:
@@ -1058,10 +1059,7 @@ class ExpressionTree(ExpressionGraph):
         for c in node:
             self.balance(c)
 
-        # If we are not using buffers, we are done
-        if not with_buffers:
-            return node
-        return self.equalize_depths(node)
+        return node
 
     def lbalance(self, node):
         """Balances the subtree rooted at this node to the left
