@@ -213,21 +213,24 @@ class ExpressionTree(ExpressionGraph):
         """Define order by rank"""
         return self.rank(self.root) < other.rank(other.root)
 
-    def is_strictly_left_of(self, other):
+    def is_strictly_left_of(self, other, self_node = None, other_node = None):
         """Determine if this tree is strictly left of another
 
         This is used to determine whether two trees can be stereoscopically combined.
         """
-        node_a = self.root
-        node_b = other.root
-        while True:
-            if (not node_a.children) or (not node_b.children):
-                break
-            if self.rank(node_a) < self.rank(node_b):
-                return False
-            node_a = node_a[0]
-            node_b = node_b[0]
-        return True
+        # Start at the root, if not specified
+        if self_node is None and other_node is None:
+            self_node = self.root
+            other_node = other.root
+        # If the leafs are reached, this recursive path has finished
+        if not self_node.children or not other_node.children:
+            return True
+        # Any leafs in other[0] are not present in self[1]
+        if other_node[0].leafs & self_node[1].leafs:
+            return False
+        # Recurse over the children
+        return self.is_strictly_left_of(other, self_node[0], other_node[0]) and \
+                self.is_strictly_left_of(other, self_node[1], other_node[1])
 
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
