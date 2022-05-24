@@ -25,12 +25,12 @@ data[
 """
 
 data["shape"] = "circle"
-data["color"] = "white"
-data["fillcolor"] = "white"
-data["label"] = "⊗"
-data["style"] = "solid"
+data["label"] = "x"
+data["fontname"] = "Comic Sans"
+data["style"] = "bold"
 data["fixedsize"] = "shape"
-data["fontsize"] = "60"
+data["penwidth"] = "4.0"
+data["fontsize"] = "52"
 
 # Footprint
 data["footprint"] = "ppa_post"
