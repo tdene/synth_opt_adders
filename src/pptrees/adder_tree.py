@@ -9,7 +9,7 @@ class adder_tree(AdderForest):
         network="ripple"
     ):
 
-        super().__init__(width, start_point = network) 
+        super().__init__(width, alias = network) 
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

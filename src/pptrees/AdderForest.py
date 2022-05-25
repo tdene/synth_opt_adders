@@ -30,7 +30,7 @@ class AdderForest(ExpressionForest):
                  out_ports=None,
                  tree_type=AdderTree,
                  name="adder",
-                 start_point=None,
+                 alias=None,
                  tree_start_points=None,
                  radix=2
                 ):
@@ -42,7 +42,7 @@ class AdderForest(ExpressionForest):
             out_ports (list of ((string, int), string)): The list of output ports
             tree_type (class): The type of tree this forest contains
             name (string): The name of the graph
-            start_point (string): The starting structure of the tree
+            alias (string): The starting structure of the forest [LEGACY]
             radix (int): The radix of the tree
         """
 
@@ -73,7 +73,7 @@ class AdderForest(ExpressionForest):
                          out_ports,
                          tree_type=tree_type,
                          name = name,
-                         start_point = start_point,
+                         alias = alias,
                          tree_start_points = tree_start_points,
                          radix = radix,
                          node_defs = node_defs

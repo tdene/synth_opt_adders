@@ -37,7 +37,7 @@ class ExpressionForest(ExpressionGraph):
                  initialized_trees = None,
                  tree_type = ExpressionTree,
                  name = "forest",
-                 start_point = None,
+                 alias = None,
                  tree_start_points = None,
                  radix = 2,
                  idem = False,
@@ -53,7 +53,7 @@ class ExpressionForest(ExpressionGraph):
                 If this parameter is set, the forest will undergo an alternate constructor
             tree_type (class): The type of tree to use
             name (string): The name of the graph
-            start_point (string): The starting structure of the forest [LEGACY]
+            alias (string): The starting structure of the forest [LEGACY]
             tree_start_points (list of int): Catalan IDs for each tree
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
@@ -73,12 +73,12 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Forest width must be an integer")
         if width < 1:
             raise ValueError("Forest width must be at least 1")
-        if start_point not in [None, "serial", "ripple", "ripple-carry", "sklansky",
+        if alias not in [None, "serial", "ripple", "ripple-carry", "sklansky",
                 "kogge-stone", "brent-kung"]:
             error = "Forest start point {0} is not implemented.\n"
             error += "Consider using non-legacy start points.\n"
             error += "These correspond to the trees' Catalan IDs."
-            error = error.format(start_point)
+            error = error.format(alias)
             raise NotImplementedError(error)
         if not isinstance(radix, int):
             raise TypeError("Tree radix must be an integer")
@@ -95,8 +95,8 @@ class ExpressionForest(ExpressionGraph):
 
         # If both kinds of start points are specified,
         # Use the non-legacy kind
-        if start_point is not None and tree_start_points is not None:
-            start_point = None
+        if alias is not None and tree_start_points is not None:
+            alias = None
 
         # Save constructor arguments
         self.width = width
@@ -151,16 +151,16 @@ class ExpressionForest(ExpressionGraph):
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
         # Transform the forest towards the starting point
-        if start_point in ["serial", "ripple", "ripple-carry"]:
+        if alias in ["serial", "ripple", "ripple-carry"]:
             pass
-        elif start_point == "sklansky":
+        elif alias == "sklansky":
             for t in self.trees[2:]:
                 t.rbalance(t.root[1])
-        elif start_point == "kogge-stone":
+        elif alias == "kogge-stone":
             for t in self.trees[2:]:
                 t.lbalance(t.root[1])
                 t.equalize_depths(t.root[1])
-        elif start_point == "brent-kung":
+        elif alias == "brent-kung":
             for t in self.trees[2:]:
                 t.rbalance(t.root[1])
                 while not t.root[1][0].is_proper():

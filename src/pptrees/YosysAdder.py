@@ -10,7 +10,7 @@ class YosysAdder(AdderForest):
                  out_ports=None,
                  tree_type=AdderTree,
                  name="adder",
-                 start_point=None,
+                 alias=None,
                  tree_start_points=None,
                  radix=2
                 ):
@@ -20,7 +20,7 @@ class YosysAdder(AdderForest):
                 out_ports=out_ports,
                 tree_type=tree_type,
                 name=name,
-                start_point=start_point,
+                alias=alias,
                 tree_start_points=tree_start_points,
                 radix=radix
                 )
