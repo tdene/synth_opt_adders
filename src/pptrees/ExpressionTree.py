@@ -859,8 +859,12 @@ class ExpressionTree(ExpressionGraph):
             self.unrank(node, 0, rank % ci1, i1, leafs, mirror, lspine)
             self.unrank(node, 1, rank // ci1, i2, leafs, mirror, False)
 
-    def rank(self, node, mirror=False):
+    def rank(self, node=None, mirror=False):
         """Classifies a binary tree under a node by ranking it"""
+
+        # If node is not specified, start at the root
+        if node is None:
+            node = self.root
 
         # Special case for 1-bit tree
         if (node is self.root) and len(node.children) == 1:
