@@ -449,7 +449,9 @@ class ExpressionForest(ExpressionGraph):
                             block_flat=block_flat,
                             cell_flat=cell_flat,
                             merge_mapping=merge_mapping,
-                            description_string=desc)
+                            module_name = "{0}_{1}".format(module_name, t.name),
+                            description_string=desc
+                        )
             w = re.findall(r"w\d+", t_hdl)
             for x in set(w):
                 t_hdl = t_hdl.replace(x, "w{}".format(w_ctr))
