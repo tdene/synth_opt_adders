@@ -433,7 +433,7 @@ class ExpressionForest(ExpressionGraph):
         optimization = 0,
         mapping="behavioral",
         language="verilog",
-        flat=False,
+        flat=True,
         block_flat=False,
         cell_flat=True,
         merge_mapping=True,
