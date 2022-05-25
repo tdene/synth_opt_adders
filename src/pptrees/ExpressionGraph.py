@@ -419,7 +419,7 @@ class ExpressionGraph(nx.DiGraph):
             mappings_path = importlib.resources.path("pptrees", "mappings")
             with mappings_path as pkg_map_dir:
                 pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
-            mapping = parse_mapping(pkg_map_file)
+            mapping_dict = parse_mapping(pkg_map_file)
 
         # Pull in the HDL description of nodes outside of blocks
         # If fully flattening them, need to rename "w*" internal wires
@@ -446,10 +446,10 @@ class ExpressionGraph(nx.DiGraph):
                 w_ctr += 1
 
             if merge_mapping:
-                node_hdl = merge_mapping_into_cells(node_hdl, mapping)
+                node_hdl = merge_mapping_into_cells(node_hdl, mapping_dict)
                 new_defs = set()
                 for a in node_defs:
-                    new_def = merge_mapping_into_cells(a, mapping)
+                    new_def = merge_mapping_into_cells(a, mapping_dict)
                     new_def = increment_iname(new_def)
                     new_defs.add(new_def)
                 node_defs = new_defs
