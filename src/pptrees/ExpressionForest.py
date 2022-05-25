@@ -73,7 +73,7 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Forest width must be an integer")
         if width < 1:
             raise ValueError("Forest width must be at least 1")
-        if start_point not in [None, "serial", "sklansky",
+        if start_point not in [None, "serial", "ripple", "ripple-carry", "sklansky",
                 "kogge-stone", "brent-kung"]:
             error = "Forest start point {0} is not implemented.\n"
             error += "Consider using non-legacy start points.\n"
@@ -151,7 +151,7 @@ class ExpressionForest(ExpressionGraph):
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
         # Transform the forest towards the starting point
-        if start_point == "serial":
+        if start_point in ["serial", "ripple", "ripple-carry"]:
             pass
         elif start_point == "sklansky":
             for t in self.trees[2:]:
