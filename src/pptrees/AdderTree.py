@@ -28,7 +28,9 @@ class AdderTree(ExpressionTree):
                  out_ports=None,
                  name="adder",
                  start_point=0,
-                 radix=2
+                 alias=None,
+                 radix=2,
+                 leaf_labels=["c","gp","p"]
                 ):
         """Initializes the AdderTree
 
@@ -37,7 +39,8 @@ class AdderTree(ExpressionTree):
             in_ports (list of ((string, int), string)): The list of input ports
             out_ports (list of ((string, int), string)): The list of output ports
             name (string): The name of the graph
-            start_point (string): The starting structure of the tree
+            start_point (int): The starting Catalan ID of the tree
+            alias (string): The name of a desired classic structure
             radix (int): The radix of the tree
         """
 
@@ -68,7 +71,9 @@ class AdderTree(ExpressionTree):
                          out_ports,
                          name = name,
                          start_point = start_point,
+                         alias = alias,
                          radix = radix,
+                         leaf_labels = leaf_labels,
                          idem = True,
                          node_defs = node_defs
                         )

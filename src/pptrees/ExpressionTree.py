@@ -36,6 +36,7 @@ class ExpressionTree(ExpressionGraph):
                  out_ports=None,
                  name="tree",
                  start_point=0,
+                 alias=None,
                  radix=2,
                  idem=False,
                  leaf_labels=["c", "gp", "p"],
@@ -49,6 +50,7 @@ class ExpressionTree(ExpressionGraph):
             out_ports (list of ((string, int), string)): List of output ports
             name (string): The name of the graph
             start_point (int): The starting Catalan ID of the tree
+            alias (string): The name of a desired classic structure
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             leaf_label (string): The label of the leaf nodes
@@ -151,15 +153,40 @@ class ExpressionTree(ExpressionGraph):
             leafs.append(leaf)
 
         ## Initialize the rest of the tree
-        if isinstance(start_point, int):
+        if alias is None:
             if start_point < 0 or start_point > self.max_rank():
                 raise ValueError("Tree start point out of bounds")
+        elif alias not in ["serial", "ripple", "ripple-carry", "sklansky",
+                "kogge-stone", "brent-kung"]:
+            error = "Structure alias {0} is not implemented.\n"
+            error += "Consider using non-legacy start points.\n"
+            error += "These correspond to the trees' Catalan IDs."
+            error = error.format(alias)
+            raise NotImplementedError(error)
         else:
             start_point = 0
         # If tree width is 1, hard-code the structure
         if self.width == 1:
             self.add_edge(self.root, leafs[0], 0)
+            return
+        # Unrank the tree based on the start_point
         self.unrank(None, 0, start_point, self.width-1, leafs, lspine = True)
+
+        # If an alias was given, implement it
+        if alias in ["serial", "ripple", "ripple-carry"]:
+            return
+        elif alias == "sklansky":
+            if self.width > 2:
+                self.rbalance(self.root[1])
+        elif alias == "kogge-stone":
+            if self.width > 2:
+                self.lbalance(self.root[1])
+                self.equalize_depths(self.root[1])
+        elif alias == "brent-kung":
+            if self.width > 2:
+                self.rbalance(self.root[1])
+                while not self.root[1][0].is_proper():
+                    self.right_rotate(self.root[1][0])
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
@@ -832,8 +859,12 @@ class ExpressionTree(ExpressionGraph):
             self.unrank(node, 0, rank % ci1, i1, leafs, mirror, lspine)
             self.unrank(node, 1, rank // ci1, i2, leafs, mirror, False)
 
-    def rank(self, node, mirror=False):
+    def rank(self, node=None, mirror=False):
         """Classifies a binary tree under a node by ranking it"""
+
+        # If node is not specified, start at the root
+        if node is None:
+            node = self.root
 
         # Special case for 1-bit tree
         if (node is self.root) and len(node.children) == 1:
