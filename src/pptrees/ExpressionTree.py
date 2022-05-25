@@ -176,13 +176,14 @@ class ExpressionTree(ExpressionGraph):
         if alias in ["serial", "ripple", "ripple-carry"]:
             return
         elif alias == "sklansky":
-            if self.width > 3:
+            if self.width > 2:
                 self.rbalance(self.root[1])
         elif alias == "kogge-stone":
-            if self.width > 3:
+            if self.width > 2:
                 self.lbalance(self.root[1])
+                self.equalize_depths(self.root[1])
         elif alias == "brent-kung":
-            if self.width > 3:
+            if self.width > 2:
                 self.rbalance(self.root[1])
                 while not self.root[1][0].is_proper():
                     self.right_rotate(self.root[1][0])
