@@ -346,7 +346,7 @@ def display_gif(graphs, *args, **kwargs):
                      format="GIF",
                      duration = 1000,
                      loop = 0,
-                     disposal = 1,
+                     disposal = 2,
                      transparency = 255,
                      append_images = images)
     # Get the GIF data
