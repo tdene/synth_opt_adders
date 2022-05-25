@@ -942,7 +942,8 @@ class ExpressionTree(ExpressionGraph):
             original_node = (parent, index)
 
         # Avoid repeated height calculations (to some degree)
-        c_heights = [len(c) for c in node]
+        children = [c for c in node]
+        c_heights = [len(c) for c in children]
         height = 1 + max(c_heights)
 
         # If the target height is not specified, reduce the height by 1
@@ -967,7 +968,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Reduce the height of bad children
         for a in range(len(c_heights)):
-            c = node[a]
+            c = children[a]
             # If child is a leaf, we are at the end of an iteration
             if len(c) == 0:
                 continue
