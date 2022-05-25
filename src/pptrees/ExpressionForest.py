@@ -34,27 +34,33 @@ class ExpressionForest(ExpressionGraph):
                  width,
                  in_ports,
                  out_ports,
-                 initialized_trees = None,
                  tree_type = ExpressionTree,
                  name = "forest",
                  alias = None,
                  tree_start_points = None,
+                 initialized_trees = None,
                  radix = 2,
                  idem = False,
                  node_defs = {}
                 ):
         """Initializes the ExpressionForest
+        
+        There are three arguments that can be used to intialize the forest.
+        This is their priority order, from highest to lowest:
+            - initialized_trees
+            - tree_start_points
+            - alias
 
         Args:
             width (int): The number of leaves in the forest
             in_ports (list of ((string, int), string)): List of input ports
             out_ports (list of ((string, int), string)): List of output ports
-            initialized_trees (list): A list of trees to initialize the forest with
-                If this parameter is set, the forest will undergo an alternate constructor
             tree_type (class): The type of tree to use
             name (string): The name of the graph
             alias (string): The starting structure of the forest [LEGACY]
             tree_start_points (list of int): Catalan IDs for each tree
+            initialized_trees (list): A list of trees to initialize the forest with
+                If this parameter is set, the forest will undergo an alternate constructor
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
@@ -149,6 +155,10 @@ class ExpressionForest(ExpressionGraph):
 
         # Initialize the graph
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
+
+        # If tree_start_points was provided, ignore the alias
+        if tree_start_points is not None:
+            return
 
         # Transform the forest towards the starting point
         if alias in ["serial", "ripple", "ripple-carry"]:

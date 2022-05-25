@@ -28,13 +28,20 @@ class AdderForest(ExpressionForest):
                  width,
                  in_ports=None,
                  out_ports=None,
-                 tree_type=AdderTree,
-                 name="adder",
-                 alias=None,
-                 tree_start_points=None,
-                 radix=2
+                 tree_type = AdderTree,
+                 name = "adder",
+                 alias = None,
+                 tree_start_points = None,
+                 initialized_trees = None,
+                 radix = 2
                 ):
         """Initializes the AdderForest
+        
+        There are three arguments that can be used to intialize the forest.
+        This is their priority order, from highest to lowest:
+            - initialized_trees
+            - tree_start_points
+            - alias
 
         Args:
             width (int): The number of leaves in the tree
@@ -43,6 +50,9 @@ class AdderForest(ExpressionForest):
             tree_type (class): The type of tree this forest contains
             name (string): The name of the graph
             alias (string): The starting structure of the forest [LEGACY]
+            tree_start_points (list of int): Catalan IDs for each tree
+            initialized_trees (list): A list of trees to initialize the forest with
+                If this parameter is set, the forest will undergo an alternate constructor
             radix (int): The radix of the tree
         """
 
@@ -75,6 +85,7 @@ class AdderForest(ExpressionForest):
                          name = name,
                          alias = alias,
                          tree_start_points = tree_start_points,
+                         initialized_trees = initialized_trees,
                          radix = radix,
                          node_defs = node_defs
                         )
