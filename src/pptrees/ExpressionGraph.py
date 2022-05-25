@@ -361,6 +361,7 @@ class ExpressionGraph(nx.DiGraph):
         """Creates a HDL description of the graph
 
         Args:
+            out (str): The file to write the HDL to
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL

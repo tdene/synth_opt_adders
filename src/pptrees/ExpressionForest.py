@@ -389,6 +389,7 @@ class ExpressionForest(ExpressionGraph):
     def hdl(
         self,
         out=None,
+        optimization = 0,
         mapping="behavioral",
         language="verilog",
         flat=False,
@@ -401,6 +402,13 @@ class ExpressionForest(ExpressionGraph):
         """Creates a HDL description of the forest
 
         Args:
+            out (str): The file to write the HDL to
+            optimization (int): The optimizaton level to use
+                optimization = 0: No optimization
+                optimization = 1: Remove some redundant logic out of nodes
+                optimization = 2: Perform previous optimization, then partition the 
+                    HDL into smaller blocks which synthesis tools can handle better.
+            mapping (str): The technology mapping to use
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
             block_flat (bool): If True, flatten all blocks in the graph's HDL
@@ -417,6 +425,14 @@ class ExpressionForest(ExpressionGraph):
         # If module name is not defined, set it to graph's name
         if module_name is None:
             module_name = self.name
+
+        if optimization > 0:
+            self.optimize_nodes()
+        if optimization > 1:
+            self.find_equivalent_nodes()
+            self.calculate_fanout()
+            self.calculate_tracks()
+            self.add_best_blocks()
 
         hdl = []
         module_defs = set()
