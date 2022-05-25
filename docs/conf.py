@@ -1,5 +1,5 @@
 project = "pptrees"
-version = "1.0.1"
+version = "1.0.3"
 copyright = "2020, tdene"
 author = "tdene"
 

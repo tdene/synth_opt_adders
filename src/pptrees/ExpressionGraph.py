@@ -361,6 +361,7 @@ class ExpressionGraph(nx.DiGraph):
         """Creates a HDL description of the graph
 
         Args:
+            out (str): The file to write the HDL to
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
@@ -403,7 +404,7 @@ class ExpressionGraph(nx.DiGraph):
                     flat=block_flat,
                     cell_flat=cell_flat,
                     merge_mapping=merge_mapping,
-                    module_name=module_name + "_block_" + str(block_id),
+                    module_name="{0}_block_{1}".format(module_name, block_id),
                     description_string="block {0}".format(block_id)
             )
 
