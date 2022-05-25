@@ -213,6 +213,37 @@ class ExpressionForest(ExpressionGraph):
                     for n2 in t2.nodes:
                         if n1.equiv(n2):
                             n1.set_equiv(n2)
+        self.mark_equivalent_nodes()
+
+    def mark_equivalent_nodes(self):
+        """Mark all redundant nodes with stripes on diagrams"""
+        for t in self.trees:
+            for n in t.nodes:
+                if n.equiv_class[0] is not n:
+                    if t.nodes(data=True)[n].get("gradientangle", "0") == "135":
+                        continue
+                    col = t.nodes(data = True)[n]["fillcolor"]
+                    t.nodes(data = True)[n]["orig_color"] = col
+                    new_col = "red;0.5:{0};0.5".format(col)
+                    t.nodes(data = True)[n]["fillcolor"] = new_col
+                    t.nodes(data = True)[n]["gradientangle"] = "135"
+
+    def reset_equivalent_nodes(self):
+        """Resets the equivalence classes of all nodes"""
+        self.unmark_equivalent_nodes()
+        for t in self.trees:
+            for n in t.nodes:
+                n.equiv_class = [n]
+
+    def unmark_equivalent_nodes(self):
+        """Remove stripes from all redundant nodes on diagrams"""
+        for t in self.trees:
+            for n in t.nodes:
+                if t.nodes(data=True)[n].get("gradientangle", "0") == "135":
+                    col = t.nodes(data = True)[n]["fillcolor"]
+                    old_col = t.nodes(data = True)[n].get("orig_color", col)
+                    t.nodes(data = True)[n]["fillcolor"] = old_col
+                    t.nodes(data = True)[n]["gradientangle"] = "0"
 
     ### NOTE: Where this logic belongs is an open question
     def find_parallel_tracks(self):
