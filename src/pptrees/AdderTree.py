@@ -28,7 +28,8 @@ class AdderTree(ExpressionTree):
                  out_ports=None,
                  name="adder",
                  start_point=0,
-                 radix=2
+                 radix=2,
+                 leaf_labels=["c","gp","p"]
                 ):
         """Initializes the AdderTree
 
