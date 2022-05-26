@@ -245,25 +245,6 @@ class ExpressionTree(ExpressionGraph):
         """Define order by rank"""
         return self.rank(self.root) < other.rank(other.root)
 
-    def is_strictly_left_of(self, other, self_node = None, other_node = None):
-        """Determine if this tree is strictly left of another
-
-        This is used to determine whether two trees can be stereoscopically combined.
-        """
-        # Start at the root, if not specified
-        if self_node is None and other_node is None:
-            self_node = self.root
-            other_node = other.root
-        # If the leafs are reached, this recursive path has finished
-        if not self_node.children or not other_node.children:
-            return True
-        # Any leafs in other[0] are not present in self[1]
-        if other_node[0].leafs & self_node[1].leafs:
-            return False
-        # Recurse over the children
-        return self.is_strictly_left_of(other, self_node[0], other_node[0]) and \
-                self.is_strictly_left_of(other, self_node[1], other_node[1])
-
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
         return display_png(self)
@@ -928,6 +909,37 @@ class ExpressionTree(ExpressionGraph):
                 y_pos = node.y_pos
                 diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
                 self.nodes[node]["pos"] = diagram_pos
+
+    def _check_attr(self, others, *attr):
+        """Check if a set of trees share a set of common attributes
+
+        Args:
+            others (list): list of trees to check
+            attr (strings): The attributes to check
+
+        Returns:
+            bool: True if all attributes are the same, False otherwise
+        """
+        for a in attr:
+            if not all([getattr(x, a) == getattr(self, a) for x in others]):
+                return False
+        return True
+
+    def stereo_check(self, others):
+        """Check if a set of trees can be steroscopically combined
+
+        Args:
+            others (list): list of trees to check
+        """
+        raise NotImplementedError("Stereo check not implemented for this operation")
+
+    def stereo_combine(self, others):
+        """Stereoscopically ombine a set of trees into a single tree
+
+        Args:
+            others (list): list of trees to combine
+        """
+        raise NotImplementedError("Stereo combine not implemented for this operation")
 
     def png(self, out="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
