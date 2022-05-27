@@ -81,7 +81,7 @@ class AdderTree(ExpressionTree):
 
     ### The methods below have to do with steroscopic composition ###
 
-    def _ling_check(self, other, self_node = None, other_node = None, buffers = []):
+    def _ling_check(self, other, self_node = None, other_node = None):
         """Determine if this tree can be stereoscopically combined with another"""
 
         # Start at the root, if not specified
@@ -91,11 +91,15 @@ class AdderTree(ExpressionTree):
         # If the leafs are reached, this recursive path has finished
         if not self_node.children or not other_node.children:
             return (True, [])
+        # If other_node is a buffer, just skip it
+        if other_node.value == self.node_defs["buffer"]:
+            return self._ling_check(other, self_node, other_node[0])
         # Any leafs in other[0] are not present in self[1]
         if other_node[0].leafs & self_node[1].leafs:
             return (False, None)
         # Any leafs in other[1] but not self[1] must BE self[0] or self[0][1]
-        # If the latter is the case, auto-add a buffer, unless we've already reached leafs
+        # If the latter is the case, auto-add a buffer
+        # unless we've already reached leafs or a buffer
         pushed_left = other_node[1].leafs & ~self_node[1].leafs
         next_selfc0 = self_node[0]
         buffers = []
@@ -105,8 +109,8 @@ class AdderTree(ExpressionTree):
             elif self_node[0][1].leafs != pushed_left:
                 return (False, None)
             next_selfc0 = self_node[0][0]
-            if other_node[0].children:
-                buffers.append(self_node[0][0])
+            if other_node[0].children and other_node[0].value != self.node_defs["buffer"]:
+                buffers.append(other_node[0])
         # Recurse over the children
         # But be ready to insert buffers if needed
         ret0, buf0 = self._ling_check(other, next_selfc0, other_node[0])
@@ -151,16 +155,13 @@ class AdderTree(ExpressionTree):
         # Finally, check their structure
         return self._ling_check(others[0])
 
-    def _ling_combine(self, other, target, self_node = None, other_node = None):
+    def _ling_combine(self, other, target, buffers, self_node = None, other_node = None):
         """Stereoscopically combine two trees"""
 
         # Start at the root, if not specified
         if self_node is None and other_node is None:
             self_node = self.root
             other_node = other.root
-        # If the leafs are reached, this recursive path has finished
-        if not self_node.children or not other_node.children:
-            return
         # Assign shorthand names for the nodes
         p = self_node
         g = other_node
@@ -191,7 +192,8 @@ class AdderTree(ExpressionTree):
         """
 
         # First check that the trees can be combined
-        if not self.stereo_check(others):
+        check, buffers = self.stereo_check(others)
+        if not check:
             raise ValueError("Trees cannot be combined")
 
         # Next, combine the trees
@@ -205,7 +207,7 @@ class AdderTree(ExpressionTree):
                 node_defs = node_defs
                 )
 
-        self._ling_combine(others[0], ret)
+        self._ling_combine(others[0], ret, buffers)
 
         # Return the combined tree
         return ret
