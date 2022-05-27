@@ -140,17 +140,15 @@ class ExpressionTree(ExpressionGraph):
             # Right-most leaf may be special
             if a == 0 and "first_pre" in node_defs:
                 stem = leaf_labels[0]
-                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["first_pre"]
             # Left-most leaf may be special
             elif a == self.width-1 and "lspine_pre" in node_defs:
                 stem = leaf_labels[2]
-                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["lspine_pre"]
             else:
                 stem = leaf_labels[1]
-                label = "{0}[{1}]".format(stem, a)
                 node_def = node_defs["pre"]
+            label = "{0}[{1}]".format(stem, a)
             leaf = Node(node_def)
             leaf = self.add_node(leaf, label = label)
             # Connect the leaf to the tree's ports

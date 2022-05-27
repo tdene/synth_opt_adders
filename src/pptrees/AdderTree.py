@@ -1,5 +1,6 @@
 from .ExpressionNode import ExpressionNode as Node
 from .ExpressionTree import ExpressionTree
+from .util import lg
 
 class AdderTree(ExpressionTree):
     """Defines a tree that computes binary addition
@@ -84,6 +85,9 @@ class AdderTree(ExpressionTree):
     def _ling_check(self, other, self_node = None, other_node = None):
         """Determine if this tree can be stereoscopically combined with another"""
 
+        # self is the p / t tree
+        # other is the g tree
+
         # Start at the root, if not specified
         if self_node is None and other_node is None:
             self_node = self.root
@@ -91,13 +95,28 @@ class AdderTree(ExpressionTree):
         # If the leafs are reached, this recursive path has finished
         if not self_node.children or not other_node.children:
             return (True, [])
-        # If other_node is a buffer, just skip it
+        # If other_node is a buffer, here are what bad things could happen:
+        # - There are leafs in other that are also present in self[1]
+        #   aka there are g's ahead of p's
+        # If nothing bad happens, skip the buffer
         if other_node.value == self.node_defs["buffer"]:
+            if other_node.leafs & self_node[1].leafs:
+                return (False, None)
             return self._ling_check(other, self_node, other_node[0])
+        # If self_node is a buffer, here are what bad things could happen:
+        # - There are leafs in other[0] that are not present in self
+        #   aka there are g's ahead of p's
+        # If nothing bad happens, skip the buffer
+        if self_node.value == self.node_defs["buffer"]:
+            if other_node[0].leafs & self_node.leafs:
+                return (False, None)
+            return self._ling_check(other, self_node[0], other_node)
         # Any leafs in other[0] are not present in self[1]
+        # aka there are no g's ahead of p's
         if other_node[0].leafs & self_node[1].leafs:
             return (False, None)
         # Any leafs in other[1] but not self[1] must BE self[0] or self[0][1]
+        # aka any factorization is resolved immediately
         # If the latter is the case, auto-add a buffer
         # unless we've already reached leafs or a buffer
         pushed_left = other_node[1].leafs & ~self_node[1].leafs
@@ -158,6 +177,9 @@ class AdderTree(ExpressionTree):
     def _ling_combine(self, other, target, buffers, self_node = None, other_node = None):
         """Stereoscopically combine two trees"""
 
+        # self is the p / t tree
+        # other is the g tree
+
         # Start at the root, if not specified
         if self_node is None and other_node is None:
             self_node = self.root
@@ -178,6 +200,24 @@ class AdderTree(ExpressionTree):
 
         # Overlapping leafs
         ## If both nodes are leafs,
+        ## they should be the same leaf???
+        if not p.children and not g.children:
+            if p.leafs != g.leafs:
+                raise ValueError("Non-matching leafs; impossible error message.")
+            new_node = Node(node_defs[p.value])
+            # Right-most leaf may be special
+            if self._on_lspine(p) and "first_pre" in self.node_defs:
+                stem = self.leaf_labels[0]
+            # Left-most leaf may be special
+            elif self._on_rspine(p) and "lspine_pre" in self.node_defs:
+                stem = self.leaf_labels[2]
+            else:
+                stem = self.leaf_labels[1]
+            label = "{0}[{1}]".format(stem, lg(p.leafs)-1)
+            new_node = target.add_node(new_node, label = label)
+            target._connect_inports(new_node, lg(p.leafs)-1)
+            new_node._recalculate_leafs(leafs=p.leafs)
+
 
         self._ling_combine(other, target, self_node[0], other_node[0])
         self._ling_combine(other, target, self_node[1], other_node[1])
@@ -197,6 +237,9 @@ class AdderTree(ExpressionTree):
             raise ValueError("Trees cannot be combined")
 
         # Next, combine the trees
+        leaf_labels = self.leaf_labels
+        # g, t -> gt
+        leaf_labels[1] = others[0].leaf_labels[1] + self.leaf_labels[1]
         ret = AdderTree(
                 width = self.width,
                 in_ports = self.in_ports,
