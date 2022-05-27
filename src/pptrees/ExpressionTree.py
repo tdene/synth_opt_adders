@@ -37,6 +37,7 @@ class ExpressionTree(ExpressionGraph):
                  name="tree",
                  start_point=0,
                  alias=None,
+                 no_shape=False,
                  radix=2,
                  idem=False,
                  leaf_labels=["c", "gp", "p"],
@@ -51,6 +52,7 @@ class ExpressionTree(ExpressionGraph):
             name (string): The name of the graph
             start_point (int): The starting Catalan ID of the tree
             alias (string): The name of a desired classic structure
+            no_shape (bool): If this is True, the tree nodes will not be initialized
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             leaf_label (string): The label of the leaf nodes
@@ -121,6 +123,10 @@ class ExpressionTree(ExpressionGraph):
         super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
 
         # Initialize the tree
+
+        ## If the tree should not be initialized, do not initialize it
+        if no_shape:
+            return
 
         ## Initialize the root node
         self.root = Node(node_defs["root"], x_pos = 0, y_pos = 0)
@@ -934,7 +940,7 @@ class ExpressionTree(ExpressionGraph):
         raise NotImplementedError("Stereo check not implemented for this operation")
 
     def stereo_combine(self, others):
-        """Stereoscopically ombine a set of trees into a single tree
+        """Stereoscopically combine a set of trees into a single tree
 
         Args:
             others (list): list of trees to combine
