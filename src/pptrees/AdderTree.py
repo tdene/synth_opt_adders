@@ -1,3 +1,4 @@
+from .ExpressionNode import ExpressionNode as Node
 from .ExpressionTree import ExpressionTree
 
 class AdderTree(ExpressionTree):
@@ -78,30 +79,45 @@ class AdderTree(ExpressionTree):
                          node_defs = node_defs
                         )
 
-    def ling_check(self, other, self_node = None, other_node = None):
-        """Determine if this tree is strictly left of another
+    ### The methods below have to do with steroscopic composition ###
 
-        This is used to determine whether two trees can be stereoscopically combined.
-        """
+    def _ling_check(self, other, self_node = None, other_node = None, buffers = []):
+        """Determine if this tree can be stereoscopically combined with another"""
+
         # Start at the root, if not specified
         if self_node is None and other_node is None:
             self_node = self.root
             other_node = other.root
         # If the leafs are reached, this recursive path has finished
         if not self_node.children or not other_node.children:
-            return True
-        # Store children of the current nodes
-        self_c = self_node.children
-        other_c = other_node.children
+            return (True, [])
         # Any leafs in other[0] are not present in self[1]
-        if other_c[0].leafs & self_c[1].leafs:
-            return False
-        # Any leafs in other[1] but not self[1] must be in self[0]
-        if self_c[0].leafs - (other_c[1].leafs - self_c[1].leafs) < 0:
-            return False
+        if other_node[0].leafs & self_node[1].leafs:
+            return (False, None)
+        # Any leafs in other[1] but not self[1] must BE self[0] or self[0][1]
+        # If the latter is the case, auto-add a buffer, unless we've already reached leafs
+        pushed_left = other_node[1].leafs & ~self_node[1].leafs
+        next_selfc0 = self_node[0]
+        buffers = []
+        if pushed_left and self_node[0].leafs != pushed_left:
+            if not self_node[0].children:
+                return (False, None)
+            elif self_node[0][1].leafs != pushed_left:
+                return (False, None)
+            next_selfc0 = self_node[0][0]
+            if other_node[0].children:
+                buffers.append(self_node[0][0])
         # Recurse over the children
-        return self.ling_check(other, self_c[0], other_c[0]) and \
-                self.ling_check(other, self_c[1], other_c[1])
+        # But be ready to insert buffers if needed
+        ret0, buf0 = self._ling_check(other, next_selfc0, other_node[0])
+        if not ret0:
+            return (False, None)
+        buffers.extend(buf0)
+        ret1, buf1 = self._ling_check(other, self_node[1], other_node[1])
+        if not ret1:
+            return (False, None)
+        buffers.extend(buf1)
+        return (True, buffers)
 
     def stereo_check(self, others):
         """Check if a set of trees can be steroscopically combined
@@ -112,6 +128,10 @@ class AdderTree(ExpressionTree):
             others (list): list of trees to check
         """
 
+        # If others is not a list, make it a list
+        if not isinstance(others, list):
+            others = [others]
+
         # First check that only two trees are being composed
         if len(others) != 1:
             return False
@@ -120,17 +140,75 @@ class AdderTree(ExpressionTree):
             if not isinstance(other, AdderTree):
                 return False
         # Next, check that their attributes match
-        if not self._check_attr(self, other,
+        if not self._check_attr(others,
                 "width", "radix", "idem", "in_shape", "out_shape",
                 "in_ports", "out_ports", "blocks"):
             return False
         # Check that no tree has blocks
-        if self.blocks:
+        if any([x is not None for x in self.blocks]):
             return False
 
         # Finally, check their structure
-        return self.ling_check(others[0])
+        return self._ling_check(others[0])
 
+    def _ling_combine(self, other, target, self_node = None, other_node = None):
+        """Stereoscopically combine two trees"""
+
+        # Start at the root, if not specified
+        if self_node is None and other_node is None:
+            self_node = self.root
+            other_node = other.root
+        # If the leafs are reached, this recursive path has finished
+        if not self_node.children or not other_node.children:
+            return
+        # Assign shorthand names for the nodes
+        p = self_node
+        g = other_node
+
+        # Overlapping roots
+        ## If both nodes are root, create a root
+        if not p.parent or not g.parent:
+            if p.parent or g.parent:
+                raise ValueError("Non-matching roots; impossible error message.")
+            new_node = Node(node_defs["root"], x_pos = 0, y_pos = 0)
+            target.root = new_node
+            target.add_node(new_node)
+            target._connect_outports(new_node)
+
+        # Overlapping leafs
+        ## If both nodes are leafs,
+
+        self._ling_combine(other, target, self_node[0], other_node[0])
+        self._ling_combine(other, target, self_node[1], other_node[1])
+
+    def stereo_combine(self, others):
+        """Stereoscopically combine a set of trees into a single tree
+
+        This implements the ExpressionTree stub method.
+
+        Args:
+            others (list): list of trees to combine
+        """
+
+        # First check that the trees can be combined
+        if not self.stereo_check(others):
+            raise ValueError("Trees cannot be combined")
+
+        # Next, combine the trees
+        ret = AdderTree(
+                width = self.width,
+                in_ports = self.in_ports,
+                out_ports = self.out_ports,
+                name = self.name,
+                no_shape = True,
+                radix = self.radix,
+                node_defs = node_defs
+                )
+
+        self._ling_combine(others[0], ret)
+
+        # Return the combined tree
+        return ret
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

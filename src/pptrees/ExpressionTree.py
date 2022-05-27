@@ -956,7 +956,6 @@ class ExpressionTree(ExpressionGraph):
         pg = nx.drawing.nx_pydot.to_pydot(self)
         pg.set_splines("false")
         pg.set_concentrate("true")
-        pg.set_fontname("Comic Sans MS")
 
         pg.write_png(out, prog="neato")
 
