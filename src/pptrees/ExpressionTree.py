@@ -929,22 +929,6 @@ class ExpressionTree(ExpressionGraph):
                 return False
         return True
 
-    def stereo_check(self, others):
-        """Check if a set of trees can be steroscopically combined
-
-        Args:
-            others (list): list of trees to check
-        """
-        raise NotImplementedError("Stereo check not implemented for this operation")
-
-    def stereo_combine(self, others):
-        """Stereoscopically combine a set of trees into a single tree
-
-        Args:
-            others (list): list of trees to combine
-        """
-        raise NotImplementedError("Stereo combine not implemented for this operation")
-
     def png(self, out="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
 
