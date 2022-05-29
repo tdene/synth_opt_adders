@@ -174,7 +174,10 @@ class AdderTree(ExpressionTree):
         # Finally, check their structure
         return self._ling_check(others[0])
 
-    def _ling_combine(self, other, target, buffers, self_node = None, other_node = None):
+    def _ling_combine(self, other, target,
+            self_node = None, other_node = None,
+            parent = None, index = None,
+            pending = False):
         """Stereoscopically combine two trees"""
 
         # self is the p / t tree
@@ -187,6 +190,20 @@ class AdderTree(ExpressionTree):
         # Assign shorthand names for the nodes
         p = self_node
         g = other_node
+        new_node = None
+
+        # Check if this location creates a factorization
+        factor = None
+        next_pending = False
+        if not pending:
+            if len(p.children) == self.radix:
+                if len(g.children) == self.radix:
+                    factor = p[0].leafs == (g[1].leafs & ~p[1].leafs)
+                    if not factor and (g[1].leafs & ~p[1].leafs):
+                        next_pending = True
+                elif len(g.children) == 1:
+                    raise NotImplementedError("How did you get here? 1")
+                    factor = p[0].leafs == (g.leafs & ~p[1].leafs)
 
         # Overlapping roots
         ## If both nodes are root, create a root
@@ -218,6 +235,48 @@ class AdderTree(ExpressionTree):
             target._connect_inports(new_node, lg(p.leafs)-1)
             new_node._recalculate_leafs(leafs=p.leafs)
 
+        # Overlapping recurrence nodes
+        ## If both nodes are recurrence nodes,
+        ## if there is no pending or current de-factorization, just combine them
+        if p.value == self.node_defs["black"] and g.value == self.node_defs["black"]:
+            if (not factor) and (not pending):
+                new_node = Node(node_defs[p.value])
+                target.add_node(new_node)
+                target.add_edge(parent, new_node, index)
+        # resolve current factorization
+        if factor:
+            if g[0].children:
+                raise NotImplementedError("How did you get here? 2")
+            new_node = Node("ppa_black_ling")
+            target.add_node(new_node)
+            target.add_edge(parent, new_node, index)
+
+            new_leaf = Node("ppa_pre_sp")
+            label = "{0}[{1}]".format(other.leaf_labels[1], lg(g[0].leafs)-1)
+            new_leaf = target.add_node(new_leaf, label = label)
+            target.add_edge(new_node, new_leaf, 0)
+            target._connect_inports(new_leaf, lg(g[0].leafs)-1)
+            new_leaf._recalculate_leafs(leafs=g[0].leafs)
+
+            new_node_2 = Node("ppa_defactor_left")
+            target.add_node(new_node_2)
+            target.add_edge(new_node, new_node_2, 1)
+
+            self._ling_combine(other, target, p[0], None, new_node_2, 0)
+            self._ling_combine(other, target, p[1], g[1], new_node_2, 1)
+            return
+
+        if pending:
+            if len(g.children) != 1:
+                raise NotImplementedError("How did you get here? 3")
+
+
+
+
+
+
+
+
 
         self._ling_combine(other, target, self_node[0], other_node[0])
         self._ling_combine(other, target, self_node[1], other_node[1])
@@ -232,7 +291,7 @@ class AdderTree(ExpressionTree):
         """
 
         # First check that the trees can be combined
-        check, buffers = self.stereo_check(others)
+        check, _ = self.stereo_check(others)
         if not check:
             raise ValueError("Trees cannot be combined")
 
@@ -240,6 +299,7 @@ class AdderTree(ExpressionTree):
         leaf_labels = self.leaf_labels
         # g, t -> gt
         leaf_labels[1] = others[0].leaf_labels[1] + self.leaf_labels[1]
+        # Add to node_defs
         ret = AdderTree(
                 width = self.width,
                 in_ports = self.in_ports,
@@ -250,7 +310,7 @@ class AdderTree(ExpressionTree):
                 node_defs = node_defs
                 )
 
-        self._ling_combine(others[0], ret, buffers)
+        self._ling_combine(others[0], ret)
 
         # Return the combined tree
         return ret
