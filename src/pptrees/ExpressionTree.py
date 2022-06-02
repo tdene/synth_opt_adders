@@ -257,9 +257,9 @@ class ExpressionTree(ExpressionGraph):
         """Return the maximum rank of the tree"""
         return catalan(self.width-1)-1
 
-    def _get_row(self, height):
-        """Return the nodes at a given height"""
-        nodes = [n for n in self.nodes if n.y_pos == height]
+    def _get_row(self, depth):
+        """Return the nodes at a given depth"""
+        nodes = [n for n in self.nodes if n.y_pos == depth]
         return sorted(nodes, key=lambda x: -x.x_pos)
 
     def _get_reversed_leafs(self, node):
@@ -1034,7 +1034,7 @@ class ExpressionTree(ExpressionGraph):
 
         Args:
             node (Node): The node that roots the subtree
-            desired_height (int): The desired depth of the subtree
+            desired_height (int): The desired height of the subtree
                 If not specified, this is set to the maximum leaf depth
         """
         # Flag to support legacy diagrams
