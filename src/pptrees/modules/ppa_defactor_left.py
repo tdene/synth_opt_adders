@@ -1,61 +1,24 @@
-name = "ppa_black"
+name = "ppa_defactor_left"
 data = dict()
 
 ### Black cell
 data[
     "verilog"
 ] = """
-module ppa_black(gin, pin, gout, pout);
+module ppa_defactor_left(gin, pin, gout, pout);
 
 	input [1:0] gin, pin;
 	output gout, pout;
 
 	and2 U1(pout,pin[1],pin[0]);
-	ao21 U2(gout,gin[0],pin[1],gin[1]);
+	oa21 U2(gout,gin[1],pin[1],gin[0]);
 
 endmodule
-"""
-
-data[
-    "vhdl"
-] = """
-entity ppa_black is
-	port (
-		gin : in std_logic_vector(1 downto 0);
-		gout : out std_logic;
-		pin : in std_logic_vector(1 downto 0);
-		pout : out std_logic
-	);
-end entity;
-
-architecture behavior of ppa_black is
-begin
-
-U1: and2
-	port map (
-		A => pin(0),
-		B => pin(1),
-		Y => pout
-	);
-
-U2: ao21
-	port map (
-		A0 => gin(0),
-		A1 => pin(1),
-		B0 => gin(1),
-		Y => gout
-	);
-
-end architecture;
 """
 
 # Graphical representation
 data["shape"] = "square"
 data["fillcolor"] = "black"
-
-# Footprint
-data["footprint"] = "ppa_black"
-data["priority"] = 1
 
 # List of inputs represented by (name, total_bits, *bits_per_direction) tuple
 data["ins"] = [("gin", 2, 1, 1), ("pin", 2, 1, 1)]

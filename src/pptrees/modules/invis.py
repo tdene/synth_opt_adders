@@ -39,10 +39,6 @@ data["width"] = 0
 data["height"] = 0
 data["fillcolor"] = "black"
 
-# Footprint
-data["footprint"] = "invis"
-data["priority"] = 0
-
 data["ins"] = [("A", 1, 1, 0)]
 data["outs"] = [("Y", 1)]
 

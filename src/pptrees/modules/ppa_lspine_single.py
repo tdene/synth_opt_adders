@@ -29,10 +29,6 @@ data["fixedsize"] = "shape"
 data["penwidth"] = "4.0"
 data["fontsize"] = "52"
 
-# Footprint
-data["footprint"] = "ppa_lspine_single"
-data["priority"] = -1
-
 data["ins"] = [("xin", 1, 1, 0), ("yin", 1, 1, 0),
                      ("pin", 1, 0, 1), ("gin", 1, 0, 1)]
 data["outs"] = [("xout", 1), ("yout", 1)]

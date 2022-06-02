@@ -47,10 +47,6 @@ data["fixedsize"] = "shape"
 data["penwidth"] = "4.0"
 data["fontsize"] = "52"
 
-# Footprint
-data["footprint"] = "ppa_post"
-data["priority"] = 3
-
 data["ins"] = [("gin", 1, 0, 1), ("pin", 1, 1, 0)]
 data["outs"] = [("sum", 1)]
 

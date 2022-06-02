@@ -1,4 +1,6 @@
+from .ExpressionNode import ExpressionNode as Node
 from .ExpressionTree import ExpressionTree
+from .util import lg
 
 class AdderTree(ExpressionTree):
     """Defines a tree that computes binary addition
@@ -11,7 +13,7 @@ class AdderTree(ExpressionTree):
         node_defs (dict): A dictionary that defines the tree's nodes
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
-        black_shape (int, int): The shape of the main recurrence node's output
+        cocycle_shape (int, int): The shape of the main recurrence node's output
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -30,14 +32,14 @@ class AdderTree(ExpressionTree):
                  start_point=0,
                  alias=None,
                  radix=2,
-                 leaf_labels=["c","gp","p"]
+                 leaf_labels=["g","gp","p"]
                 ):
         """Initializes the AdderTree
 
         Args:
             width (int): The number of leaves in the tree
-            in_ports (list of ((string, int), string)): The list of input ports
-            out_ports (list of ((string, int), string)): The list of output ports
+            in_ports (list of ((string, int), string)): List of input ports
+            out_ports (list of ((string, int), string)): List of output ports
             name (string): The name of the graph
             start_point (int): The starting Catalan ID of the tree
             alias (string): The name of a desired classic structure
@@ -48,11 +50,15 @@ class AdderTree(ExpressionTree):
         node_defs = {
                 "pre"           : "ppa_pre",
                 "root"          : "ppa_post",
-                "black"         : "ppa_black",
-                "grey"          : "ppa_grey",
+                "cocycle"       : "ppa_cocycle",
                 "buffer"        : "ppa_buffer",
                 "lspine_pre"    : "ppa_lspine_pre",
-                "lspine"        : "ppa_lspine"
+                "lspine"        : "ppa_lspine",
+                "rspine"        : "ppa_rspine",
+                "rspine_pre"    : "ppa_rspine_pre",
+                "rspine_buf"    : "ppa_rspine_buffer",
+                "small_root"    : "ppa_post_no_g",
+                "small_pre"     : "ppa_lspine_pre_simple"
                 }
 
         # Provide defaults for in_ports and out_ports
@@ -77,6 +83,40 @@ class AdderTree(ExpressionTree):
                          idem = True,
                          node_defs = node_defs
                         )
+
+    def optimize_nodes(self):
+        """Optimizes nodes in the tree by removing unnecessary logic
+
+        This method is meant to be called after the structure of the tree
+        has been finalized, and final HDL is desired.
+
+        There is currently no guarantee that this method will allow for further
+        modification of the tree structure. Instead, it may cause any and all
+        methods that modify the tree, such as rotations and buffer insertions,
+        to fail.
+        """
+
+        # Call the superclass method
+        super().optimize_nodes()
+
+        # Perform specific optimizations
+
+        ## Handle width < 2 case
+        if self.width < self.radix:
+            return
+
+        ## If there is no lspine, swap out the root
+        if not self.root[0].children:
+            child = self.root[0]
+            other_child = self.root[1]
+            self._swap_node_def(self.root, None, None, "ppa_post_nolspine")
+            self._swap_node_def(child, self.root, 0, "ppa_lspine_pre_simple")
+            self.add_edge(self.root, other_child, 1)
+        ## If an lspine node has a leaf as right child, simplify it
+        for node in self.nodes:
+            if self._on_lspine(node) and node.children and node.parent:
+                if not node[1].children:
+                    self.swap_node_def(node, "ppa_lspine_single")
 
 
 if __name__ == "__main__":

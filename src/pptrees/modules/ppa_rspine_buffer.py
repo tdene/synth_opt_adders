@@ -1,11 +1,11 @@
-name = "ppa_buffer_grey"
+name = "ppa_rspine_buffer"
 data = dict()
 
 ### Buffer node
 data[
     "verilog"
 ] = """
-module ppa_buffer_grey(gin, gout);
+module ppa_rspine_buffer(gin, gout);
 
 	input gin;
 	output gout;
@@ -18,14 +18,14 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_buffer_grey is
+entity ppa_rspine_buffer is
 	port (
 		gin : in std_logic;
 		gout : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_buffer_grey is
+architecture behavior of ppa_rspine_buffer is
 begin
 
 U2: buffer
@@ -39,10 +39,6 @@ end architecture;
 
 data["shape"] = "invtriangle"
 data["fillcolor"] = "white"
-
-# Footprint
-data["footprint"] = "ppa_buffer"
-data["priority"] = 1
 
 data["ins"] = [("gin", 1, 1, 0)]
 data["outs"] = [("gout", 1)]

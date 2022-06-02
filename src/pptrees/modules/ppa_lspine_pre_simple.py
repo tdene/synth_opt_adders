@@ -44,10 +44,6 @@ data["fillcolor"] = "white"
 data["label"] = "pre"
 data["style"] = "dashed"
 
-# Footprint
-data["footprint"] = "ppa_lspine_pre"
-data["priority"] = 2
-
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
 data["outs"] = [("pout", 1)]
 
