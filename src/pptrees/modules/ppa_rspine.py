@@ -1,11 +1,11 @@
-name = "ppa_grey"
+name = "ppa_rspine"
 data = dict()
 
 ### Grey cell
 data[
     "verilog"
 ] = """
-module ppa_grey(gin, pin, gout);
+module ppa_rspine(gin, pin, gout);
 
 	input[1:0] gin;
 	input pin;
@@ -19,7 +19,7 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_grey is
+entity ppa_rspine is
 	port (
 		gin : in std_logic_vector(1 downto 0);
 		gout : out std_logic;
@@ -27,7 +27,7 @@ entity ppa_grey is
 	);
 end entity;
 
-architecture behavior of ppa_grey is
+architecture behavior of ppa_rspine is
 begin
 
 U1: ao21

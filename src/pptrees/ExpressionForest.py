@@ -430,10 +430,10 @@ class ExpressionForest(ExpressionGraph):
     def hdl(
         self,
         out=None,
-        optimization = 0,
+        optimization = 1,
         mapping="behavioral",
         language="verilog",
-        flat=True,
+        flat=False,
         block_flat=False,
         node_flat=True,
         merge_mapping=True,

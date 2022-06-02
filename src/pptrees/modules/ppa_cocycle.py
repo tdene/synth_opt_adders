@@ -1,11 +1,11 @@
-name = "ppa_black"
+name = "ppa_cocycle"
 data = dict()
 
 ### Black cell
 data[
     "verilog"
 ] = """
-module ppa_black(gin, pin, gout, pout);
+module ppa_cocycle(gin, pin, gout, pout);
 
 	input [1:0] gin, pin;
 	output gout, pout;
@@ -19,7 +19,7 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_black is
+entity ppa_cocycle is
 	port (
 		gin : in std_logic_vector(1 downto 0);
 		gout : out std_logic;
@@ -28,7 +28,7 @@ entity ppa_black is
 	);
 end entity;
 
-architecture behavior of ppa_black is
+architecture behavior of ppa_cocycle is
 begin
 
 U1: and2
@@ -54,7 +54,7 @@ data["shape"] = "square"
 data["fillcolor"] = "black"
 
 # Footprint
-data["footprint"] = "ppa_black"
+data["footprint"] = "ppa_cocycle"
 data["priority"] = 1
 
 # List of inputs represented by (name, total_bits, *bits_per_direction) tuple
