@@ -435,7 +435,7 @@ class ExpressionForest(ExpressionGraph):
         language="verilog",
         flat=True,
         block_flat=False,
-        cell_flat=True,
+        node_flat=True,
         merge_mapping=True,
         module_name=None,
         description_string="start of unnamed graph"
@@ -447,13 +447,14 @@ class ExpressionForest(ExpressionGraph):
             optimization (int): The optimizaton level to use
                 optimization = 0: No optimization
                 optimization = 1: Remove some redundant logic out of nodes
-                optimization = 2: Perform previous optimization, then partition the 
-                    HDL into smaller blocks which synthesis tools can handle better.
+                optimization = 2: Perform previous optimization, then partition
+                the HDL into smaller blocks which synthesis tools can handle
+                better.
             mapping (str): The technology mapping to use
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
             block_flat (bool): If True, flatten all blocks in the graph's HDL
-            cell_flat (bool): If True, flatten all modules in the graph's HDL
+            node_flat (bool): If True, flatten all cells in the graph's HDL
             merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
@@ -488,7 +489,7 @@ class ExpressionForest(ExpressionGraph):
                             mapping=mapping,
                             flat=flat,
                             block_flat=block_flat,
-                            cell_flat=cell_flat,
+                            node_flat=node_flat,
                             merge_mapping=merge_mapping,
                             module_name = "{0}_{1}".format(module_name, t.name),
                             description_string=desc

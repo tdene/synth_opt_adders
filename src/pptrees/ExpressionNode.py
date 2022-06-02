@@ -14,13 +14,15 @@ class ExpressionNode:
         leafs (int): A binary encoding of all leafs reachable from this node
         graph (ExpressionGraph): The graph this node belongs to
         block (int): The block number of this node's HDL (if applicable)
-        in_nets (list): A list of input nets
-        out_nets (list): A list of output nets
+        in_nets (dict): A dictionary of input nets
+        out_nets (dict): A dictionary of output nets
         x_pos (float): The x-coordinate of this node's graphical representation
         y_pos (float): The y-coordinate of this node's graphical representation
         equiv_class (list of ExpressionNode): The list of all nodes equivalent
             to this one. The first node in the list is special, and is known
             as the representative of the equivalence class.
+        equiv_wires (set of strings): The set of wires that are output by the 
+            representative node of this node's equivalence class.
         tracks_class (list of ExpressionNode): The list of all nodes that cause
             parallel wires in the layout. No node in this list is special.
     """
@@ -53,6 +55,7 @@ class ExpressionNode:
         self.graph = None
         self.block = None
         self.equiv_class = [self]
+        self.equiv_wires = set()
         self.tracks_class = set()
         self.tracks_class.add(self)
 
@@ -161,12 +164,20 @@ class ExpressionNode:
         for n in ec2:
             if n not in ec:
                 ec.append(n)
-        # If the two nodes' graphs have a width attribute, sort the nodes by width
+        # If the two nodes' graphs have a width attribute,
+        # sort the nodes by width
         if hasattr(self.graph, "width") and hasattr(other.graph, "width"):
             ec.sort(key=lambda x: x.graph.width, reverse=True)
-        # Set both nodes' equivalence classes to the result
-        self.equiv_class = ec
-        other.equiv_class = ec
+
+        # In order to write out correct HDL,
+        # each node must be aware of its representative's output nets.
+        equiv_wires = [wire for net in ec[0].out_nets.values() for wire in net]
+        # Set all nodes' equivalence classes to the result
+        for n in ec:
+            n.equiv_class = ec
+            # Set each node's equiv_wires
+            n.equiv_wires = set(equiv_wires)
+
         # Return the final equivalence class
         return ec
 
