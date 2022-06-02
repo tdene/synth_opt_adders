@@ -42,10 +42,6 @@ end architecture;
 data["shape"] = "square"
 data["fillcolor"] = "black"
 
-# Footprint
-data["footprint"] = "ppa_grey_ling"
-data["priority"] = 1
-
 # List of inputs represented by (name, total_bits, *bits_per_direction) tuple
 data["ins"] = [("gin", 2, 1, 1)]
 

@@ -52,7 +52,7 @@ class ExpressionTree(ExpressionGraph):
             name (string): The name of the graph
             start_point (int): The starting Catalan ID of the tree
             alias (string): The name of a desired classic structure
-            no_shape (bool): If this is True, the tree nodes will not be initialized
+            no_shape (bool): If this is True, the tree will not be initialized
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             leaf_label (string): The label of the leaf nodes
@@ -65,8 +65,9 @@ class ExpressionTree(ExpressionGraph):
             Optional node definitions include but are not limited to:
                 - "rspine": Nodes that lie along the right spine of the tree
                 - "lspine": Nodes that lie along the left spine of the tree
+                - "rspine_pre": Pre- node that feeds into the right spine
                 - "lspine_pre": Pre- node that feeds into the left spine
-                - "first_pre": Right-most pre-processing node
+                - "small_root": Root node that corresponds to width = 1
         """
         if not isinstance(width, int):
             raise TypeError("Tree width must be an integer")
@@ -129,7 +130,10 @@ class ExpressionTree(ExpressionGraph):
             return
 
         ## Initialize the root node
-        self.root = Node(node_defs["root"], x_pos = 0, y_pos = 0)
+        if self.width == 1 and "small_root" in node_defs:
+            self.root = Node(node_defs["small_root"], x_pos = 0, y_pos = 0)
+        else:
+            self.root = Node(node_defs["root"], x_pos = 0, y_pos = 0)
         self.root = self.add_node(self.root)
         ### Connect the root node to the tree's ports
         self._connect_outports(self.root)
@@ -137,11 +141,10 @@ class ExpressionTree(ExpressionGraph):
         ## Initialize the leafs
         leafs = []
         for a in range(self.width):
-            # Right-most leaf may be special
-            if a == 0 and "first_pre" in node_defs:
-                stem = leaf_labels[0]
-                node_def = node_defs["first_pre"]
             # Left-most leaf may be special
+            if width == 1 and "small_pre" in node_defs:
+                stem = leaf_labels[2]
+                node_def = node_defs["small_pre"]
             elif a == self.width-1 and "lspine_pre" in node_defs:
                 stem = leaf_labels[2]
                 node_def = node_defs["lspine_pre"]
@@ -346,139 +349,73 @@ class ExpressionTree(ExpressionGraph):
         diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
 
-    def _check_fit(self, node, parent, index, valids, prev_dict={}):
-        """Recursively check if a module can fit at the given location
-
-        Args:
-            node_def (string): The node module to check
-            parent (string): The proposed parent node module
-            index (int): The index of the parent's input port
-            path (list): The path to the current node
-
-        Returns:
-            list: A list of possible combinations of children
-        """
-
-        node_def = node.value
-        children = node.children
-
-        footprint = modules[node_def]["footprint"]
-        variants = [k for k,v in modules.items()
-                    if v["footprint"] == footprint]
-
-        # Check which node variants will match the parent
-        to_remove = []
-        for k in variants:
-            if k == "ppa_post_no_g" and self.width > 1:
-                to_remove.append(k)
-            if parent is not None:
-                pin_pairs = match_nodes(parent, k, index)
-                if pin_pairs is None:
-                    to_remove.append(k)
-            # If this is a leaf node, check if the shape matches
-            if len(node) == 0:
-                if modules[k]["ins"] != modules[node_def]["ins"]:
-                    to_remove.append(k)
-            # If this is a root node, check if the shape matches
-            if parent is None:
-                if modules[k]["outs"] != modules[node_def]["outs"]:
-                    to_remove.append(k)
-        for k in to_remove:
-            variants.remove(k)
-
-        # For each possible variant, check if the children can match it
-        flag = True
-        for k in variants:
-            ctr = valids['idx']
-            ctr += 1
-            valids['idx'] = ctr
-            entry = valids.get(ctr, prev_dict.copy())
-            valids[ctr] = entry
-            entry[str(node)] = k
-            for c in range(len(children)):
-                child = children[c]
-                if child is None:
-                    continue
-                prev_dict = valids[valids['idx']].copy()
-                ret = self._check_fit(child, k, c, valids, prev_dict=prev_dict)
-                if not ret:
-                    del valids[valids['idx']]
-                    valids['idx'] -= 1
-                    break
-
-        if len(variants) == 0:
-            return False
-        return flag
-
     def optimize_nodes(self):
-        """Greedily attempt to swap in nodes with same footprint
+        """Optimizes nodes in the tree by removing unnecessary logic
 
-        All node modules have a footprint attribute, clarifying which modules
-        refer to the same node concept. All node modules also have a priority
-        attribute, used to determine which module is most "optimal".
+        This method is meant to be called after the structure of the tree
+        has been finalized, and final HDL is desired.
 
-        This method attempts to raise the total optimality of the tree by
-        swapping in higher-priority modules.
+        There is currently no guarantee that this method will allow for further
+        modification of the tree structure. Instead, it may cause any and all
+        methods that modify the tree, such as rotations and buffer insertions,
+        to fail.
 
-        This can probably be safely executed at any point in time, but it is
-        advisable to only execute this once no more rotations will take place.
-
-        Args:
-            node (Node): The root node of the sub-tree to optimize
+        This method should be extended by child classes to implement
+        operation-specific optimizations.
         """
 
         # First fix node positions
         self._fix_diagram_positions()
 
-        # Use recursive function to get all possible combinations
-        ret_dict = {'idx':0}
-        self._check_fit(self.root, None, 0, ret_dict)
-        del ret_dict['idx']
+        # If rspine nodes are defined, swap them in
+        node = self.root
+        while True:
+            if "rspine" in self.node_defs and \
+                    node.value == self.node_defs["cocycle"]:
+                node = self.swap_node_def(node, self.node_defs["rspine"])
+            if "rspine_buf" in self.node_defs and \
+                    node.value == self.node_defs["buffer"]:
+                node = self.swap_node_def(node, self.node_defs["rspine_buf"])
+            if "rspine_pre" in self.node_defs and \
+                    node.value == self.node_defs["pre"]:
+                node = self.swap_node_def(node, self.node_defs["rspine_pre"])
+            if not node.children:
+                break
+            node = node[-1]
 
-        # Keep only combinations that encompass all nodes
-        valid_results = []
-        num_nodes = len(self.nodes)
-        for a in ret_dict.values():
-            if len(a) == num_nodes:
-                valid_results.append(a)
-
-        # Find the result with the highest priority
-        best_result = None
-        best_priority = -1000
-        for a in valid_results:
-            priority = 0
-            for v in a.values():
-                priority += modules[v]["priority"]
-            if priority > best_priority:
-                best_result = a
-                best_priority = priority
-
-        ### NOTE: TEMPORARY 4 AM CODE
-        for node in self.nodes:
-            if node.value != "ppa_lspine":
-                continue
-            if modules[node.children[1].value]["footprint"] != "ppa_pre":
-                continue
-            best_result[str(node)] = "ppa_lspine_single"
-
-        # Replace the nodes with the best result
-        self._swap_all_nodes(self.root, None, 0, best_result)
-
-        # Connect root to outports
-        self._connect_outports(self.root)
-
-        # Connect all leafs to inports
-        leafs = self._get_leafs(self.root)
-        for a in range(len(leafs)):
-            leaf = leafs[a]
-            self._connect_inports(leaf, a)
-
-    def _swap_node_defs(self, node, parent, index, new_def):
+    def swap_node_def(self, node, new_def):
         """Change a node's module definition
 
         Args:
             node (Node): The node to change
-            parent (Node): The parent node (already disconnected)
+            new_def (str): The new module definition
+        """
+
+        # Disconnect the node from its parent
+        parent = node.parent
+        index = None
+        if parent is not None:
+            index = parent.children.index(node)
+            self.remove_edge(parent, node)
+
+        new_node, children = self._swap_node_def(node, parent, index, new_def)
+
+        # Reconnect the node's children
+        for index in range(len(children)):
+            c = children[index]
+            if c is not None:
+                self.add_edge(new_node, c, index)
+            else:
+                new_node.children.append(None)
+
+        return new_node
+
+    def _swap_node_def(self, node, parent, index, new_def):
+        """Change a node's module definition and disconnect children
+
+        Args:
+            node (Node): The node to change
+            parent (Node): The parent of the node (already disconnected)
             index (int): The index of the parent's input port
             new_def (str): The new module definition
         """
@@ -492,6 +429,7 @@ class ExpressionTree(ExpressionGraph):
         # Remove the node from the tree
         if not node.children:
             label = self.nodes.data("label")[node]
+            leafs = node.leafs
         self.remove_node(node)
 
         # Create the new node
@@ -500,6 +438,8 @@ class ExpressionTree(ExpressionGraph):
         # Add the new node to the tree
         if not node.children:
             self.add_node(new_node, **{"label": label})
+            self._connect_inports(new_node, lg(leafs))
+            new_node._recalculate_leafs(leafs=leafs)
         else:
             self.add_node(new_node)
 
@@ -508,27 +448,9 @@ class ExpressionTree(ExpressionGraph):
             self.add_edge(parent, new_node, index)
         else:
             self.root = new_node
+            self._connect_outports(new_node)
+
         return new_node, children
-
-    def _swap_all_nodes(self, node, parent, index, new_defs):
-        """Swap all node module definitions
-
-        Args:
-            node (Node): The node to start recursion from
-            parent (Node): The parent node (already disconnected)
-            index (int): The index of the parent's input port
-            new_defs (dict): A dictionary mapping node names to new modules
-        """
-
-        # Swap the node's module definition
-        new_node, children = self._swap_node_defs(node, parent, index,
-                new_defs[str(node)])
-
-        # Recurse on the node's children
-        for index in range(len(children)):
-            c = children[index]
-            if c is not None:
-                self._swap_all_nodes(c, new_node, index, new_defs)
 
     def _on_lspine(self, node):
         """Checks if a node is on the left spine of this tree"""

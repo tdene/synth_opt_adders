@@ -49,10 +49,6 @@ end architecture;
 data["shape"] = "invtriangle"
 data["fillcolor"] = "white"
 
-# Footprint
-data["footprint"] = "ppa_buffer"
-data["priority"] = 1
-
 data["ins"] = [("gin", 1, 1, 0), ("pin", 1, 1, 0)]
 data["outs"] = [("gout", 1), ("pout", 1)]
 

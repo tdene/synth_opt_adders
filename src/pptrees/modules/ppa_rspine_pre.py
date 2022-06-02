@@ -1,11 +1,11 @@
-name = "ppa_pre_sp"
+name = "ppa_rspine_pre"
 data = dict()
 
 ### Pre-processing node for input sparsity
 data[
     "verilog"
 ] = """
-module ppa_pre_sp(a_in, b_in, gout);
+module ppa_rspine_pre(a_in, b_in, gout);
 
 	input a_in, b_in;
 	output gout;
@@ -18,7 +18,7 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_pre_sp is
+entity ppa_rspine_pre is
 	port (
 		a_in : in std_logic;
 		b_in : in std_logic;
@@ -26,7 +26,7 @@ entity ppa_pre_sp is
 	);
 end entity;
 
-architecture behavior of ppa_pre_sp is
+architecture behavior of ppa_rspine_pre is
 begin
 
 U2: and2
@@ -43,10 +43,6 @@ data["shape"] = "square"
 data["fillcolor"] = "white"
 data["label"] = "pre"
 data["style"] = "dashed"
-
-# Footprint
-data["footprint"] = "ppa_pre"
-data["priority"] = 2
 
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 1, 0)]
 data["outs"] = [("gout", 1)]
