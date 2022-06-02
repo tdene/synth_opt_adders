@@ -13,7 +13,7 @@ class AdderTree(ExpressionTree):
         node_defs (dict): A dictionary that defines the tree's nodes
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
-        black_shape (int, int): The shape of the main recurrence node's output
+        cocycle_shape (int, int): The shape of the main recurrence node's output
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -50,8 +50,8 @@ class AdderTree(ExpressionTree):
         node_defs = {
                 "pre"           : "ppa_pre",
                 "root"          : "ppa_post",
-                "black"         : "ppa_black",
-                "grey"          : "ppa_grey",
+                "cocycle"       : "ppa_cocycle",
+                "rspine"        : "ppa_rspine",
                 "buffer"        : "ppa_buffer",
                 "lspine_pre"    : "ppa_lspine_pre",
                 "lspine"        : "ppa_lspine"

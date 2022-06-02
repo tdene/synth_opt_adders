@@ -19,7 +19,7 @@ class ExpressionForest(ExpressionGraph):
         node_defs (dict): A dictionary that defines the tree's nodes
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
-        black_shape (int, int): The shape of the main recurrence node's output
+        cocycle_shape (int, int): The shape of the main recurrence node's output
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -66,11 +66,11 @@ class ExpressionForest(ExpressionGraph):
             node_defs (dict): A dictionary that must define these nodes:
                 - "pre": Pre-processing node
                 - "root": Root node
-                - "black": Main expression node used in the tree
+                - "cocycle": Main expression node used in the tree
                 - "buffer": Buffer node
 
             Optional node definitions include but are not limited to:
-                - "grey": Black node that feeds into the root node
+                - "rspine": Nodes that lie along the right spine of the tree
                 - "lspine": Nodes that lie along the left spine of the tree
                 - "lspine_pre": Pre- node that feeds into the left spine
                 - "first_pre": Right-most pre-processing node
@@ -94,7 +94,7 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Tree idempotency must be a boolean")
         if not isinstance(node_defs, dict):
             raise TypeError("Tree node definitions must be a dictionary")
-        for required in ["pre", "root", "black", "buffer"]:
+        for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(("Tree node definitions must contain"
                                   " the node {}").format(required))

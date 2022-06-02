@@ -19,7 +19,7 @@ class ExpressionTree(ExpressionGraph):
         node_defs (dict): A dictionary that defines the tree's nodes
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
-        black_shape (int, int): The shape of the main recurrence node's output
+        cocycle_shape (int, int): The shape of the main recurrence node's output
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -59,11 +59,11 @@ class ExpressionTree(ExpressionGraph):
             node_defs (dict): A dictionary that must define these nodes:
                 - "pre": Pre-processing node
                 - "root": Root node
-                - "black": Main expression node used in the tree
+                - "cocycle": Main expression node used in the tree
                 - "buffer": Buffer node
 
             Optional node definitions include but are not limited to:
-                - "grey": Black node that feeds into the root node
+                - "rspine": Nodes that lie along the right spine of the tree
                 - "lspine": Nodes that lie along the left spine of the tree
                 - "lspine_pre": Pre- node that feeds into the left spine
                 - "first_pre": Right-most pre-processing node
@@ -80,7 +80,7 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Tree idempotency must be a boolean")
         if not isinstance(node_defs, dict):
             raise TypeError("Tree node definitions must be a dictionary")
-        for required in ["pre", "root", "black", "buffer"]:
+        for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(("Tree node definitions must contain"
                                   " the node {}").format(required))
@@ -96,13 +96,13 @@ class ExpressionTree(ExpressionGraph):
         self.in_shape = [x[1] for x in modules[node_defs["pre"]]["ins"]]
         self.out_shape = [x[1] for x in modules[node_defs["root"]]["outs"]]
 
-        self.black_shape = [x[1] for x in modules[node_defs["black"]]["ins"]]
-        black_out_shape = [x[1] for x in modules[node_defs["black"]]["outs"]]
-        black_out_shape = [self.radix*x for x in black_out_shape]
-        if black_out_shape != self.black_shape:
+        self.cocycle_shape = [x[1] for x in modules[node_defs["cocycle"]]["ins"]]
+        cocycle_out_shape = [x[1] for x in modules[node_defs["cocycle"]]["outs"]]
+        cocycle_out_shape = [self.radix*x for x in cocycle_out_shape]
+        if cocycle_out_shape != self.cocycle_shape:
             raise ValueError(("The main recurrence node of the tree"
                               " must have the same input and output shape"))
-        del black_out_shape
+        del cocycle_out_shape
 
         # Check that node shapes are compatible with port shapes
         ### NOTE: INPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
@@ -671,7 +671,7 @@ class ExpressionTree(ExpressionGraph):
         # If rotating through root, nodes must be morphed
         if thru_lspine:
             self.remove_node(parent)
-            parent = parent.morph(self.node_defs["black"])
+            parent = parent.morph(self.node_defs["cocycle"])
             self.add_node(parent)
 
             if thru_root:
@@ -805,8 +805,8 @@ class ExpressionTree(ExpressionGraph):
         if "lspine" in self.node_defs and lspine:
             node_defs[0] = self.node_defs["lspine"]
         else:
-            node_defs[0] = self.node_defs["black"]
-        node_defs[1] = self.node_defs["black"]
+            node_defs[0] = self.node_defs["cocycle"]
+        node_defs[1] = self.node_defs["cocycle"]
 
         # Initial recursion start case
         if parent is None:
