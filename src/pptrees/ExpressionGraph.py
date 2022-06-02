@@ -334,7 +334,7 @@ class ExpressionGraph(nx.DiGraph):
         out_extras = [x[0][0] for x in self.out_extras]
         all_ports = in_ports + out_ports + in_extras + out_extras
         in_nets = [x for x in in_nets if x.split("[")[0] not in all_ports]
-        out_nets = [x for x in in_nets if x.split("[")[0] not in all_ports]
+        out_nets = [x for x in out_nets if x.split("[")[0] not in all_ports]
 
         return (set(in_nets), set(out_nets))
 
