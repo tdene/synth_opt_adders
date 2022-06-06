@@ -369,6 +369,8 @@ class ExpressionGraph(nx.DiGraph):
 
         return (in_ports + self.in_extras, out_ports + self.out_extras)
 
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
     def hdl(
         self,
         out=None,
