@@ -1,12 +1,10 @@
 import networkx as nx
-import pydot
 
-from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
-from .modules import *
-from .util import match_nodes
-from .util import lg, catalan, catalan_mirror_point
-from .util import display_png, display_gif
+from .ExpressionNode import ExpressionNode as Node
+from .node_data import node_data
+from .util import catalan, catalan_mirror_point, display_png, lg, match_nodes
+
 
 class ExpressionTree(ExpressionGraph):
     """Defines a tree of binary expressions
@@ -30,19 +28,22 @@ class ExpressionTree(ExpressionGraph):
         out_ports (list of ((string, int), string)): The list of output ports
     """
 
-    def __init__(self,
-                 width=1,
-                 in_ports=None,
-                 out_ports=None,
-                 name="tree",
-                 start_point=0,
-                 alias=None,
-                 no_shape=False,
-                 radix=2,
-                 idem=False,
-                 leaf_labels=["g", "gp", "p"],
-                 node_defs={}
-                ):
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
+    def __init__(
+        self,
+        width=1,
+        in_ports=None,
+        out_ports=None,
+        name="tree",
+        start_point=0,
+        alias=None,
+        no_shape=False,
+        radix=2,
+        idem=False,
+        leaf_labels=["g", "gp", "p"],
+        node_defs={},
+    ):
         """Initializes the ExpressionTree
 
         Args:
@@ -83,26 +84,33 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Tree node definitions must be a dictionary")
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
-                raise ValueError(("Tree node definitions must contain"
-                                  " the node {}").format(required))
+                raise ValueError(
+                    ("Tree node definitions must contain" " the node {}").format(
+                        required
+                    )
+                )
 
         # Save constructor arguments
         self.width = width
-        self.max_id = catalan(width-1)
+        self.max_id = catalan(width - 1)
         self.radix = radix
         self.idem = idem
         self.node_defs = node_defs
 
         # Get node port shapes from the module definitions
-        self.in_shape = [x[1] for x in modules[node_defs["pre"]]["ins"]]
-        self.out_shape = [x[1] for x in modules[node_defs["root"]]["outs"]]
+        self.in_shape = [x[1] for x in node_data[node_defs["pre"]]["ins"]]
+        self.out_shape = [x[1] for x in node_data[node_defs["root"]]["outs"]]
 
-        self.cocycle_shape = [x[1] for x in modules[node_defs["cocycle"]]["ins"]]
-        cocycle_out_shape = [x[1] for x in modules[node_defs["cocycle"]]["outs"]]
-        cocycle_out_shape = [self.radix*x for x in cocycle_out_shape]
+        self.cocycle_shape = [x[1] for x in node_data[node_defs["cocycle"]]["ins"]]
+        cocycle_out_shape = [x[1] for x in node_data[node_defs["cocycle"]]["outs"]]
+        cocycle_out_shape = [self.radix * x for x in cocycle_out_shape]
         if cocycle_out_shape != self.cocycle_shape:
-            raise ValueError(("The main recurrence node of the tree"
-                              " must have the same input and output shape"))
+            raise ValueError(
+                (
+                    "The main recurrence node of the tree"
+                    " must have the same input and output shape"
+                )
+            )
         del cocycle_out_shape
 
         # Check that node shapes are compatible with port shapes
@@ -110,18 +118,26 @@ class ExpressionTree(ExpressionGraph):
         ### TO-DO: Allow for arbitrary input shape
         ### Need to check whole file for this implicit assumption
         for a in range(len(self.in_shape)):
-            if a > len(in_ports)-1 or in_ports[a][0][1] != self.width:
-                raise ValueError(("Input port {} of the tree must have the"
-                                  " compatible shape with input shape of the"
-                                  " pre-processing node").format(a))
+            if a > len(in_ports) - 1 or in_ports[a][0][1] != self.width:
+                raise ValueError(
+                    (
+                        "Input port {} of the tree must have the"
+                        " compatible shape with input shape of the"
+                        " pre-processing node"
+                    ).format(a)
+                )
         for a in range(len(self.out_shape)):
-            if a > len(out_ports)-1 or self.out_shape[a] != out_ports[a][0][1]:
-                raise ValueError(("Output port {} of the tree must have the"
-                                  " same shape as the output shape of the"
-                                  " root node").format(a))
+            if a > len(out_ports) - 1 or self.out_shape[a] != out_ports[a][0][1]:
+                raise ValueError(
+                    (
+                        "Output port {} of the tree must have the"
+                        " same shape as the output shape of the"
+                        " root node"
+                    ).format(a)
+                )
 
         # Initialize the graph
-        super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
+        super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
 
         # Initialize the tree
 
@@ -131,9 +147,9 @@ class ExpressionTree(ExpressionGraph):
 
         ## Initialize the root node
         if self.width == 1 and "small_root" in node_defs:
-            self.root = Node(node_defs["small_root"], x_pos = 0, y_pos = 0)
+            self.root = Node(node_defs["small_root"], x_pos=0, y_pos=0)
         else:
-            self.root = Node(node_defs["root"], x_pos = 0, y_pos = 0)
+            self.root = Node(node_defs["root"], x_pos=0, y_pos=0)
         self.root = self.add_node(self.root)
         ### Connect the root node to the tree's ports
         self._connect_outports(self.root)
@@ -145,7 +161,7 @@ class ExpressionTree(ExpressionGraph):
             if width == 1 and "small_pre" in node_defs:
                 stem = leaf_labels[2]
                 node_def = node_defs["small_pre"]
-            elif a == self.width-1 and "lspine_pre" in node_defs:
+            elif a == self.width - 1 and "lspine_pre" in node_defs:
                 stem = leaf_labels[2]
                 node_def = node_defs["lspine_pre"]
             else:
@@ -153,7 +169,7 @@ class ExpressionTree(ExpressionGraph):
                 node_def = node_defs["pre"]
             label = "{0}[{1}]".format(stem, a)
             leaf = Node(node_def)
-            leaf = self.add_node(leaf, label = label)
+            leaf = self.add_node(leaf, label=label)
             # Connect the leaf to the tree's ports
             self._connect_inports(leaf, a)
             leaf._recalculate_leafs(leafs=2**a)
@@ -163,8 +179,14 @@ class ExpressionTree(ExpressionGraph):
         if alias is None:
             if start_point < 0 or start_point > self.max_rank():
                 raise ValueError("Tree start point out of bounds")
-        elif alias not in ["serial", "ripple", "ripple-carry", "sklansky",
-                "kogge-stone", "brent-kung"]:
+        elif alias not in [
+            "serial",
+            "ripple",
+            "ripple-carry",
+            "sklansky",
+            "kogge-stone",
+            "brent-kung",
+        ]:
             error = "Structure alias {0} is not implemented.\n"
             error += "Consider using non-legacy start points.\n"
             error += "These correspond to the trees' Catalan IDs."
@@ -177,7 +199,7 @@ class ExpressionTree(ExpressionGraph):
             self.add_edge(self.root, leafs[0], 0)
             return
         # Unrank the tree based on the start_point
-        self.unrank(None, 0, start_point, self.width-1, leafs, lspine = True)
+        self.unrank(None, 0, start_point, self.width - 1, leafs, lspine=True)
 
         # If an alias was given, implement it
         if alias in ["serial", "ripple", "ripple-carry"]:
@@ -197,10 +219,10 @@ class ExpressionTree(ExpressionGraph):
 
     def __len__(self):
         """Redefine the len() function to return the height of the tree"""
-        return len(self.root)+1
+        return len(self.root) + 1
 
     ### NOTE: This is meant to work with the classic representation of n-rooted
-    ### prefix tree structures, with no regard for post-processing nodes. How 
+    ### prefix tree structures, with no regard for post-processing nodes. How
     ### does this interact with post-processing nodes?
     ### TO-DO: Consider replacing this legacy method with non-legacy code
     def __getitem__(self, key):
@@ -224,7 +246,7 @@ class ExpressionTree(ExpressionGraph):
             # Iterate through nodes in the column
             while True:
                 # If all nodes have been checked, return None
-                if target == None:
+                if not target:
                     return None
                 # If this node has the correct height, return it
                 height = len(target)
@@ -258,7 +280,7 @@ class ExpressionTree(ExpressionGraph):
 
     def max_rank(self):
         """Return the maximum rank of the tree"""
-        return catalan(self.width-1)-1
+        return catalan(self.width - 1) - 1
 
     def _get_row(self, depth):
         """Return the nodes at a given depth"""
@@ -272,12 +294,11 @@ class ExpressionTree(ExpressionGraph):
         if len(node.children) == 0:
             return [node]
         else:
-            return [n for c in node.children \
-                    for n in self._get_reversed_leafs(c)]
+            return [n for c in node.children for n in self._get_reversed_leafs(c)]
 
-    def _get_leafs(self, node = None):
+    def _get_leafs(self, node=None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
-        if node == None:
+        if not node:
             node = self.root
         return list(reversed(self._get_reversed_leafs(node)))
 
@@ -290,7 +311,7 @@ class ExpressionTree(ExpressionGraph):
                 root.out_nets[port_name][0] = net_name
                 continue
             for b in range(self.out_shape[a]):
-                net_name = "${}[{}]".format(port_name,b)
+                net_name = "${}[{}]".format(port_name, b)
                 root.out_nets[port_name][b] = net_name
 
     def _connect_inports(self, node, index):
@@ -300,7 +321,7 @@ class ExpressionTree(ExpressionGraph):
             if self.width == 1:
                 net_name = "${}".format(port_name)
             else:
-                net_name = "${}[{}]".format(port_name,index)
+                net_name = "${}[{}]".format(port_name, index)
             node.in_nets[port_name][0] = net_name
 
     def add_edge(self, parent, child, index):
@@ -318,9 +339,10 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("Child must be an Node")
         if not isinstance(index, int):
             raise TypeError("index must be an integer")
-        if index < -self.radix or index > self.radix-1:
-            raise ValueError(("Tree nodes may not have more edges"
-                              "than the radix of the tree"))
+        if index < -self.radix or index > self.radix - 1:
+            raise ValueError(
+                ("Tree nodes may not have more edges" "than the radix of the tree")
+            )
 
         # Normalize index
         index = index % self.radix
@@ -330,14 +352,14 @@ class ExpressionTree(ExpressionGraph):
         if pin_pairs is None:
             raise ValueError("Nodes do not have matching ports")
 
-        for (p,c) in pin_pairs:
+        for (p, c) in pin_pairs:
             # Connect the ports
             super().add_edge(parent, p, child, c)
-        
+
         # Adjust x-pos and y-pos of the child
         ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
         ### TO-DO: Make this more general
-        y_pos = parent.y_pos+1
+        y_pos = parent.y_pos + 1
         x_diff = 1
 
         if index == 0:
@@ -348,7 +370,7 @@ class ExpressionTree(ExpressionGraph):
         child.x_pos = x_pos
         child.y_pos = y_pos
 
-        diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
+        diagram_pos = "{0},{1}!".format(x_pos * -1, y_pos * -1)
         self.nodes[child]["pos"] = diagram_pos
 
     def remove_subtree(self, node):
@@ -390,7 +412,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Re-add the leafs
         for leaf, label in zip(leafs, labels):
-            self.add_node(leaf, label = label)
+            self.add_node(leaf, label=label)
 
         # Re-build the mirrored subtree
         return self.unrank(parent, index, rank, width, leafs)
@@ -416,14 +438,14 @@ class ExpressionTree(ExpressionGraph):
         # If rspine nodes are defined, swap them in
         node = self.root
         while True:
-            if "rspine" in self.node_defs and \
-                    node.value == self.node_defs["cocycle"]:
+            if "rspine" in self.node_defs and node.value == self.node_defs["cocycle"]:
                 node = self.swap_node_def(node, self.node_defs["rspine"])
-            if "rspine_buf" in self.node_defs and \
-                    node.value == self.node_defs["buffer"]:
+            if (
+                "rspine_buf" in self.node_defs
+                and node.value == self.node_defs["buffer"]
+            ):
                 node = self.swap_node_def(node, self.node_defs["rspine_buf"])
-            if "rspine_pre" in self.node_defs and \
-                    node.value == self.node_defs["pre"]:
+            if "rspine_pre" in self.node_defs and node.value == self.node_defs["pre"]:
                 node = self.swap_node_def(node, self.node_defs["rspine_pre"])
             if not node.children:
                 break
@@ -503,14 +525,14 @@ class ExpressionTree(ExpressionGraph):
         if node not in self:
             raise ValueError("Node is not part of this tree")
 
-        return node.leafs >= 2**(self.width-1)
+        return node.leafs >= 2 ** (self.width - 1)
 
     def _on_rspine(self, node):
         """Checks if a node is on the right spine of this tree"""
         if node not in self:
             raise ValueError("Node is not part of this tree")
 
-        return (node.leafs & (node.leafs + 1) == 0) 
+        return node.leafs & (node.leafs + 1) == 0
 
     ### NOTE: THIS IS HARD-CODED FOR RADIX OF 2
     ### TO-DO: Make this more general
@@ -546,9 +568,9 @@ class ExpressionTree(ExpressionGraph):
 
         # Adjust the y-pos
         parent.y_pos += 1
-        plchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
-        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        lchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+        plchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos + 1))
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos - 1))
+        lchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos + 1))
 
         # Disconnect the nodes
         if not thru_root:
@@ -623,9 +645,9 @@ class ExpressionTree(ExpressionGraph):
 
         # Adjust the y-pos
         parent.y_pos += 1
-        prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
-        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
-        rchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+        prchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos + 1))
+        node.iter_down(lambda x: setattr(x, "y_pos", x.y_pos - 1))
+        rchild.iter_down(lambda x: setattr(x, "y_pos", x.y_pos + 1))
 
         # Disconnect the nodes
         if not thru_root:
@@ -738,7 +760,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Fix the diagram positions
         buffer[0].y_pos -= 1
-        buffer[0].iter_down(lambda x: setattr(x, "y_pos", x.y_pos+1))
+        buffer[0].iter_down(lambda x: setattr(x, "y_pos", x.y_pos + 1))
 
         return buffer
 
@@ -750,8 +772,8 @@ class ExpressionTree(ExpressionGraph):
         """
         if not isinstance(buffer, Node):
             raise TypeError("buffer must be an Node")
-        footprint = modules[self.node_defs["buffer"]]["footprint"]
-        this_footprint = modules[buffer.value]["footprint"]
+        footprint = node_data[self.node_defs["buffer"]]["footprint"]
+        this_footprint = node_data[buffer.value]["footprint"]
         if footprint != this_footprint:
             raise ValueError("buffer must be a buffer node")
 
@@ -770,12 +792,11 @@ class ExpressionTree(ExpressionGraph):
 
         # Fix the diagram positions
         child.y_pos += 1
-        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos-1))
+        child.iter_down(lambda x: setattr(x, "y_pos", x.y_pos - 1))
 
         return child
 
-    def unrank(self, parent, index, rank, width, leafs,
-            mirror=False, lspine=False):
+    def unrank(self, parent, index, rank, width, leafs, mirror=False, lspine=False):
         """Generate a binary tree under a node by unranking it"""
 
         # The unranking function is symmetrical around the midpoint
@@ -786,7 +807,7 @@ class ExpressionTree(ExpressionGraph):
         rank = cn - 1 - rank if mirror_test else rank
 
         # Check which kind of node to add
-        node_defs = [None,None]
+        node_defs = [None, None]
         if "lspine" in self.node_defs and lspine:
             node_defs[0] = self.node_defs["lspine"]
         else:
@@ -809,13 +830,13 @@ class ExpressionTree(ExpressionGraph):
             node = Node(node_defs[index])
             self.add_node(node)
             self.add_edge(parent, node, index)
-        
+
         # Take advantage of Catalan properties
         i1, i2, ci1 = 0, 0, 0
-        for i in range((width+1)//2):
-            i1, i2 = i, width-i-1
+        for i in range((width + 1) // 2):
+            i1, i2 = i, width - i - 1
             ci1 = catalan(i1)
-            big_number = ci1*catalan(i2)
+            big_number = ci1 * catalan(i2)
             rem = rank - big_number
             if rem < 0:
                 break
@@ -849,7 +870,6 @@ class ExpressionTree(ExpressionGraph):
         rwidth = bin(rchild.leafs).count("1") - 1
 
         # Calculate info that the children need
-        height = len(node)
         width = lwidth + rwidth + 1
         new_mirror = lwidth > rwidth
 
@@ -866,12 +886,12 @@ class ExpressionTree(ExpressionGraph):
         rank = lrank + rrank * catalan(lwidth)
         # Add rest of rank
         for i in range(lwidth):
-            i1, i2 = i, width-i-1
+            i1, i2 = i, width - i - 1
             big_number = catalan(i1) * catalan(i2)
             rank += big_number
 
         # Account for mirroring
-        dir_switched = (new_mirror != mirror)
+        dir_switched = new_mirror != mirror
         rank = catalan(width) - rank - 1 if dir_switched else rank
         return rank
 
@@ -886,7 +906,7 @@ class ExpressionTree(ExpressionGraph):
             leaf.x_pos = ctr
             ctr -= 1
         # Adjust other nodes' x_pos based on the leafs
-        for d in range(height-1, -1, -1):
+        for d in range(height - 1, -1, -1):
             for node in self._get_row(d):
                 if len(node.children) > 0:
                     children = [x for x in node.children if x is not None]
@@ -896,7 +916,7 @@ class ExpressionTree(ExpressionGraph):
                     node.x_pos = avg
                 x_pos = node.x_pos
                 y_pos = node.y_pos
-                diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
+                diagram_pos = "{0},{1}!".format(x_pos * -1, y_pos * -1)
                 self.nodes[node]["pos"] = diagram_pos
 
     def _check_attr(self, others, *attr):
@@ -938,6 +958,7 @@ class ExpressionTree(ExpressionGraph):
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
+
         def reconstruct_node(parent, index):
             """Reconstruct the original node"""
             if parent is None:
@@ -970,16 +991,12 @@ class ExpressionTree(ExpressionGraph):
             return reconstruct_node(*original_node)
 
         # Check whether the height can be reduced
-        if 1<<(target_height) < bin(node.leafs).count("1"):
+        if 1 << (target_height) < bin(node.leafs).count("1"):
             return None
 
-        # Characterize each child as under_full, just_full, or over_full
-        under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") \
-                for c in node]
-        just_full = [1 << (target_height - 1) == bin(c.leafs).count("1") \
-                for c in node]
-        over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") \
-                for c in node]
+        # Characterize each child as under_full or over_full
+        under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") for c in node]
+        over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") for c in node]
 
         # Reduce the height of bad children
         for a in range(len(c_heights)):
@@ -996,14 +1013,14 @@ class ExpressionTree(ExpressionGraph):
             if c_heights[a] <= target_height - 1:
                 continue
             # If child is over_full and can shift a node left, do so
-            elif a > 0 and over_full[a] and under_full[a-1]:
+            elif a > 0 and over_full[a] and under_full[a - 1]:
                 self.left_shift(c.leftmost_leaf().parent)
             # If child is over_full and can shift a node right, do so
-            elif a < len(c_heights) - 1 and over_full[a] and under_full[a+1]:
+            elif a < len(c_heights) - 1 and over_full[a] and under_full[a + 1]:
                 self.right_shift(c.rightmost_leaf().parent)
             # Otherwise try to iterate down the child
             else:
-                self.reduce_height(c, target_height-1)
+                self.reduce_height(c, target_height - 1)
 
         # After iterating, the desired height may not be reached
         # If so, try again. We know it can be done.
@@ -1014,7 +1031,7 @@ class ExpressionTree(ExpressionGraph):
     # This method is solely here for legacy support
     # It does something very specific, and arguably not generally useful
     # Use if you prefer comfort over efficiency
-    def equalize_depths(self, node, desired_height = None):
+    def equalize_depths(self, node, desired_height=None):
         """Equalizes the leaf depths of the rooted at this node
 
         Args:
@@ -1053,7 +1070,7 @@ class ExpressionTree(ExpressionGraph):
                     for a in range(desired_height - height - 1):
                         self.insert_buffer(c)
                 continue
-            self.equalize_depths(c, desired_height-1)
+            self.equalize_depths(c, desired_height - 1)
 
         return node
 
@@ -1079,7 +1096,7 @@ class ExpressionTree(ExpressionGraph):
                 break
             old_node = node
         del old_node
-        
+
         # Balance each child, recursively
         for c in node:
             self.balance(c)
@@ -1096,6 +1113,7 @@ class ExpressionTree(ExpressionGraph):
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
+
         def reconstruct_node(parent, index):
             """Reconstruct the original node"""
             if parent is None:
@@ -1120,7 +1138,7 @@ class ExpressionTree(ExpressionGraph):
         if node.is_proper():
             return
 
-        full_leafs = 1<<(len(node)-1)
+        full_leafs = 1 << (len(node) - 1)
         lleafs = bin(node[0].leafs).count("1")
         rleafs = bin(node[1].leafs).count("1")
 
@@ -1146,6 +1164,7 @@ class ExpressionTree(ExpressionGraph):
             original_node (Node, index): Information to refind subtree root
                 This is used in recursion, and should not be specified
         """
+
         def reconstruct_node(parent, index):
             """Reconstruct the original node"""
             if parent is None:
@@ -1170,7 +1189,7 @@ class ExpressionTree(ExpressionGraph):
         if node.is_proper():
             return
 
-        full_leafs = 1<<(len(node)-1)
+        full_leafs = 1 << (len(node) - 1)
         lleafs = bin(node[0].leafs).count("1")
         rleafs = bin(node[1].leafs).count("1")
 
@@ -1186,7 +1205,7 @@ class ExpressionTree(ExpressionGraph):
             self.rbalance(node[0])
             self.rbalance(node[1])
 
-    def LF(self, x, y = None, find_y = False):
+    def LF(self, x, y=None, find_y=False):
         """Performs an LF transform on the specified node, if possible
 
         This method is maintained solely for backwards compatibility.
@@ -1213,24 +1232,24 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.LF(x, len(self)-2, find_y = True)
+            return self.LF(x, len(self) - 2, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
-        if self[x,y] is None:
+        if self[x, y] is None:
             if find_y and y > 1:
-                return self.LF(x, y-1, find_y = True)
+                return self.LF(x, y - 1, find_y=True)
             else:
                 return None
 
         # Now that the node is known to be in the tree,
         # attempt to apply an LF transform
-        node = self[x,y]
+        node = self[x, y]
         new_node = self.reduce_height(node)
         if new_node is None and find_y:
-            return self.LF(x, y-1, find_y = True)
-        return (x,y)
+            return self.LF(x, y - 1, find_y=True)
+        return (x, y)
 
-    def FL(self, x, y = None, find_y = False):
+    def FL(self, x, y=None, find_y=False):
         """Performs an FL transform on the specified node, if possible
 
         This method is maintained solely for backwards compatibility.
@@ -1257,22 +1276,22 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.FL(x, len(self)-2, find_y = True)
+            return self.FL(x, len(self) - 2, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
-        if self[x,y] is None:
+        if self[x, y] is None:
             if find_y and y > 1:
-                return self.FL(x, y-1, find_y = True)
+                return self.FL(x, y - 1, find_y=True)
             else:
                 return None
 
         # Now that the node is known to be in the tree,
         # attempt to apply an FL transform
-        node = self[x,y]
-        new_node = self.insert_buffer(node)
-        return (x,y)
+        node = self[x, y]
+        self.insert_buffer(node)
+        return (x, y)
 
-    def FT(self, x, y = None, find_y = False):
+    def FT(self, x, y=None, find_y=False):
         """Performs an FT transform on the specified node, if possible
 
         This method is maintained solely for backwards compatibility.
@@ -1299,25 +1318,24 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.FT(x, len(self)-2, find_y = True)
+            return self.FT(x, len(self) - 2, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
-        if self[x,y] is None:
+        if self[x, y] is None:
             if find_y and y > 1:
-                return self.FT(x, y-1, find_y = True)
+                return self.FT(x, y - 1, find_y=True)
             else:
                 return None
 
         # Now that the node is known to be in the tree,
         # attempt to apply an FT transform
-        node = self[x,y]
-        original_height = len(node)
+        node = self[x, y]
         new_node = self.left_shift(node[1].leftmost_leaf().parent)
         if new_node is None and find_y:
-            return self.FT(x, y-1, find_y = True)
-        return (x,y)
+            return self.FT(x, y - 1, find_y=True)
+        return (x, y)
 
-    def TF(self, x, y = None, find_y = False):
+    def TF(self, x, y=None, find_y=False):
         """Performs a TF transform on the specified node, if possible
 
         This method is maintained solely for backwards compatibility.
@@ -1344,25 +1362,25 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.TF(x, len(self)-2, find_y = True)
+            return self.TF(x, len(self) - 2, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
-        if self[x,y] is None:
+        if self[x, y] is None:
             if find_y and y > 1:
-                return self.TF(x, y-1, find_y = True)
+                return self.TF(x, y - 1, find_y=True)
             else:
                 return None
 
         # Now that the node is known to be in the tree,
         # attempt to apply an TF transform
-        node = self[x,y]
-        original_height = len(node)
+        node = self[x, y]
         new_node = self.right_shift(node[0].rightmost_leaf().parent)
         if new_node is None and find_y:
-            return self.TF(x, y-1, find_y = True)
-        return (x,y)
+            return self.TF(x, y - 1, find_y=True)
+        return (x, y)
 
     ### NOTE: END LEGACY METHODS ###
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

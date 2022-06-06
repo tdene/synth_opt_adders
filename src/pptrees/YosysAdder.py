@@ -1,29 +1,31 @@
 from .AdderForest import AdderForest
 from .AdderTree import AdderTree
 
+
 class YosysAdder(AdderForest):
     """Defines a tree that computes binary addition and can be fed into a Yosys plugin"""
 
-    def __init__(self,
-                 width,
-                 in_ports=None,
-                 out_ports=None,
-                 tree_type=AdderTree,
-                 name="adder",
-                 alias=None,
-                 tree_start_points=None,
-                 radix=2
-                ):
+    def __init__(
+        self,
+        width,
+        in_ports=None,
+        out_ports=None,
+        tree_type=AdderTree,
+        name="adder",
+        alias=None,
+        tree_start_points=None,
+        radix=2,
+    ):
         super().__init__(
-                width,
-                in_ports=in_ports,
-                out_ports=out_ports,
-                tree_type=tree_type,
-                name=name,
-                alias=alias,
-                tree_start_points=tree_start_points,
-                radix=radix
-                )
+            width,
+            in_ports=in_ports,
+            out_ports=out_ports,
+            tree_type=tree_type,
+            name=name,
+            alias=alias,
+            tree_start_points=tree_start_points,
+            radix=radix,
+        )
 
     def hdl(
         self,
@@ -35,7 +37,7 @@ class YosysAdder(AdderForest):
         cell_flat=True,
         merge_mapping=True,
         top_module=None,
-        description_string="start of unnamed graph"
+        description_string="start of unnamed graph",
     ):
 
         hdl, module_defs, file_out_hdl = super().hdl(
@@ -47,7 +49,7 @@ class YosysAdder(AdderForest):
             cell_flat=cell_flat,
             merge_mapping=merge_mapping,
             module_name=top_module,
-            description_string=description_string
+            description_string=description_string,
         )
         # If module name is not defined, set it to graph's name
         if top_module is None:
@@ -96,6 +98,7 @@ endmodule
             self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
 
         return hdl, module_defs, file_out_hdl
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

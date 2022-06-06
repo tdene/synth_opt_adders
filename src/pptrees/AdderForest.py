@@ -1,5 +1,6 @@
-from .ExpressionForest import ExpressionForest
 from .AdderTree import AdderTree
+from .ExpressionForest import ExpressionForest
+
 
 class AdderForest(ExpressionForest):
     """Defines a tree that computes binary addition
@@ -22,21 +23,22 @@ class AdderForest(ExpressionForest):
         blocks (list): The list of blocks in the graph
         in_ports (list of ((string, int), string)): The list of input ports
         out_ports (list of ((string, int), string)): The list of output ports
-    """	
+    """
 
-    def __init__(self,
-                 width,
-                 in_ports=None,
-                 out_ports=None,
-                 tree_type = AdderTree,
-                 name = "adder",
-                 alias = None,
-                 tree_start_points = None,
-                 initialized_trees = None,
-                 radix = 2
-                ):
+    def __init__(
+        self,
+        width,
+        in_ports=None,
+        out_ports=None,
+        tree_type=AdderTree,
+        name="adder",
+        alias=None,
+        tree_start_points=None,
+        initialized_trees=None,
+        radix=2,
+    ):
         """Initializes the AdderForest
-        
+
         There are three arguments that can be used to intialize the forest.
         This is their priority order, from highest to lowest:
             - initialized_trees
@@ -58,37 +60,34 @@ class AdderForest(ExpressionForest):
 
         # Initialize the node definitions
         node_defs = {
-                "pre"           : "ppa_pre",
-                "root"          : "ppa_post",
-                "cocycle"       : "ppa_cocycle",
-                "rspine"        : "ppa_rspine",
-                "buffer"        : "ppa_buffer",
-                "lspine_pre"    : "ppa_lspine_pre",
-                "lspine"        : "ppa_lspine"
-                }
+            "pre": "ppa_pre",
+            "root": "ppa_post",
+            "cocycle": "ppa_cocycle",
+            "rspine": "ppa_rspine",
+            "buffer": "ppa_buffer",
+            "lspine_pre": "ppa_lspine_pre",
+            "lspine": "ppa_lspine",
+        }
 
         # Provide defaults for in_ports and out_ports
         if in_ports is None or out_ports is None:
-            in_ports = [
-                        (('a_in', width), 'a_in'),
-                        (('b_in', width), 'b_in')
-                       ]
-            out_ports = [
-                         (('sum', width), 'sum')
-                        ]
+            in_ports = [(("a_in", width), "a_in"), (("b_in", width), "b_in")]
+            out_ports = [(("sum", width), "sum")]
 
         # Initialize the expression tree
-        super().__init__(width,
-                         in_ports,
-                         out_ports,
-                         tree_type=tree_type,
-                         name = name,
-                         alias = alias,
-                         tree_start_points = tree_start_points,
-                         initialized_trees = initialized_trees,
-                         radix = radix,
-                         node_defs = node_defs
-                        )
+        super().__init__(
+            width,
+            in_ports,
+            out_ports,
+            tree_type=tree_type,
+            name=name,
+            alias=alias,
+            tree_start_points=tree_start_points,
+            initialized_trees=initialized_trees,
+            radix=radix,
+            node_defs=node_defs,
+        )
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

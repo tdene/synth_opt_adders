@@ -35,7 +35,7 @@ data["fontsize"] = "52"
 data["ins"] = [("gin", 1, 0, 1), ("xin", 1, 1, 0), ("yin", 1, 1, 0)]
 data["outs"] = [("sum", 1), ("sum_plus_one", 1)]
 
-#data["logic"] = lambda yin, xin, gin, pin: [yin if gin else xin]
+# data["logic"] = lambda yin, xin, gin, pin: [yin if gin else xin]
 
 data["pd"] = 9 / 3
 data["le"] = [9 / 3, 9 / 3]

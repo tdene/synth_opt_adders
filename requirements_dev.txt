@@ -1,9 +1,11 @@
 sphinx
 docutils
+nbsphinx
 sphinx-rtd-theme
 recommonmark
 sphinx-markdown-tables
 sphinx-autodoc-typehints
+sphinx-click
 matplotlib
 pytest
 pytest-regressions
