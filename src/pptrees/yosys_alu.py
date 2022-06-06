@@ -1,5 +1,6 @@
 from .YosysAdder import YosysAdder
 
+
 class yosys_alu(YosysAdder):
     """Class that generates parallel prefix adder trees"""
 
@@ -16,7 +17,8 @@ class yosys_alu(YosysAdder):
             network = "sklansky"
         elif network == "very_fast":
             network = "kogge-stone"
-        super().__init__(width, alias = network)
+        super().__init__(width, alias=network)
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

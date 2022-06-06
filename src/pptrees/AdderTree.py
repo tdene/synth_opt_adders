@@ -2,6 +2,7 @@ from .ExpressionNode import ExpressionNode as Node
 from .ExpressionTree import ExpressionTree
 from .util import lg
 
+
 class AdderTree(ExpressionTree):
     """Defines a tree that computes binary addition
 
@@ -22,18 +23,19 @@ class AdderTree(ExpressionTree):
         blocks (list): The list of blocks in the graph
         in_ports (list of ((string, int), string)): The list of input ports
         out_ports (list of ((string, int), string)): The list of output ports
-    """	
+    """
 
-    def __init__(self,
-                 width=1,
-                 in_ports=None,
-                 out_ports=None,
-                 name="adder",
-                 start_point=0,
-                 alias=None,
-                 radix=2,
-                 leaf_labels=["g","gp","p"]
-                ):
+    def __init__(
+        self,
+        width=1,
+        in_ports=None,
+        out_ports=None,
+        name="adder",
+        start_point=0,
+        alias=None,
+        radix=2,
+        leaf_labels=["g", "gp", "p"],
+    ):
         """Initializes the AdderTree
 
         Args:
@@ -48,41 +50,37 @@ class AdderTree(ExpressionTree):
 
         # Initialize the node definitions
         node_defs = {
-                "pre"           : "ppa_pre",
-                "root"          : "ppa_post",
-                "cocycle"       : "ppa_cocycle",
-                "buffer"        : "ppa_buffer",
-                "lspine_pre"    : "ppa_lspine_pre",
-                "lspine"        : "ppa_lspine",
-                "rspine"        : "ppa_rspine",
-                "rspine_pre"    : "ppa_rspine_pre",
-                "rspine_buf"    : "ppa_rspine_buffer",
-                "small_root"    : "ppa_post_no_g",
-                "small_pre"     : "ppa_lspine_pre_simple"
-                }
+            "pre": "ppa_pre",
+            "root": "ppa_post",
+            "cocycle": "ppa_cocycle",
+            "buffer": "ppa_buffer",
+            "lspine_pre": "ppa_lspine_pre",
+            "lspine": "ppa_lspine",
+            "rspine": "ppa_rspine",
+            "rspine_pre": "ppa_rspine_pre",
+            "rspine_buf": "ppa_rspine_buffer",
+            "small_root": "ppa_post_no_g",
+            "small_pre": "ppa_lspine_pre_simple",
+        }
 
         # Provide defaults for in_ports and out_ports
         if in_ports is None or out_ports is None:
-            in_ports = [
-                        (('a_in', width), 'a'),
-                        (('b_in', width), 'b')
-                       ]
-            out_ports = [
-                         (('sum', 1), 'sum')
-                        ]
+            in_ports = [(("a_in", width), "a"), (("b_in", width), "b")]
+            out_ports = [(("sum", 1), "sum")]
 
         # Initialize the expression tree
-        super().__init__(width,
-                         in_ports,
-                         out_ports,
-                         name = name,
-                         start_point = start_point,
-                         alias = alias,
-                         radix = radix,
-                         leaf_labels = leaf_labels,
-                         idem = True,
-                         node_defs = node_defs
-                        )
+        super().__init__(
+            width,
+            in_ports,
+            out_ports,
+            name=name,
+            start_point=start_point,
+            alias=alias,
+            radix=radix,
+            leaf_labels=leaf_labels,
+            idem=True,
+            node_defs=node_defs,
+        )
 
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic

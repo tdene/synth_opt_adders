@@ -8,9 +8,9 @@ for f in Path(__file__).parent.glob("*.py"):
     del f, module_name
 del import_module, Path
 
-__all__ = ['modules']
+__all__ = ['node_data']
 
 imported = [globals()[x] for x in dir() if x[0]!='_']
-modules = {}
+node_data = {}
 for x in imported:
-    modules[getattr(x,"name")] = getattr(x,"data")
+    node_data[getattr(x,"name")] = getattr(x,"data")
