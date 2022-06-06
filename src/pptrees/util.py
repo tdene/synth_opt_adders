@@ -225,7 +225,7 @@ def atoi(x):
 
 def natural_keys(text):
     """Human sorting / natural sorting"""
-    return [atoi(c) for c in re.split("(\d+)", text)]
+    return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
 ### NOTE: This needs to be reworked when map files are reworked
