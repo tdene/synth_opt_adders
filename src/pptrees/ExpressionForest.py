@@ -1,11 +1,10 @@
 import re
 
-from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
-from .modules import *
-from .util import lg
-from .util import increment_iname
-from .util import display_png, display_gif
+from .ExpressionTree import ExpressionTree
+from .node_data import node_data
+from .util import display_gif, increment_iname
+
 
 class ExpressionForest(ExpressionGraph):
     """Defines a forest of binary expression trees
@@ -30,21 +29,24 @@ class ExpressionForest(ExpressionGraph):
         out_ports (list of ((string, int), string)): The list of output ports
     """
 
-    def __init__(self,
-                 width,
-                 in_ports,
-                 out_ports,
-                 tree_type = ExpressionTree,
-                 name = "forest",
-                 alias = None,
-                 tree_start_points = None,
-                 initialized_trees = None,
-                 radix = 2,
-                 idem = False,
-                 node_defs = {}
-                ):
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
+    def __init__(
+        self,
+        width,
+        in_ports,
+        out_ports,
+        tree_type=ExpressionTree,
+        name="forest",
+        alias=None,
+        tree_start_points=None,
+        initialized_trees=None,
+        radix=2,
+        idem=False,
+        node_defs={},
+    ):
         """Initializes the ExpressionForest
-        
+
         There are three arguments that can be used to intialize the forest.
         This is their priority order, from highest to lowest:
             - initialized_trees
@@ -79,8 +81,15 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Forest width must be an integer")
         if width < 1:
             raise ValueError("Forest width must be at least 1")
-        if alias not in [None, "serial", "ripple", "ripple-carry", "sklansky",
-                "kogge-stone", "brent-kung"]:
+        if alias not in [
+            None,
+            "serial",
+            "ripple",
+            "ripple-carry",
+            "sklansky",
+            "kogge-stone",
+            "brent-kung",
+        ]:
             error = "Forest start point {0} is not implemented.\n"
             error += "Consider using non-legacy start points.\n"
             error += "These correspond to the trees' Catalan IDs."
@@ -96,8 +105,11 @@ class ExpressionForest(ExpressionGraph):
             raise TypeError("Tree node definitions must be a dictionary")
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
-                raise ValueError(("Tree node definitions must contain"
-                                  " the node {}").format(required))
+                raise ValueError(
+                    ("Tree node definitions must contain" " the node {}").format(
+                        required
+                    )
+                )
 
         # If both kinds of start points are specified,
         # Use the non-legacy kind
@@ -110,51 +122,51 @@ class ExpressionForest(ExpressionGraph):
         self.radix = radix
         self.idem = idem
         self.node_defs = node_defs
-        
+
         # If initialized trees are provided, simply use them
         if isinstance(initialized_trees, list):
             if len(initialized_trees) != width:
                 raise ValueError("Number of trees in a forest must equal width")
             self.trees = initialized_trees
-            super().__init__(name = name, in_ports = in_ports, out_ports = out_ports)
+            super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
             return
 
         # Otherwise, initialize the trees
         self.trees = []
 
-        for a in range(1,width+1):
+        for a in range(1, width + 1):
             ### NOTE: INPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
             ### TO-DO: Allow for arbitrary input shape
             ### Need to check whole file for this implicit assumption
             if a == 1:
-                bit_s = "[{0}]".format(a-1)
+                bit_s = "[{0}]".format(a - 1)
             else:
-                bit_s = "[{0}:0]".format(a-1)
-            tree_in_ports = [((x[0][0],a),x[1]+bit_s) for x in in_ports]
+                bit_s = "[{0}:0]".format(a - 1)
+            tree_in_ports = [((x[0][0], a), x[1] + bit_s) for x in in_ports]
 
             ### NOTE: TREE OUTPUT SHAPE IS CURRENTLY ASSUMED TO BE [1,1,1,..]
             ### TO-DO: Allow for arbitrary input shape
             ### Need to check whole file for this implicit assumption
-            bit_s = "[{0}]".format(a-1)
-            tree_out_ports = [((x[0][0],1),x[1]+bit_s) for x in out_ports]
+            bit_s = "[{0}]".format(a - 1)
+            tree_out_ports = [((x[0][0], 1), x[1] + bit_s) for x in out_ports]
 
-            if tree_start_points is not None and len(tree_start_points) > a-1:
-                catalan_id = tree_start_points[a-1]
+            if tree_start_points is not None and len(tree_start_points) > a - 1:
+                catalan_id = tree_start_points[a - 1]
             else:
                 catalan_id = 0
 
             t = self.tree_type(
-                    a,
-                    tree_in_ports,
-                    tree_out_ports,
-                    name="tree_{}".format(a-1),
-                    radix=radix,
-                    start_point=catalan_id
+                a,
+                tree_in_ports,
+                tree_out_ports,
+                name="tree_{}".format(a - 1),
+                radix=radix,
+                start_point=catalan_id,
             )
             self.trees.append(t)
 
         # Initialize the graph
-        super().__init__(name=name,in_ports=in_ports,out_ports=out_ports)
+        super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
 
         # If tree_start_points was provided, ignore the alias
         if tree_start_points is not None:
@@ -222,11 +234,11 @@ class ExpressionForest(ExpressionGraph):
                 if n.equiv_class[0] is not n:
                     if t.nodes(data=True)[n].get("gradientangle", "0") == "135":
                         continue
-                    col = t.nodes(data = True)[n]["fillcolor"]
-                    t.nodes(data = True)[n]["orig_color"] = col
+                    col = t.nodes(data=True)[n]["fillcolor"]
+                    t.nodes(data=True)[n]["orig_color"] = col
                     new_col = "red;0.5:{0};0.5".format(col)
-                    t.nodes(data = True)[n]["fillcolor"] = new_col
-                    t.nodes(data = True)[n]["gradientangle"] = "135"
+                    t.nodes(data=True)[n]["fillcolor"] = new_col
+                    t.nodes(data=True)[n]["gradientangle"] = "135"
 
     def reset_equivalent_nodes(self):
         """Resets the equivalence classes of all nodes"""
@@ -240,10 +252,10 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             for n in t.nodes:
                 if t.nodes(data=True)[n].get("gradientangle", "0") == "135":
-                    col = t.nodes(data = True)[n]["fillcolor"]
-                    old_col = t.nodes(data = True)[n].get("orig_color", col)
-                    t.nodes(data = True)[n]["fillcolor"] = old_col
-                    t.nodes(data = True)[n]["gradientangle"] = "0"
+                    col = t.nodes(data=True)[n]["fillcolor"]
+                    old_col = t.nodes(data=True)[n].get("orig_color", col)
+                    t.nodes(data=True)[n]["fillcolor"] = old_col
+                    t.nodes(data=True)[n]["gradientangle"] = "0"
 
     ### NOTE: Where this logic belongs is an open question
     def find_parallel_tracks(self):
@@ -260,7 +272,7 @@ class ExpressionForest(ExpressionGraph):
     ### NOTE: Improve fanout estimate
     def _calc_node_fanout(self, node):
         """Estimates the delay caused by fanout for a node
-        
+
         A node has fanout of k if:
          - node is the representative of an equivalence class
          - There are k nodes in the forest such that
@@ -292,11 +304,11 @@ class ExpressionForest(ExpressionGraph):
         fanout = len(ctr)
 
         # Modify the relevant edge's data
-        e_data = tree.get_edge_data(node.parent,node)
+        e_data = tree.get_edge_data(node.parent, node)
         index = node.parent.children.index(node)
-        g = modules[node.value]["le"][index]
+        g = node_data[node.value]["le"][index]
         ### This is a bad estimate of fanout's effect on delay
-        e_data["fanout"] = g*fanout
+        e_data["fanout"] = g * fanout
         tree.update_edge_weight(node.parent, node)
 
         return fanout
@@ -346,7 +358,7 @@ class ExpressionForest(ExpressionGraph):
         tracks = len(node.tracks_class)
 
         # Modify the relevant edge's data
-        e_data = tree.get_edge_data(node.parent,node)
+        e_data = tree.get_edge_data(node.parent, node)
         ### This is a bad estimate of tracks' effect on delay
         e_data["tracks"] = tracks
         tree.update_edge_weight(node.parent, node)
@@ -372,7 +384,9 @@ class ExpressionForest(ExpressionGraph):
         if not (node in node.graph):
             raise ValueError("Node is not in its graph. This should not happen.")
         if not (node.graph in self.trees):
-            raise ValueError("Node graph is not in this forest. This should not happen.")
+            raise ValueError(
+                "Node graph is not in this forest. This should not happen."
+            )
         if not (tree in self.trees):
             raise ValueError("Trying to decouple fanout in an invalid tree.")
 
@@ -406,12 +420,12 @@ class ExpressionForest(ExpressionGraph):
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
-        All node modules have a footprint attribute, clarifying which modules
-        refer to the same node concept. All node modules also have a priority
+        All node node_data have a footprint attribute, clarifying which node_data
+        refer to the same node concept. All node node_data also have a priority
         attribute, used to determine which module is most "optimal".
 
         This method attempts to raise the total optimality of the forest by
-        swapping in higher-priority modules.
+        swapping in higher-priority node_data.
 
         This can probably be safely executed at any point in time, but it is
         advisable to only execute this once no more rotations will take place.
@@ -430,7 +444,7 @@ class ExpressionForest(ExpressionGraph):
     def hdl(
         self,
         out=None,
-        optimization = 1,
+        optimization=1,
         mapping="behavioral",
         language="verilog",
         flat=False,
@@ -438,7 +452,7 @@ class ExpressionForest(ExpressionGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
-        description_string="start of unnamed graph"
+        description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the forest
 
@@ -485,15 +499,15 @@ class ExpressionForest(ExpressionGraph):
         for t in reversed(self.trees):
             desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
-                            language=language,
-                            mapping=mapping,
-                            flat=flat,
-                            block_flat=block_flat,
-                            node_flat=node_flat,
-                            merge_mapping=merge_mapping,
-                            module_name = "{0}_{1}".format(module_name, t.name),
-                            description_string=desc
-                        )
+                language=language,
+                mapping=mapping,
+                flat=flat,
+                block_flat=block_flat,
+                node_flat=node_flat,
+                merge_mapping=merge_mapping,
+                module_name="{0}_{1}".format(module_name, t.name),
+                description_string=desc,
+            )
             w = re.findall(r"w\d+", t_hdl)
             for x in set(w):
                 t_hdl = t_hdl.replace(x, "w{}".format(w_ctr))
@@ -507,8 +521,9 @@ class ExpressionForest(ExpressionGraph):
         # These names need to be made unique
         hdl = increment_iname(hdl)
 
-        hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
-                language, module_name)
+        hdl, module_defs, file_out_hdl = self._wrap_hdl(
+            hdl, module_defs, language, module_name
+        )
         if out is not None:
             self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
 
@@ -516,7 +531,7 @@ class ExpressionForest(ExpressionGraph):
 
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 
-    def LF(self, x, y = None):
+    def LF(self, x, y=None):
         """Performs an LF transform on the specified node in all trees
 
         This is node by calling on the corresponding method in the Tree class.
@@ -526,13 +541,13 @@ class ExpressionForest(ExpressionGraph):
         # Try to first apply transform on most significant tree
         # Once a valid transform is applied, use x,y for all other trees
         for t in reversed(list(self.trees)):
-            if x < t.width-1:
+            if x < t.width - 1:
                 attempt = t.LF(x, y)
                 if attempt is not None:
                     x, y = attempt
         return x, y
 
-    def FL(self, x, y = None):
+    def FL(self, x, y=None):
         """Performs an FL transform on the specified node in all trees
 
         This is node by calling on the corresponding method in the Tree class.
@@ -542,13 +557,13 @@ class ExpressionForest(ExpressionGraph):
         # Try to first apply transform on most significant tree
         # Once a valid transform is applied, use x,y for all other trees
         for t in reversed(list(self.trees)):
-            if x < t.width-1:
+            if x < t.width - 1:
                 attempt = t.FL(x, y)
                 if attempt is not None:
                     x, y = attempt
         return x, y
 
-    def TF(self, x, y = None):
+    def TF(self, x, y=None):
         """Performs a TF transform on the specified node in all trees
 
         This is node by calling on the corresponding method in the Tree class.
@@ -558,13 +573,13 @@ class ExpressionForest(ExpressionGraph):
         # Try to first apply transform on most significant tree
         # Once a valid transform is applied, use x,y for all other trees
         for t in reversed(list(self.trees)):
-            if x < t.width-1:
+            if x < t.width - 1:
                 attempt = t.TF(x, y)
                 if attempt is not None:
                     x, y = attempt
         return x, y
 
-    def FT(self, x, y = None):
+    def FT(self, x, y=None):
         """Performs an FT transform on the specified node in all trees
 
         This is node by calling on the corresponding method in the Tree class.
@@ -574,20 +589,19 @@ class ExpressionForest(ExpressionGraph):
         # Try to first apply transform on most significant tree
         # Once a valid transform is applied, use x,y for all other trees
         for t in reversed(list(self.trees)):
-            if x < t.width-1:
+            if x < t.width - 1:
                 attempt = t.FT(x, y)
                 if attempt is not None:
                     x, y = attempt
         return x, y
 
-    def legacy_decouple_node_fanout(self, node, maximum_fanout = 2):
+    def legacy_decouple_node_fanout(self, node, maximum_fanout=2):
         """Decouples the fanout of the specified node in all trees"""
 
         # Get node's equivalence class
         ec = node.equiv_class
         # Filter out nodes whose parents are equivalent
-        ec = [x for x in ec \
-                if x.parent is None or x.parent.equiv_class[0] is x.parent]
+        ec = [x for x in ec if x.parent is None or x.parent.equiv_class[0] is x.parent]
         # Decouple fanout
         ctr = 0
         for a in range(len(ec)):
@@ -596,10 +610,10 @@ class ExpressionForest(ExpressionGraph):
             if parent is None:
                 continue
             # The last connection does not benefit from extra buffer
-            if a == len(ec)-1:
+            if a == len(ec) - 1:
                 ctr -= 1
             index = parent.children.index(n)
-            for b in range(ctr//(maximum_fanout-1)):
+            for b in range(ctr // (maximum_fanout - 1)):
                 for p in parent.equiv_class:
                     t = p.graph
                     t.insert_buffer(p[index])
@@ -615,8 +629,8 @@ class ExpressionForest(ExpressionGraph):
         for n in targets:
             self.legacy_decouple_node_fanout(n, maximum_fanout)
 
-
     ### NOTE: END LEGACY METHODS ###
+
 
 if __name__ == "__main__":
     raise RuntimeError("This file is importable, but not executable")

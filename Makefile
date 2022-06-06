@@ -8,7 +8,7 @@ test:
 	pytest
 
 cov:
-	pytest --cov= pptrees
+	pytest --cov=src/pptrees
 
 mypy:
 	mypy . --ignore-missing-imports

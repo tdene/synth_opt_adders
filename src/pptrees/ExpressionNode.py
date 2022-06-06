@@ -1,6 +1,6 @@
-from .modules import *
-from .util import lg
-from .util import parse_net, verso_pin
+from .node_data import node_data
+from .util import lg, parse_net, verso_pin
+
 
 class ExpressionNode:
     """Defines a node in an expression tree
@@ -21,11 +21,12 @@ class ExpressionNode:
         equiv_class (list of ExpressionNode): The list of all nodes equivalent
             to this one. The first node in the list is special, and is known
             as the representative of the equivalence class.
-        equiv_wires (set of strings): The set of wires that are output by the 
+        equiv_wires (set of strings): The set of wires that are output by the
             representative node of this node's equivalence class.
         tracks_class (list of ExpressionNode): The list of all nodes that cause
             parallel wires in the layout. No node in this list is special.
     """
+
     def __init__(self, value, x_pos=0, y_pos=0):
         """Initializes a new ExpressionNode
 
@@ -38,7 +39,7 @@ class ExpressionNode:
             raise TypeError("X-coordinate must be a number")
         if not isinstance(y_pos, (int, float)):
             raise TypeError("Y-coordinate must be a number")
-        if value not in modules:
+        if value not in node_data:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Node attributes
@@ -47,8 +48,8 @@ class ExpressionNode:
         self.parent = None
 
         # HDL-related attributes
-        self.in_nets = {x: [None] * y for x, y, *z in modules[value]["ins"]}
-        self.out_nets = {x: [None] * y for x, y in modules[value]["outs"]}
+        self.in_nets = {x: [None] * y for x, y, *z in node_data[value]["ins"]}
+        self.out_nets = {x: [None] * y for x, y in node_data[value]["outs"]}
 
         # Graph-related attributes
         self.leafs = 0
@@ -79,7 +80,7 @@ class ExpressionNode:
         """Returns the height of the subtree rooted at this node"""
         if not self.children:
             return 0
-        return 1+max([len(x) for x in self])
+        return 1 + max([len(x) for x in self])
 
     def __lt__(self, other):
         """Compares this node to another node by position in tree
@@ -125,15 +126,14 @@ class ExpressionNode:
             raise TypeError("Cannot compare to non-ExpressionNode")
 
         # Check whether self and other are equivalent
-        ret = (not (self > other) and not (self < other) \
-                and self.value == other.value)
+        ret = not (self > other) and not (self < other) and self.value == other.value
 
         # Check whether their subtrees are also equivalent
         for a in range(len(self.children)):
             if self[a] is not None:
                 try:
                     other_c = other[a]
-                except:
+                except IndexError:
                     return False
                 ret = ret and self[a].equiv(other_c)
 
@@ -204,8 +204,7 @@ class ExpressionNode:
 
         # If either node is not the representative of its equivalence class
         # There is no physical meaning to this metric
-        if (self.equiv_class[0] is not self) or \
-           (other.equiv_class[0] is not other):
+        if (self.equiv_class[0] is not self) or (other.equiv_class[0] is not other):
             return False
 
         # Check if the edges lead to parallel routes
@@ -220,7 +219,7 @@ class ExpressionNode:
         """Sets two nodes as causing parallel wires for each other"""
         if not self.tracks(other):
             raise ValueError("Nodes do not cause parallel routes")
-        
+
         tr = self.tracks_class
         tr |= other.tracks_class
         other.tracks_class = tr
@@ -238,10 +237,9 @@ class ExpressionNode:
 
         This will error out if the node has a parent or children.
         """
-        if self.parent is not None or \
-                any([not x is None for x in self]):
+        if self.parent is not None or any([x is not None for x in self]):
             raise ValueError("Cannot morph a node with children or parents")
-        if value not in modules:
+        if value not in node_data:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Create new node
@@ -257,7 +255,7 @@ class ExpressionNode:
         c_heights = [len(c) for c in self]
         height = 1 + max(c_heights)
         # First confirm the subtree has minimal height
-        if 1<<(height-1) >= bin(self.leafs).count("1"):
+        if 1 << (height - 1) >= bin(self.leafs).count("1"):
             return False
         # Confirm that the children have heights consistent with completeness
         prev_d = height - 1
@@ -283,12 +281,12 @@ class ExpressionNode:
 
     def is_proper(self):
         """Checks if the subtree rooted at this node is proper"""
-        return 1<<len(self) == bin(self.leafs).count("1")
+        return 1 << len(self) == bin(self.leafs).count("1")
 
     def rightmost_leaf(self):
         """Finds the least significant leaf descendant of this node"""
         # Get the target leaf
-        target = 1<<(len(bin(self.leafs)) - len(bin(self.leafs).rstrip("0")))
+        target = 1 << (len(bin(self.leafs)) - len(bin(self.leafs).rstrip("0")))
         # Iterate over all children
         for c in self:
             if c is None:
@@ -300,7 +298,7 @@ class ExpressionNode:
     def leftmost_leaf(self):
         """Finds the most significant leaf descendant of this node"""
         # Get the target leaf
-        target = 1<<lg(self.leafs)
+        target = 1 << lg(self.leafs)
         # Iterate over all children
         for c in self:
             if c is None:
@@ -337,7 +335,7 @@ class ExpressionNode:
         child.out_nets[pn2][pi2] = net_name
 
         # If nodes are not already connected, connect them
-        if not child.parent is self:
+        if child.parent is not self:
             try:
                 index = self.children.index(None)
                 self.children[index] = child
@@ -401,7 +399,7 @@ class ExpressionNode:
         if self.parent is not None:
             self.parent._recalculate_leafs()
 
-    def hdl(self, language="verilog",flat=False):
+    def hdl(self, language="verilog", flat=False):
         """Returns the HDL of this node
 
         Args:
@@ -413,9 +411,9 @@ class ExpressionNode:
             list: Set of HDL module definitions used in the node
         """
         if not flat and language == "verilog":
-            return (self._verilog(), (modules[self.value][language],))
+            return (self._verilog(), (node_data[self.value][language],))
         if not flat and language == "vhdl":
-            return (self._vhdl(), (modules[self.value][language],))
+            return (self._vhdl(), (node_data[self.value][language],))
         if flat and language == "verilog":
             return (self._verilog_flat(), set())
         if flat and language == "vhdl":
@@ -433,8 +431,8 @@ class ExpressionNode:
 
         # Format net IDs into the module instantiation
         for a in pins:
-            b = ','.join([parse_net(x) for x in pins[a]])
-            ret += " .{0}( {{ {1} }} ),".format(a,b)
+            b = ",".join([parse_net(x) for x in pins[a]])
+            ret += " .{0}( {{ {1} }} ),".format(a, b)
         ret = ret[:-1] + " );\n"
 
         return ret
@@ -480,15 +478,15 @@ class ExpressionNode:
                 for a in range(len(port)):
                     net = port[a]
                     n = ExpressionNode("invis")
-                    n.in_nets['A'][0] = net
-                    n.out_nets['Y'][0] = self.out_nets[v][a]
+                    n.in_nets["A"][0] = net
+                    n.out_nets["Y"][0] = self.out_nets[v][a]
                     ret += n.hdl(language="verilog", flat=True)[0]
             return ret
 
         ### Grab only instantiated cells from the HDL definiton
 
         # Iterate over each line in the HDL definition
-        hdl_def = modules[self.value]["verilog"].splitlines()
+        hdl_def = node_data[self.value]["verilog"].splitlines()
 
         # Flag whether we're currently looking at a cell
         in_std_cell = False
@@ -496,15 +494,15 @@ class ExpressionNode:
         # Store the filtered HDL in a string
         ret = ""
 
-        for l in hdl_def:
-            if "assign" in l:
-                ret += l + "\n\n"
+        for line in hdl_def:
+            if "assign" in line:
+                ret += line + "\n\n"
             else:
-                if "U" in l:
+                if "U" in line:
                     in_std_cell = True
-                if in_std_cell == True:
-                    ret += l + "\n\n"
-                if l != "" and l[-1] == ";":
+                if in_std_cell:
+                    ret += line + "\n\n"
+                if line != "" and line[-1] == ";":
                     in_std_cell = False
 
         # Create list of all instance pins and copy in unformatted net IDs
@@ -523,6 +521,7 @@ class ExpressionNode:
                     ret = ret.replace("{0}[{1}]".format(a, idx), net_name)
 
         return ret[:-1]
+
 
 if __name__ == "__main__":
     raise RuntimeError("This module is not intended to be run directly")

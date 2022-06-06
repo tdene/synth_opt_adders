@@ -19,5 +19,3 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install .
-        python3 unit_tests/node_test.py
-        python3 unit_tests/tree_test.py

@@ -1,23 +1,32 @@
-import re
+import importlib.resources
 import pathlib
 import shutil
-import importlib.resources
 
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
-from .modules import *
-from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
-from .util import parse_net, sub_brackets, sub_ports
-from .util import natural_keys
-from .util import parse_mapping, merge_mapping_into_cells, increment_iname
+from .node_data import node_data
+from .util import (
+    hdl_arch,
+    hdl_entity,
+    hdl_inst,
+    hdl_syntax,
+    increment_iname,
+    merge_mapping_into_cells,
+    natural_keys,
+    parse_mapping,
+    parse_net,
+    sub_brackets,
+    sub_ports,
+)
+
 
 class ExpressionGraph(nx.DiGraph):
     """Defines a di-graph of arithmetic expressions
 
     The graph is defined as follows:
     - Each node is a module that computes an arithmetic expression
-    - Each edge is a net connecting two modules
+    - Each edge is a net connecting two node_data
 
     Attributes:
         name (string): The name of the graph
@@ -47,10 +56,12 @@ class ExpressionGraph(nx.DiGraph):
         """
 
         # Make sure that in_ports and out_ports are both None or both lists
-        if any(x is not None for x in [in_ports, out_ports]) and \
-                not all(x is not None for x in [in_ports, out_ports]):
-            raise ValueError(("in_ports and out_ports"
-                "must both be None or both be lists"))
+        if any(x is not None for x in [in_ports, out_ports]) and not all(
+            x is not None for x in [in_ports, out_ports]
+        ):
+            raise ValueError(
+                ("in_ports and out_ports" "must both be None or both be lists")
+            )
 
         super().__init__()
 
@@ -81,13 +92,13 @@ class ExpressionGraph(nx.DiGraph):
             raise TypeError("Node must be an ExpressionNode")
 
         # Add GraphViz attributes
-        kwargs = modules[node.value]
+        kwargs = node_data[node.value]
         kwargs.update(attr)
         kwargs["shape"] = kwargs.get("shape", "square")
         kwargs["fillcolor"] = kwargs.get("fillcolor", "white")
         kwargs["label"] = kwargs.get("label", "")
         kwargs["style"] = kwargs.get("style", "filled")
-        kwargs["pos"] = "{0},{1}!".format(node.x_pos*-1, node.y_pos*-1)
+        kwargs["pos"] = "{0},{1}!".format(node.x_pos * -1, node.y_pos * -1)
 
         # Add the node to the graph
         node.graph = self
@@ -103,7 +114,7 @@ class ExpressionGraph(nx.DiGraph):
 
         if not isinstance(node, ExpressionNode):
             raise TypeError("Node must be an ExpressionNode")
-        
+
         # Remove the node from the graph
         super().remove_node(node)
         return node
@@ -134,24 +145,24 @@ class ExpressionGraph(nx.DiGraph):
             "arrowhead": "none",
             "ins": [pin1],
             "outs": [pin2],
-            "edge_nets": [net_name]
+            "edge_nets": [net_name],
         }
 
         # Initialize weight to parasitc delay
         # This is later modified by logical effort and cross-track cap
         kwargs["fanout"] = 1
         kwargs["tracks"] = 0
-        kwargs["delay"] = modules[child.value]["pd"]
+        kwargs["delay"] = node_data[child.value]["pd"]
         kwargs["weight"] = kwargs["delay"]
 
         # If the two nodes are already connnected, simply update the pins
         if self.has_edge(parent, child):
-            edge_data = self.get_edge_data(parent, child, default = kwargs)
+            edge_data = self.get_edge_data(parent, child, default=kwargs)
             edge_data["ins"].append(pin1)
             edge_data["outs"].append(pin2)
             edge_data["edge_nets"].append(net_name)
         else:
-        # Add the edge to the graph
+            # Add the edge to the graph
             super().add_edge(parent, child, **kwargs)
 
         return self.get_edge_data(parent, child)
@@ -225,7 +236,7 @@ class ExpressionGraph(nx.DiGraph):
         # If the block is empty, don't create it
         if not nodes:
             return None
-        
+
         # Get the name of the block
         block_id = self.next_block
 
@@ -234,17 +245,17 @@ class ExpressionGraph(nx.DiGraph):
             node.block = block_id
 
         # Create the block
-        new_block = ExpressionGraph(name = "block_{0}".format(block_id))
+        new_block = ExpressionGraph(name="block_{0}".format(block_id))
         subgraph = self.subgraph(nodes)
-        new_block.add_nodes_from(subgraph.nodes(data = True))
-        new_block.add_edges_from(subgraph.edges(data = True))
+        new_block.add_nodes_from(subgraph.nodes(data=True))
+        new_block.add_edges_from(subgraph.edges(data=True))
         self.blocks[block_id] = new_block
         if block_id == len(self.blocks) - 1:
             self.blocks.append(None)
 
         # Increment the next block name
         self.next_block = next(
-                x for x in range(len(self.blocks)) if self.blocks[x] is None
+            x for x in range(len(self.blocks)) if self.blocks[x] is None
         )
 
         return block_id
@@ -279,8 +290,11 @@ class ExpressionGraph(nx.DiGraph):
         """Groups nodes into blocks based on critical paths"""
 
         # Get valid nodes
-        valid_nodes = [node for node in self.nodes \
-                if node.block is None and node.equiv_class[0] is node]
+        valid_nodes = [
+            node
+            for node in self.nodes
+            if node.block is None and node.equiv_class[0] is node
+        ]
 
         if len(valid_nodes) < 2:
             return
@@ -343,8 +357,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # If the ports are defined, return them
         if self.in_ports is not None:
-            return (self.in_ports + self.in_extras,
-                    self.out_ports + self.out_extras)
+            return (self.in_ports + self.in_extras, self.out_ports + self.out_extras)
 
         # Otherwise, find them from nodes and blocks
         in_ports, out_ports = self._get_internal_nets()
@@ -354,17 +367,18 @@ class ExpressionGraph(nx.DiGraph):
 
         # Form the ports
         # Assume that all these retrieved nets are 1-bit
-        in_internal = [(sub_brackets(x),1) for x in in_ports]
+        in_internal = [(sub_brackets(x), 1) for x in in_ports]
         in_external = list(in_ports)
-        in_ports = [(x,y) for x,y in zip(in_internal, in_external)]
+        in_ports = [(x, y) for x, y in zip(in_internal, in_external)]
 
-        out_internal = [(sub_brackets(x),1) for x in out_ports]
+        out_internal = [(sub_brackets(x), 1) for x in out_ports]
         out_external = list(out_ports)
-        out_ports = [(x,y) for x,y in zip(out_internal, out_external)]
+        out_ports = [(x, y) for x, y in zip(out_internal, out_external)]
 
-        return (in_ports + self.in_extras,
-                out_ports + self.out_extras)
+        return (in_ports + self.in_extras, out_ports + self.out_extras)
 
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
     def hdl(
         self,
         out=None,
@@ -375,7 +389,7 @@ class ExpressionGraph(nx.DiGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
-        description_string="start of unnamed graph"
+        description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the graph
 
@@ -418,13 +432,13 @@ class ExpressionGraph(nx.DiGraph):
             block = self.blocks[block_id]
 
             block_hdl, block_defs = block.hdl(
-                    mapping=mapping,
-                    language=language,
-                    flat=block_flat,
-                    node_flat=node_flat,
-                    merge_mapping=merge_mapping,
-                    module_name="{0}_block_{1}".format(module_name, block_id),
-                    description_string="block {0}".format(block_id)
+                mapping=mapping,
+                language=language,
+                flat=block_flat,
+                node_flat=node_flat,
+                merge_mapping=merge_mapping,
+                module_name="{0}_block_{1}".format(module_name, block_id),
+                description_string="block {0}".format(block_id),
             )
 
             hdl += block_hdl
@@ -452,8 +466,10 @@ class ExpressionGraph(nx.DiGraph):
             # and some part of the equivalence class is not in this graph,
             # and the node is not part of a bigger subtree,
             # bring up its internal wires to the top level
-            if any([x not in self for x in node.equiv_class]) and \
-                    node.parent.equiv_class[0] == node.parent:
+            if (
+                any([x not in self for x in node.equiv_class])
+                and node.parent.equiv_class[0] == node.parent
+            ):
 
                 # If this node is the representative, its wires become outputs
                 if node.equiv_class[0] == node:
@@ -470,14 +486,11 @@ class ExpressionGraph(nx.DiGraph):
                 # Query the node for its graph and block ID
                 node_block = node.graph.blocks[node.block]
                 # Check whether the node's block is this graph
-                usable = (node_block is self)
+                usable = node_block is self
             if not usable:
                 continue
             # Get the node's HDL description
-            node_hdl, node_defs = node.hdl(
-                    language=language,
-                    flat=node_flat
-            )
+            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
             # If the cell is flat, rename the internal wires
             if node_flat:
                 node_hdl = node_hdl.replace("w1", "w{0}".format(w_ctr))
@@ -496,8 +509,8 @@ class ExpressionGraph(nx.DiGraph):
             hdl += node_hdl
             module_defs.update(node_defs)
         # Format the list of extra nets caused by equivalence classes
-        self.in_extras = [((sub_brackets(x),1),x) for x in self.in_extras]
-        self.out_extras = [((sub_brackets(x),1),x) for x in self.out_extras]
+        self.in_extras = [((sub_brackets(x), 1), x) for x in self.in_extras]
+        self.out_extras = [((sub_brackets(x), 1), x) for x in self.out_extras]
 
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
@@ -530,8 +543,15 @@ class ExpressionGraph(nx.DiGraph):
             wire_hdl = ""
 
         # Assemble the HDL
-        hdl = syntax["comment_string"] + description_string + "\n" + \
-                "\t" + wire_hdl + "\n" + hdl
+        hdl = (
+            syntax["comment_string"]
+            + description_string
+            + "\n"
+            + "\t"
+            + wire_hdl
+            + "\n"
+            + hdl
+        )
 
         # If flat HDL is desired, it can returned here
         if flat:
@@ -540,8 +560,9 @@ class ExpressionGraph(nx.DiGraph):
             return hdl, module_defs
 
         # Otherwise, return the HDL module definition
-        hdl, module_defs, file_out_hdl = self._wrap_hdl(hdl, module_defs,
-                language, module_name)
+        hdl, module_defs, file_out_hdl = self._wrap_hdl(
+            hdl, module_defs, language, module_name
+        )
 
         # Write the HDL to file
         if out is not None:
@@ -566,15 +587,21 @@ class ExpressionGraph(nx.DiGraph):
         file_out_hdl = entity + arch + "".join(formatted_defs)
         module_defs.add(entity + arch)
         ## Create an instance of the module
-        inst_ports = [[x[0][0],x[1]] for x in in_ports + out_ports]
+        inst_ports = [[x[0][0], x[1]] for x in in_ports + out_ports]
         inst = hdl_inst(module_name, inst_ports, language)
         ## Add the instance to the HDL
         hdl = inst
 
         return hdl, module_defs, file_out_hdl
 
-    def _write_hdl(self, file_out_hdl, out=None, language="verilog",
-            mapping="behavioral", merge_mapping=True):
+    def _write_hdl(
+        self,
+        file_out_hdl,
+        out=None,
+        language="verilog",
+        mapping="behavioral",
+        merge_mapping=True,
+    ):
         """Writes the HDL to a file"""
         # Check that output path is valid
         if out is None:
@@ -582,7 +609,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
-        
+
         outdir = pathlib.Path(out).resolve().parent
         if not outdir.exists():
             raise ValueError("Output path does not exist")
@@ -600,9 +627,10 @@ class ExpressionGraph(nx.DiGraph):
             if not merge_mapping:
                 # Copy the mapping file to the output directory
                 shutil.copy(pkg_map_file, local_map_file)
-    
+
         with open(out, "w") as f:
             f.write(file_out_hdl)
+
 
 if __name__ == "__main__":
     raise RuntimeError("This module is not intended to be run directly")
