@@ -6,7 +6,7 @@ import importlib.resources
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
-from .node_data import *
+from .node_data import node_data
 from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
 from .util import parse_net, sub_brackets, sub_ports
 from .util import natural_keys

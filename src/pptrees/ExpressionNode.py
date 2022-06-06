@@ -1,4 +1,4 @@
-from .node_data import *
+from .node_data import node_data
 from .util import lg
 from .util import parse_net, verso_pin
 

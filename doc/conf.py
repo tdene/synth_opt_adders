@@ -1,4 +1,5 @@
-import sys, re
+import sys
+import re
 from os.path import abspath
 from pathlib import Path
 from json import loads as json_loads
@@ -6,25 +7,25 @@ from json import loads as json_loads
 
 ROOT = Path(__file__).resolve().parent
 
-sys.path.insert(0, abspath('.'))
+sys.path.insert(0, abspath("."))
 
 # -- General configuration ------------------------------------------------
 
 extensions = [
-    'sphinx.ext.extlinks',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
-    'sphinxcontrib.bibtex',
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.bibtex",
 ]
 
-bibtex_default_style = 'plain'
-bibtex_bibfiles = [str(ROOT / 'refs.bib')]
+bibtex_default_style = "plain"
+bibtex_bibfiles = [str(ROOT / "refs.bib")]
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
@@ -40,17 +41,17 @@ napoleon_use_rtype = True
 
 todo_include_todos = True
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 source_suffix = {
-    '.rst': 'restructuredtext',
+    ".rst": "restructuredtext",
 }
 
-master_doc = 'index'
+master_doc = "index"
 
-project = 'Parallel prefix tree generation and exploration'
-author = 'Teodor-Dumitru Ene'
-copyright = 'Teodor-Dumitru Ene'
+project = "Parallel prefix tree generation and exploration"
+author = "Teodor-Dumitru Ene"
+copyright = "Teodor-Dumitru Ene"
 
 version = "1.0.7"
 release = version  # The full version, including alpha/beta/rc tags.
@@ -76,30 +77,26 @@ except Exception as ex:
 # -- Options for HTML output ----------------------------------------------
 
 html_context = {}
-ctx = ROOT / 'context.json'
+ctx = ROOT / "context.json"
 if ctx.is_file():
-    html_context.update(json_loads(ctx.open('r').read()))
+    html_context.update(json_loads(ctx.open("r").read()))
 
 if (ROOT / "_theme").is_dir():
     html_theme_path = ["."]
     html_theme = "_theme"
     html_theme_options = {
-        'logo_only': True,
-        'home_breadcrumbs': True,
-        'vcs_pageview_mode': 'blob',
+        "logo_only": True,
+        "home_breadcrumbs": True,
+        "vcs_pageview_mode": "blob",
     }
 else:
     html_theme = "sphinx_rtd_theme"
 
-htmlhelp_basename = 'pptrees_doc'
+htmlhelp_basename = "pptrees_doc"
 
 # -- Sphinx.Ext.InterSphinx -----------------------------------------------
 
-intersphinx_mapping = {
-   'python': ('https://docs.python.org/3.7/', None)
-}
+intersphinx_mapping = {"python": ("https://docs.python.org/3.7/", None)}
 
 # -- Sphinx.Ext.ExtLinks --------------------------------------------------
-extlinks = {
-   'wikipedia':  ('https://en.wikipedia.org/wiki/%s', None)
-}
+extlinks = {"wikipedia": ("https://en.wikipedia.org/wiki/%s", None)}

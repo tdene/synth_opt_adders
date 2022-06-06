@@ -3,7 +3,7 @@ import pydot
 
 from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
-from .node_data import *
+from .node_data import node_data
 from .util import match_nodes
 from .util import lg, catalan, catalan_mirror_point
 from .util import display_png, display_gif

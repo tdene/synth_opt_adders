@@ -1,5 +1,5 @@
 import re
-from .node_data import *
+from .node_data import node_data
 import PIL.Image
 import os, uuid
 
