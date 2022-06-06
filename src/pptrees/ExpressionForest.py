@@ -31,6 +31,8 @@ class ExpressionForest(ExpressionGraph):
         out_ports (list of ((string, int), string)): The list of output ports
     """
 
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
     def __init__(
         self,
         width,

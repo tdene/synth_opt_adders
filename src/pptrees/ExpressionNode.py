@@ -134,7 +134,7 @@ class ExpressionNode:
             if self[a] is not None:
                 try:
                     other_c = other[a]
-                except:
+                except IndexError:
                     return False
                 ret = ret and self[a].equiv(other_c)
 
@@ -238,7 +238,7 @@ class ExpressionNode:
 
         This will error out if the node has a parent or children.
         """
-        if self.parent is not None or any([not x is None for x in self]):
+        if self.parent is not None or any([x is not None for x in self]):
             raise ValueError("Cannot morph a node with children or parents")
         if value not in node_data:
             raise ValueError("Invalid module name: {}".format(value))
@@ -336,7 +336,7 @@ class ExpressionNode:
         child.out_nets[pn2][pi2] = net_name
 
         # If nodes are not already connected, connect them
-        if not child.parent is self:
+        if child.parent is not self:
             try:
                 index = self.children.index(None)
                 self.children[index] = child
@@ -495,15 +495,15 @@ class ExpressionNode:
         # Store the filtered HDL in a string
         ret = ""
 
-        for l in hdl_def:
-            if "assign" in l:
-                ret += l + "\n\n"
+        for line in hdl_def:
+            if "assign" in line:
+                ret += line + "\n\n"
             else:
-                if "U" in l:
+                if "U" in line:
                     in_std_cell = True
-                if in_std_cell == True:
-                    ret += l + "\n\n"
-                if l != "" and l[-1] == ";":
+                if in_std_cell:
+                    ret += line + "\n\n"
+                if line != "" and line[-1] == ";":
                     in_std_cell = False
 
         # Create list of all instance pins and copy in unformatted net IDs

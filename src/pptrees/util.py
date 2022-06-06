@@ -1,7 +1,8 @@
 import re
 from .node_data import node_data
 import PIL.Image
-import os, uuid
+import os
+import uuid
 
 
 def lg(x):
@@ -67,7 +68,7 @@ def match_nodes(parent, child, index):
         try:
             # Get the matching output port
             matching_port = get_matching_port(port, child_ports)
-        except:
+        except ValueError:
             return None
         # Figure out which bits of the port to connect
         offset = 0
@@ -250,8 +251,8 @@ def parse_mapping(mapping_file):
                 in_a_module = False
                 current_module = None
             elif in_a_module and "Y, " in line:
-                l = [x.strip() for x in line.strip().split(",")]
-                mapping[current_module][0] = l
+                new_split = [x.strip() for x in line.strip().split(",")]
+                mapping[current_module][0] = new_split
             elif in_a_module and ("));" in line or "assign" in line):
                 mapping[current_module][1] += line
     return mapping

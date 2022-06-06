@@ -31,6 +31,8 @@ class ExpressionTree(ExpressionGraph):
         out_ports (list of ((string, int), string)): The list of output ports
     """
 
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
     def __init__(
         self,
         width=1,
@@ -247,7 +249,7 @@ class ExpressionTree(ExpressionGraph):
             # Iterate through nodes in the column
             while True:
                 # If all nodes have been checked, return None
-                if target == None:
+                if not target:
                     return None
                 # If this node has the correct height, return it
                 height = len(target)
@@ -297,7 +299,7 @@ class ExpressionTree(ExpressionGraph):
 
     def _get_leafs(self, node=None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
-        if node == None:
+        if not node:
             node = self.root
         return list(reversed(self._get_reversed_leafs(node)))
 
@@ -808,7 +810,6 @@ class ExpressionTree(ExpressionGraph):
         rwidth = bin(rchild.leafs).count("1") - 1
 
         # Calculate info that the children need
-        height = len(node)
         width = lwidth + rwidth + 1
         new_mirror = lwidth > rwidth
 
@@ -933,9 +934,8 @@ class ExpressionTree(ExpressionGraph):
         if 1 << (target_height) < bin(node.leafs).count("1"):
             return None
 
-        # Characterize each child as under_full, just_full, or over_full
+        # Characterize each child as under_full or over_full
         under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") for c in node]
-        just_full = [1 << (target_height - 1) == bin(c.leafs).count("1") for c in node]
         over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") for c in node]
 
         # Reduce the height of bad children
@@ -1228,7 +1228,7 @@ class ExpressionTree(ExpressionGraph):
         # Now that the node is known to be in the tree,
         # attempt to apply an FL transform
         node = self[x, y]
-        new_node = self.insert_buffer(node)
+        self.insert_buffer(node)
         return (x, y)
 
     def FT(self, x, y=None, find_y=False):
@@ -1270,7 +1270,6 @@ class ExpressionTree(ExpressionGraph):
         # Now that the node is known to be in the tree,
         # attempt to apply an FT transform
         node = self[x, y]
-        original_height = len(node)
         new_node = self.left_shift(node[1].leftmost_leaf().parent)
         if new_node is None and find_y:
             return self.FT(x, y - 1, find_y=True)
@@ -1315,7 +1314,6 @@ class ExpressionTree(ExpressionGraph):
         # Now that the node is known to be in the tree,
         # attempt to apply an TF transform
         node = self[x, y]
-        original_height = len(node)
         new_node = self.right_shift(node[0].rightmost_leaf().parent)
         if new_node is None and find_y:
             return self.TF(x, y - 1, find_y=True)
