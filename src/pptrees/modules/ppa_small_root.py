@@ -1,11 +1,11 @@
-name = "ppa_post_no_g"
+name = "ppa_small_root"
 data = dict()
 
 ### Post-processing node
 data[
     "verilog"
 ] = """
-module ppa_post_no_g(pin, sum);
+module ppa_small_root(pin, sum);
 
 	input pin;
 	output sum;
@@ -18,14 +18,14 @@ endmodule
 data[
     "vhdl"
 ] = """
-entity ppa_post_no_g is
+entity ppa_small_root is
 	port (
 		pin : in std_logic;
 		sum : out std_logic
 	);
 end entity;
 
-architecture behavior of ppa_post_no_g is
+architecture behavior of ppa_small_root is
 begin
 
 	sum <= pin;

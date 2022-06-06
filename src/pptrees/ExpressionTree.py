@@ -40,7 +40,7 @@ class ExpressionTree(ExpressionGraph):
                  no_shape=False,
                  radix=2,
                  idem=False,
-                 leaf_labels=["c", "gp", "p"],
+                 leaf_labels=["g", "gp", "p"],
                  node_defs={}
                 ):
         """Initializes the ExpressionTree
@@ -267,6 +267,8 @@ class ExpressionTree(ExpressionGraph):
 
     def _get_reversed_leafs(self, node):
         """Return a list of leaf nodes in the subtree rooted at node"""
+        if node is None:
+            return []
         if len(node.children) == 0:
             return [node]
         else:
@@ -348,6 +350,18 @@ class ExpressionTree(ExpressionGraph):
 
         diagram_pos = "{0},{1}!".format(x_pos*-1, y_pos*-1)
         self.nodes[child]["pos"] = diagram_pos
+
+    def remove_subtree(self, node):
+        """Remove the subtree rooted at node"""
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+
+        # Remove the subtree
+        for c in node.children:
+            self.remove_subtree(c)
+        if node.parent is not None:
+            self.remove_edge(node.parent, node)
+        self.remove_node(node)
 
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic
@@ -649,6 +663,23 @@ class ExpressionTree(ExpressionGraph):
         except ValueError:
             node = self.left_rotate(node)
             return self.right_shift(node)
+
+    def _mass_left_shift(self, node):
+        """This method is used in the factorization of trees.
+
+        Its intended purpose is to create a tree that will be stereoscopically
+            combined with self without increasing the depth of any leaf.
+
+        It shifts a node to the left, and if this has increased the height of
+            the subtree, it shifts its left child to the left.
+
+        Args:
+            node (Node): The node at which the shift starts
+
+        Returns:
+            ExpresionTree: The resulting tree, or None if the shift failed
+        """
+        pass
 
     def insert_buffer(self, node):
         """Insert a buffer as the parent of a node

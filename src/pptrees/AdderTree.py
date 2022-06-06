@@ -57,7 +57,7 @@ class AdderTree(ExpressionTree):
                 "rspine"        : "ppa_rspine",
                 "rspine_pre"    : "ppa_rspine_pre",
                 "rspine_buf"    : "ppa_rspine_buffer",
-                "small_root"    : "ppa_post_no_g",
+                "small_root"    : "ppa_small_root",
                 "small_pre"     : "ppa_lspine_pre_simple"
                 }
 
