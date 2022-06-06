@@ -356,12 +356,44 @@ class ExpressionTree(ExpressionGraph):
         if not isinstance(node, Node):
             raise TypeError("Node must be an Node")
 
-        # Remove the subtree
+        # Remove the subtree at node
         for c in node.children:
             self.remove_subtree(c)
         if node.parent is not None:
             self.remove_edge(node.parent, node)
         self.remove_node(node)
+
+    def mirror_subtree(self, node):
+        """Mirror the subtree rooted at node"""
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+
+        # Get the rank and leafs of the subtree
+        rank = self.rank(node)
+        leafs = self._get_leafs(node)
+        labels = [self.nodes[n]["label"] for n in leafs]
+        width = len(leafs) - 1
+
+        # Get the parent and index of the node
+        parent = node.parent
+        index = node.parent.children.index(node)
+
+        # Mirror the rank
+        high_bound = catalan_mirror_point(width) - 1
+        low_bound = catalan(width) - high_bound - 1
+        if rank > low_bound and rank < high_bound:
+            raise ValueError("Cannot mirror tree with rank {0}".format(rank))
+        rank = catalan(width) - rank - 1
+
+        # Remove the subtree
+        self.remove_subtree(node)
+
+        # Re-add the leafs
+        for leaf, label in zip(leafs, labels):
+            self.add_node(leaf, label = label)
+
+        # Re-build the mirrored subtree
+        return self.unrank(parent, index, rank, width, leafs)
 
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic
@@ -840,7 +872,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Account for mirroring
         dir_switched = (new_mirror != mirror)
-        rank = catalan(width) - 1 - rank if dir_switched else rank
+        rank = catalan(width) - rank - 1 if dir_switched else rank
         return rank
 
     def _fix_diagram_positions(self):
