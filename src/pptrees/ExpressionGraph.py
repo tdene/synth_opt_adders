@@ -208,6 +208,22 @@ class ExpressionGraph(nx.DiGraph):
 
         return weight
 
+    def critical_path(self):
+        """Returns the longest path of the graph"""
+
+        # Get valid nodes
+        valid_nodes = [node for node in self.nodes \
+                if node.block is None and node.equiv_class[0] is node]
+
+        if len(valid_nodes) < 2:
+            return
+
+        # Get subgraph view with only valid nodes
+        subgraph = self.subgraph(valid_nodes)
+
+        # Find the critical path
+        return nx.dag_longest_path(subgraph)
+
     def add_block(self, *nodes):
         """Creates a new module block of nodes
 
@@ -255,7 +271,8 @@ class ExpressionGraph(nx.DiGraph):
         Args:
             block_id (int): The ID of the block to remove
         """
-        if block_id not in range(len(self.blocks)) or self.blocks[block_id] is None:
+        if block_id not in range(len(self.blocks)) \
+                or self.blocks[block_id] is None:
             raise ValueError("Invalid block ID")
 
         # Remove the block from the graph
@@ -278,18 +295,7 @@ class ExpressionGraph(nx.DiGraph):
     def add_best_blocks(self):
         """Groups nodes into blocks based on critical paths"""
 
-        # Get valid nodes
-        valid_nodes = [node for node in self.nodes \
-                if node.block is None and node.equiv_class[0] is node]
-
-        if len(valid_nodes) < 2:
-            return
-
-        # Get subgraph view with only valid nodes
-        subgraph = self.subgraph(valid_nodes)
-
-        # Find the critical path
-        path = nx.dag_longest_path(subgraph)
+        path = self.critical_path()
 
         # Add a block
         if len(path) > 1:

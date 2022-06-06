@@ -306,9 +306,6 @@ class ExpressionForest(ExpressionGraph):
 
         See the description of _calc_node_fanout for details
         """
-        # Calculate equivalence classes
-        self.find_equivalent_nodes()
-
         for t in self.trees:
             for n in t:
                 self._calc_node_fanout(n)
@@ -358,9 +355,6 @@ class ExpressionForest(ExpressionGraph):
 
         See the description of _calc_node_tracks for details
         """
-        # Calculate equivalence classes
-        self.find_equivalent_nodes()
-
         for t in self.trees:
             for n in t:
                 self._calc_node_tracks(n)
