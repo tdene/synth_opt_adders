@@ -5,6 +5,7 @@ select = B,C,E,F,W,T4,B9
 ignore = E203, E266, E501, W503, F403, F401, C901
 per-file-ignores = 
     src/pptrees/node_data/*: E101, W191
+    src/pptrees/YosysAdder.py: W605
 
 exclude =
     # No need to traverse our git directory
