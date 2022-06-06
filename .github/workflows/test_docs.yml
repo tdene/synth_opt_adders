@@ -23,6 +23,7 @@ jobs:
         run: |
           pip install .
           pip install sphinx
+          pip install matplotlib
           sudo apt install pandoc
       - name: Test documentation
         run: |
