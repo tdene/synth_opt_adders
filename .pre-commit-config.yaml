@@ -16,7 +16,7 @@ repos:
       rev: "24c98ec4a3c826b44f4d7b06ebfe09a485d2fbcf"
       hooks:
           - id: isort
-            files: "src/pptrees/*.py"
+            files: "src/pptrees/.*.py"
             args: ["--profile", "black", "--filter-files"]
 
     - repo: https://github.com/psf/black
