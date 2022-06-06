@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 setup(
     name="pptrees",
-    version="0.0.2",
+    version="1.0.7",
     description="Parallel Prefix tree generation library",
     url="https://github.com/tdene/synth_opt_adders",
     author="tdene",
@@ -16,9 +16,9 @@ setup(
     ],
     keywords=["hardware adders prefix"],
     package_dir={"": "src"},
-    packages=["pptrees"],
+    packages=find_namespace_packages(where="src"),
     package_data={"pptrees": ["mappings/*.v"]},
     long_description=open("README.md").read(),
     python_requires=">=3.7.*",
-    install_requires=["networkx", "pydot", "graphviz"],
+    install_requires=["networkx", "pydot", "graphviz", "Pillow"],
 )
