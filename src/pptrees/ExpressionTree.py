@@ -1,12 +1,9 @@
 import networkx as nx
-import pydot
 
-from .ExpressionNode import ExpressionNode as Node
 from .ExpressionGraph import ExpressionGraph
+from .ExpressionNode import ExpressionNode as Node
 from .node_data import node_data
-from .util import match_nodes
-from .util import lg, catalan, catalan_mirror_point
-from .util import display_png, display_gif
+from .util import catalan, catalan_mirror_point, display_png, lg, match_nodes
 
 
 class ExpressionTree(ExpressionGraph):

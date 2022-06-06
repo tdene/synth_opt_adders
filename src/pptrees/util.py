@@ -1,8 +1,10 @@
-import re
-from .node_data import node_data
-import PIL.Image
 import os
+import re
 import uuid
+
+import PIL.Image
+
+from .node_data import node_data
 
 
 def lg(x):

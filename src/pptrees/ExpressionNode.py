@@ -1,6 +1,5 @@
 from .node_data import node_data
-from .util import lg
-from .util import parse_net, verso_pin
+from .util import lg, parse_net, verso_pin
 
 
 class ExpressionNode:

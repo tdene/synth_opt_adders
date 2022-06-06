@@ -1,6 +1,4 @@
-from .ExpressionNode import ExpressionNode as Node
 from .ExpressionTree import ExpressionTree
-from .util import lg
 
 
 class AdderTree(ExpressionTree):

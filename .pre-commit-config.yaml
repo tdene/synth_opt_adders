@@ -11,15 +11,16 @@ repos:
       hooks:
           - id: unimport
             args: [--remove, --include-star-import]
+
     - repo: https://github.com/pycqa/isort
       rev: "24c98ec4a3c826b44f4d7b06ebfe09a485d2fbcf"
       hooks:
           - id: isort
-            files: "pptrees/.*"
+            files: "src/pptrees/*.py"
             args: ["--profile", "black", "--filter-files"]
 
     - repo: https://github.com/psf/black
-      rev: "3b2a7d196bc1984aed194cca26a7900968ce4409"
+      rev: "ae2c0758c9e61a385df9700dc9c231bf54887041"
       hooks:
           - id: black
 
@@ -28,11 +29,11 @@ repos:
     #   hooks:
     #       - id: flake8
 
-    - repo: https://github.com/kynan/nbstripout
-      rev: 3843f5f7c586fa6f0df81423f35d52e6af8e3039
-      hooks:
-          - id: nbstripout
-            files: ".ipynb"
+    # - repo: https://github.com/kynan/nbstripout
+    #   rev: 3843f5f7c586fa6f0df81423f35d52e6af8e3039
+    #   hooks:
+    #       - id: nbstripout
+    #         files: ".ipynb"
 
     # - repo: https://github.com/pre-commit/mirrors-mypy
     #   rev: ""

@@ -1,16 +1,24 @@
-import re
+import importlib.resources
 import pathlib
 import shutil
-import importlib.resources
 
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
 from .node_data import node_data
-from .util import hdl_syntax, hdl_entity, hdl_arch, hdl_inst
-from .util import parse_net, sub_brackets, sub_ports
-from .util import natural_keys
-from .util import parse_mapping, merge_mapping_into_cells, increment_iname
+from .util import (
+    hdl_arch,
+    hdl_entity,
+    hdl_inst,
+    hdl_syntax,
+    increment_iname,
+    merge_mapping_into_cells,
+    natural_keys,
+    parse_mapping,
+    parse_net,
+    sub_brackets,
+    sub_ports,
+)
 
 
 class ExpressionGraph(nx.DiGraph):

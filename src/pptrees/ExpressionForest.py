@@ -1,11 +1,9 @@
 import re
 
-from .ExpressionTree import ExpressionTree
 from .ExpressionGraph import ExpressionGraph
+from .ExpressionTree import ExpressionTree
 from .node_data import node_data
-from .util import lg
-from .util import increment_iname
-from .util import display_png, display_gif
+from .util import display_gif, increment_iname
 
 
 class ExpressionForest(ExpressionGraph):

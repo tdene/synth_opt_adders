@@ -1,5 +1,5 @@
-from .ExpressionForest import ExpressionForest
 from .AdderTree import AdderTree
+from .ExpressionForest import ExpressionForest
 
 
 class AdderForest(ExpressionForest):

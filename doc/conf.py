@@ -1,5 +1,4 @@
 import sys
-import re
 from os.path import abspath
 from pathlib import Path
 from json import loads as json_loads
