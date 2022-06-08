@@ -23,6 +23,7 @@ repos:
       rev: "ae2c0758c9e61a385df9700dc9c231bf54887041"
       hooks:
           - id: black
+            args: ["--line-length", "80"]
 
     - repo: https://gitlab.com/pycqa/flake8
       rev: "21d3c70d676007470908d39b73f0521d39b3b997"

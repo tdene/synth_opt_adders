@@ -85,9 +85,9 @@ class ExpressionTree(ExpressionGraph):
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(
-                    ("Tree node definitions must contain" " the node {}").format(
-                        required
-                    )
+                    (
+                        "Tree node definitions must contain" " the node {}"
+                    ).format(required)
                 )
 
         # Save constructor arguments
@@ -101,8 +101,9 @@ class ExpressionTree(ExpressionGraph):
         self.in_shape = [x[1] for x in node_data[node_defs["pre"]]["ins"]]
         self.out_shape = [x[1] for x in node_data[node_defs["root"]]["outs"]]
 
-        self.cocycle_shape = [x[1] for x in node_data[node_defs["cocycle"]]["ins"]]
-        cocycle_out_shape = [x[1] for x in node_data[node_defs["cocycle"]]["outs"]]
+        cocycle = node_data[node_defs["cocycle"]]
+        self.cocycle_shape = [x[1] for x in cocycle["ins"]]
+        cocycle_out_shape = [x[1] for x in cocycle["outs"]]
         cocycle_out_shape = [self.radix * x for x in cocycle_out_shape]
         if cocycle_out_shape != self.cocycle_shape:
             raise ValueError(
@@ -127,7 +128,10 @@ class ExpressionTree(ExpressionGraph):
                     ).format(a)
                 )
         for a in range(len(self.out_shape)):
-            if a > len(out_ports) - 1 or self.out_shape[a] != out_ports[a][0][1]:
+            if (
+                a > len(out_ports) - 1
+                or self.out_shape[a] != out_ports[a][0][1]
+            ):
                 raise ValueError(
                     (
                         "Output port {} of the tree must have the"
@@ -246,7 +250,7 @@ class ExpressionTree(ExpressionGraph):
             # Iterate through nodes in the column
             while True:
                 # If all nodes have been checked, return None
-                if not target:
+                if target is None:
                     return None
                 # If this node has the correct height, return it
                 height = len(target)
@@ -294,7 +298,9 @@ class ExpressionTree(ExpressionGraph):
         if len(node.children) == 0:
             return [node]
         else:
-            return [n for c in node.children for n in self._get_reversed_leafs(c)]
+            return [
+                n for c in node.children for n in self._get_reversed_leafs(c)
+            ]
 
     def _get_leafs(self, node=None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
@@ -341,7 +347,10 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("index must be an integer")
         if index < -self.radix or index > self.radix - 1:
             raise ValueError(
-                ("Tree nodes may not have more edges" "than the radix of the tree")
+                (
+                    "Tree nodes may not have more edges"
+                    "than the radix of the tree"
+                )
             )
 
         # Normalize index
@@ -373,17 +382,67 @@ class ExpressionTree(ExpressionGraph):
         diagram_pos = "{0},{1}!".format(x_pos * -1, y_pos * -1)
         self.nodes[child]["pos"] = diagram_pos
 
-    def remove_subtree(self, node):
-        """Remove the subtree rooted at node"""
+    def detach_subtree(self, node, return_data=True):
+        """Detach the subtree rooted at node
+
+        Args:
+            node (Node): The root of the subtree to detach
+            return_data (bool): Whether to return the data of the subtree
+
+        Returns:
+            rank (int): The rank of the subtree
+            leafs (list): The leaf nodes of the subtree
+        """
         if not isinstance(node, Node):
             raise TypeError("Node must be an Node")
 
+        # Save the rank and leafs
+        if return_data:
+            rank = self.rank(node=node)
+            leafs = self._get_leafs(node)
+            labels = [self.nodes[n]["label"] for n in leafs]
+
         # Remove the subtree at node
         for c in node.children:
-            self.remove_subtree(c)
+            self.detach_subtree(c, return_data=False)
         if node.parent is not None:
             self.remove_edge(node.parent, node)
         self.remove_node(node)
+
+        # Return the data
+        if return_data:
+            return rank, leafs, labels
+
+    def attach_subtree(self, parent, index, rank, leafs, labels):
+        """Attach the subtree rooted at node
+
+        Args:
+            parent (Node): The parent node
+            index (int): The index of the parent's input port
+            rank (int): The rank of the subtree
+            width (int): The width of the subtree
+            leafs (list): The leaf nodes of the subtree
+        """
+        if not isinstance(parent, Node):
+            raise TypeError("Parent must be an Node")
+        if not isinstance(index, int):
+            raise TypeError("index must be an integer")
+        if not isinstance(rank, int):
+            raise TypeError("rank must be an integer")
+        if not isinstance(leafs, list):
+            raise TypeError("leafs must be a list")
+        if not all(isinstance(leaf, Node) for leaf in leafs):
+            raise TypeError("leafs must be a list of Nodes")
+
+        # Add the leafs to the tree
+        for leaf, label in zip(leafs, labels):
+            self.add_node(leaf, label=label)
+
+        # Get the width of the subtree, based on the number of leafs
+        width = len(leafs) - 1
+
+        # Build the subtree
+        return self.unrank(parent, index, rank, width, leafs)
 
     def mirror_subtree(self, node):
         """Mirror the subtree rooted at node"""
@@ -408,7 +467,7 @@ class ExpressionTree(ExpressionGraph):
         rank = catalan(width) - rank - 1
 
         # Remove the subtree
-        self.remove_subtree(node)
+        self.detach_subtree(node)
 
         # Re-add the leafs
         for leaf, label in zip(leafs, labels):
@@ -438,14 +497,20 @@ class ExpressionTree(ExpressionGraph):
         # If rspine nodes are defined, swap them in
         node = self.root
         while True:
-            if "rspine" in self.node_defs and node.value == self.node_defs["cocycle"]:
+            if (
+                "rspine" in self.node_defs
+                and node.value == self.node_defs["cocycle"]
+            ):
                 node = self.swap_node_def(node, self.node_defs["rspine"])
             if (
                 "rspine_buf" in self.node_defs
                 and node.value == self.node_defs["buffer"]
             ):
                 node = self.swap_node_def(node, self.node_defs["rspine_buf"])
-            if "rspine_pre" in self.node_defs and node.value == self.node_defs["pre"]:
+            if (
+                "rspine_pre" in self.node_defs
+                and node.value == self.node_defs["pre"]
+            ):
                 node = self.swap_node_def(node, self.node_defs["rspine_pre"])
             if not node.children:
                 break
@@ -796,7 +861,9 @@ class ExpressionTree(ExpressionGraph):
 
         return child
 
-    def unrank(self, parent, index, rank, width, leafs, mirror=False, lspine=False):
+    def unrank(
+        self, parent, index, rank, width, leafs, mirror=False, lspine=False
+    ):
         """Generate a binary tree under a node by unranking it"""
 
         # The unranking function is symmetrical around the midpoint
@@ -995,8 +1062,9 @@ class ExpressionTree(ExpressionGraph):
             return None
 
         # Characterize each child as under_full or over_full
-        under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") for c in node]
-        over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") for c in node]
+        max_leafs = 1 << (target_height - 1)
+        under_full = [max_leafs > bin(c.leafs).count("1") for c in node]
+        over_full = [max_leafs < bin(c.leafs).count("1") for c in node]
 
         # Reduce the height of bad children
         for a in range(len(c_heights)):

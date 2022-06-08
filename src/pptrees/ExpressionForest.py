@@ -61,8 +61,9 @@ class ExpressionForest(ExpressionGraph):
             name (string): The name of the graph
             alias (string): The starting structure of the forest [LEGACY]
             tree_start_points (list of int): Catalan IDs for each tree
-            initialized_trees (list): A list of trees to initialize the forest with
-                If this parameter is set, the forest will undergo an alternate constructor
+            initialized_trees (list): A list of trees to initialize the forest
+                If this parameter is set,
+                the forest will undergo an alternate constructor
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
@@ -106,9 +107,9 @@ class ExpressionForest(ExpressionGraph):
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(
-                    ("Tree node definitions must contain" " the node {}").format(
-                        required
-                    )
+                    (
+                        "Tree node definitions must contain" " the node {}"
+                    ).format(required)
                 )
 
         # If both kinds of start points are specified,
@@ -376,10 +377,10 @@ class ExpressionForest(ExpressionGraph):
 
         # Check if arguments are valid
         if not (node in node.graph):
-            raise ValueError("Node is not in its graph. This should not happen.")
+            raise ValueError("Node is not in its graph. Impossible error.")
         if not (node.graph in self.trees):
             raise ValueError(
-                "Node graph is not in this forest. This should not happen."
+                "Node graph is not in this forest. Impossible error."
             )
         if not (tree in self.trees):
             raise ValueError("Trying to decouple fanout in an invalid tree.")
@@ -392,7 +393,7 @@ class ExpressionForest(ExpressionGraph):
                 other_node = a
                 break
         if other_node is None:
-            raise ValueError("Trying to decouple fanout in an innapropriate tree.")
+            raise ValueError("Trying to decouple fanout in innapropriate tree.")
 
         # Decouple fanout
         buffer = tree.insert_buffer(other_node)
@@ -414,7 +415,7 @@ class ExpressionForest(ExpressionGraph):
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
-        All node node_data have a footprint attribute, clarifying which node_data
+        All node node_data have a footprint attribute clarifying which node_data
         refer to the same node concept. All node node_data also have a priority
         attribute, used to determine which module is most "optimal".
 
@@ -595,7 +596,11 @@ class ExpressionForest(ExpressionGraph):
         # Get node's equivalence class
         ec = node.equiv_class
         # Filter out nodes whose parents are equivalent
-        ec = [x for x in ec if x.parent is None or x.parent.equiv_class[0] is x.parent]
+        ec = [
+            x
+            for x in ec
+            if x.parent is None or x.parent.equiv_class[0] is x.parent
+        ]
         # Decouple fanout
         ctr = 0
         for a in range(len(ec)):

@@ -285,7 +285,10 @@ class ExpressionGraph(nx.DiGraph):
         Args:
             block_id (int): The ID of the block to remove
         """
-        if block_id not in range(len(self.blocks)) or self.blocks[block_id] is None:
+        if (
+            block_id not in range(len(self.blocks))
+            or self.blocks[block_id] is None
+        ):
             raise ValueError("Invalid block ID")
 
         # Remove the block from the graph
@@ -362,7 +365,10 @@ class ExpressionGraph(nx.DiGraph):
 
         # If the ports are defined, return them
         if self.in_ports is not None:
-            return (self.in_ports + self.in_extras, self.out_ports + self.out_extras)
+            return (
+                self.in_ports + self.in_extras,
+                self.out_ports + self.out_extras,
+            )
 
         # Otherwise, find them from nodes and blocks
         in_ports, out_ports = self._get_internal_nets()
