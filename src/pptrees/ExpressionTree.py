@@ -449,15 +449,13 @@ class ExpressionTree(ExpressionGraph):
         if not isinstance(node, Node):
             raise TypeError("Node must be an Node")
 
-        # Get the rank and leafs of the subtree
-        rank = self.rank(node)
-        leafs = self._get_leafs(node)
-        labels = [self.nodes[n]["label"] for n in leafs]
-        width = len(leafs) - 1
-
         # Get the parent and index of the node
         parent = node.parent
         index = node.parent.children.index(node)
+
+        # Detach the subtree
+        rank, leafs, labels = self.detach_subtree(node)
+        width = len(leafs) - 1
 
         # Mirror the rank
         high_bound = catalan_mirror_point(width) - 1
@@ -466,15 +464,8 @@ class ExpressionTree(ExpressionGraph):
             raise ValueError("Cannot mirror tree with rank {0}".format(rank))
         rank = catalan(width) - rank - 1
 
-        # Remove the subtree
-        self.detach_subtree(node)
-
-        # Re-add the leafs
-        for leaf, label in zip(leafs, labels):
-            self.add_node(leaf, label=label)
-
-        # Re-build the mirrored subtree
-        return self.unrank(parent, index, rank, width, leafs)
+        # Attach the mirrored subtree
+        return self.attach_subtree(parent, index, rank, leafs, labels)
 
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic
