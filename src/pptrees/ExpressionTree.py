@@ -64,11 +64,10 @@ class ExpressionTree(ExpressionGraph):
                 - "buffer": Buffer node
 
             Optional node definitions include but are not limited to:
-                - "rspine": Nodes that lie along the right spine of the tree
                 - "lspine": Nodes that lie along the left spine of the tree
-                - "rspine_pre": Pre- node that feeds into the right spine
                 - "lspine_pre": Pre- node that feeds into the left spine
                 - "small_root": Root node that corresponds to width = 1
+                - "small_pre": Pre- node that corresponds to width = 1
         """
         if not isinstance(width, int):
             raise TypeError("Tree width must be an integer")
@@ -280,7 +279,11 @@ class ExpressionTree(ExpressionGraph):
 
     def __copy__(self):
         """Define copying of Trees in terms of rank"""
-        return self.__class__(width=self.width, startpoint=self.rank())
+        return self.__class__(width=self.width, start_point=self.rank())
+
+    def copy(self):
+        """Define copying of Trees in terms of rank"""
+        return self.__class__(width=self.width, start_point=self.rank())
 
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
@@ -533,28 +536,6 @@ class ExpressionTree(ExpressionGraph):
 
         # First fix node positions
         self._fix_diagram_positions()
-
-        # If rspine nodes are defined, swap them in
-        node = self.root
-        while True:
-            if (
-                "rspine" in self.node_defs
-                and node.value == self.node_defs["cocycle"]
-            ):
-                node = self.swap_node_def(node, self.node_defs["rspine"])
-            if (
-                "rspine_buf" in self.node_defs
-                and node.value == self.node_defs["buffer"]
-            ):
-                node = self.swap_node_def(node, self.node_defs["rspine_buf"])
-            if (
-                "rspine_pre" in self.node_defs
-                and node.value == self.node_defs["pre"]
-            ):
-                node = self.swap_node_def(node, self.node_defs["rspine_pre"])
-            if not node.children:
-                break
-            node = node[-1]
 
     def swap_node_def(self, node, new_def):
         """Change a node's module definition
