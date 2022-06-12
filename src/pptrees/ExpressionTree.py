@@ -304,7 +304,7 @@ class ExpressionTree(ExpressionGraph):
 
     def _get_leafs(self, node=None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
-        if not node:
+        if node is None:
             node = self.root
         return list(reversed(self._get_reversed_leafs(node)))
 
@@ -413,7 +413,7 @@ class ExpressionTree(ExpressionGraph):
         if return_data:
             return rank, leafs, labels
 
-    def attach_subtree(self, parent, index, rank, leafs, labels):
+    def attach_subtree(self, parent, index, rank, leafs, labels, lspine=False):
         """Attach the subtree rooted at node
 
         Args:
@@ -442,7 +442,7 @@ class ExpressionTree(ExpressionGraph):
         width = len(leafs) - 1
 
         # Build the subtree
-        return self.unrank(parent, index, rank, width, leafs)
+        return self.unrank(parent, index, rank, width, leafs, lspine=lspine)
 
     def mirror_subtree(self, node):
         """Mirror the subtree rooted at node"""
@@ -466,6 +466,51 @@ class ExpressionTree(ExpressionGraph):
 
         # Attach the mirrored subtree
         return self.attach_subtree(parent, index, rank, leafs, labels)
+
+    def left_graft_branch(self, node):
+        """Detach the subtree rooted at node, and graft it to the left
+
+        Args:
+            node (Node): The root of the subtree to detach
+
+        Returns:
+            rootstock (Node): The rootstock of the graft
+        """
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+        if self._on_lspine(node):
+            raise ValueError("There is nothing to the left of this node")
+
+        # Get the parent and index of the node
+        parent = node.parent
+        index = node.parent.children.index(node)
+
+        # Detach the scion
+        rank, leafs, labels = self.detach_subtree(node)
+
+        # Find the rootstock
+        rootstock = parent.rightmost_leaf()
+        r_parent = rootstock.parent
+        r_index = r_parent.children.index(rootstock)
+
+        # Check whether the scion will be attached onto the left spine
+        lspine = r_index == 0 and self._on_lspine(r_parent)
+
+        # Re-attach the rightmost leaf of the scion
+        self.attach_subtree(parent, index, 0, [leafs.pop(0)], [labels.pop(0)])
+
+        # Detach the leaf attached to the rootstock
+        _, leaf, label = self.detach_subtree(rootstock)
+
+        # Combine this leaf with the scion
+        leafs += leaf
+        labels += label
+
+        # Graft the scion to the rootstock
+        self.attach_subtree(r_parent, r_index, rank, leafs, labels, lspine)
+
+        # Return the rootstock
+        return rootstock
 
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic
