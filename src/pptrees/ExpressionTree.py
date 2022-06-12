@@ -278,6 +278,10 @@ class ExpressionTree(ExpressionGraph):
         """Define order by rank"""
         return self.rank(self.root) < other.rank(other.root)
 
+    def __copy__(self):
+        """Define copying of Trees in terms of rank"""
+        return self.__class__(width=self.width, startpoint=self.rank())
+
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
         return display_png(self)
@@ -467,7 +471,7 @@ class ExpressionTree(ExpressionGraph):
         # Attach the mirrored subtree
         return self.attach_subtree(parent, index, rank, leafs, labels)
 
-    def left_graft_branch(self, node):
+    def graft_branch_left(self, node):
         """Detach the subtree rooted at node, and graft it to the left
 
         Args:
