@@ -4,12 +4,12 @@
   <a title="Apache-2.0" href="https://github.com/tdene/synth_opt_adders/blob/main/LICENSE"><img src="https://img.shields.io/github/license/tdene/synth_opt_adders?longCache=true&style=flat-square&logo=Apache&label=Code"></a><!--
   -->
   <a title="'unit_tests' workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Aunit_tests"
+     href="https://github.com/tdene/synth_opt_adders/actions?query=workflow%3Aunit_tests"
   ><img alt="'unit_tests' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&style=flat-square&label=unit_tests&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'docs workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
+     href="https://github.com/tdene/synth_opt_adders/actions?query=workflow%3Adocs"
   ><img alt="'docs workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
