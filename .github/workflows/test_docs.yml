@@ -23,9 +23,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .
-          pip install -r doc/requirements.txt
+          pip install -r docs/requirements.txt
           sudo apt install pandoc
       - name: Test documentation
         run: |
-          cd doc
+          cd docs
           make html
