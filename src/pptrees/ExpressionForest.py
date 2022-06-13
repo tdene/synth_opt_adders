@@ -524,6 +524,10 @@ class ExpressionForest(ExpressionGraph):
 
         return hdl, module_defs, file_out_hdl
 
+    def gif(self, out="forest.gif"):
+        with open(out, "wb") as fout:
+            fout.write(self._repr_png_())
+
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 
     def LF(self, x, y=None):
