@@ -6,6 +6,7 @@ recommonmark
 sphinx-markdown-tables
 sphinx-autodoc-typehints
 sphinx-click
+sphinxcontrib-bibtex
 matplotlib
 pytest
 pytest-regressions
