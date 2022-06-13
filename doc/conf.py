@@ -75,7 +75,7 @@ release = version  # The full version, including alpha/beta/rc tags.
 # for a list of supported languages.
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = en
+language = "en"
 
 exclude_patterns = [
     "_build",
