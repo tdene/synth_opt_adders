@@ -48,7 +48,7 @@ doctest:
   stage: test
   script:
     - python -m pip install tox
-    - python -m tox -e doc
+    - python -m tox -e docs
 
 flake8:
   stage: test
@@ -62,10 +62,10 @@ mypy:
     - python -m pip install tox
     - python -m tox -e mypy
 
-doc:
+docs:
   stage: release
   script:
-    - cd doc
+    - cd docs
     - make install clean html upload
   only:
     - release
