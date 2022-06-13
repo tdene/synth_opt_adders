@@ -18,7 +18,6 @@ author = "tdene"
 autodoc_member_order = "bysource"
 
 extensions = [
-    "matplotlib.sphinxext.plot_directive",
     "myst_parser",
     "nbsphinx",
     "sphinx.ext.doctest",

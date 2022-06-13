@@ -2,12 +2,10 @@ sphinx
 docutils
 nbsphinx
 sphinx-rtd-theme
-recommonmark
 sphinx-markdown-tables
 sphinx-autodoc-typehints
 sphinx-click
 sphinxcontrib-bibtex
-matplotlib
 pytest
 pytest-regressions
 pre-commit
@@ -17,4 +15,3 @@ doc8
 pydocstyle
 pur
 myst-parser
-furo
