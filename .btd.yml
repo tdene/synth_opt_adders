@@ -1,4 +1,4 @@
-input: doc
+input: docs
 output: _build
 requirements: requirements.txt
 target: gh-pages
