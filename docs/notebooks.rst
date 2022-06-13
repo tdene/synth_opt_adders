@@ -7,4 +7,5 @@ Tutorial
    :titlesonly:
    :caption: Contents:
 
-   notebooks/hardware_addition.ipynb
+   notebooks/intro.ipynb
+   notebooks/adder_theory.ipynb
