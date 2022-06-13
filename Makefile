@@ -26,7 +26,7 @@ lintd:
 	pydocstyle pptrees
 
 doc8:
-	doc8 docs/
+	doc8 doc/
 
 update:
 	pur

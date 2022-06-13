@@ -47,14 +47,15 @@ class AdderForest(ExpressionForest):
 
         Args:
             width (int): The number of leaves in the tree
-            in_ports (list of ((string, int), string)): The list of input ports
-            out_ports (list of ((string, int), string)): The list of output ports
+            in_ports (list of ((string, int), string)): List of input ports
+            out_ports (list of ((string, int), string)): List of output ports
             tree_type (class): The type of tree this forest contains
             name (string): The name of the graph
             alias (string): The starting structure of the forest [LEGACY]
             tree_start_points (list of int): Catalan IDs for each tree
-            initialized_trees (list): A list of trees to initialize the forest with
-                If this parameter is set, the forest will undergo an alternate constructor
+            initialized_trees (list): List of trees to initialize the forest
+                If this parameter is set,
+                the forest will undergo an alternate constructor
             radix (int): The radix of the tree
         """
 

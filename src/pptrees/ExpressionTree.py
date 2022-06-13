@@ -41,7 +41,7 @@ class ExpressionTree(ExpressionGraph):
         no_shape=False,
         radix=2,
         idem=False,
-        leaf_labels=["c", "gp", "p"],
+        leaf_labels=["g", "gp", "p"],
         node_defs={},
     ):
         """Initializes the ExpressionTree
@@ -64,11 +64,10 @@ class ExpressionTree(ExpressionGraph):
                 - "buffer": Buffer node
 
             Optional node definitions include but are not limited to:
-                - "rspine": Nodes that lie along the right spine of the tree
                 - "lspine": Nodes that lie along the left spine of the tree
-                - "rspine_pre": Pre- node that feeds into the right spine
                 - "lspine_pre": Pre- node that feeds into the left spine
                 - "small_root": Root node that corresponds to width = 1
+                - "small_pre": Pre- node that corresponds to width = 1
         """
         if not isinstance(width, int):
             raise TypeError("Tree width must be an integer")
@@ -85,9 +84,9 @@ class ExpressionTree(ExpressionGraph):
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(
-                    ("Tree node definitions must contain" " the node {}").format(
-                        required
-                    )
+                    (
+                        "Tree node definitions must contain" " the node {}"
+                    ).format(required)
                 )
 
         # Save constructor arguments
@@ -101,8 +100,9 @@ class ExpressionTree(ExpressionGraph):
         self.in_shape = [x[1] for x in node_data[node_defs["pre"]]["ins"]]
         self.out_shape = [x[1] for x in node_data[node_defs["root"]]["outs"]]
 
-        self.cocycle_shape = [x[1] for x in node_data[node_defs["cocycle"]]["ins"]]
-        cocycle_out_shape = [x[1] for x in node_data[node_defs["cocycle"]]["outs"]]
+        cocycle = node_data[node_defs["cocycle"]]
+        self.cocycle_shape = [x[1] for x in cocycle["ins"]]
+        cocycle_out_shape = [x[1] for x in cocycle["outs"]]
         cocycle_out_shape = [self.radix * x for x in cocycle_out_shape]
         if cocycle_out_shape != self.cocycle_shape:
             raise ValueError(
@@ -127,7 +127,10 @@ class ExpressionTree(ExpressionGraph):
                     ).format(a)
                 )
         for a in range(len(self.out_shape)):
-            if a > len(out_ports) - 1 or self.out_shape[a] != out_ports[a][0][1]:
+            if (
+                a > len(out_ports) - 1
+                or self.out_shape[a] != out_ports[a][0][1]
+            ):
                 raise ValueError(
                     (
                         "Output port {} of the tree must have the"
@@ -246,7 +249,7 @@ class ExpressionTree(ExpressionGraph):
             # Iterate through nodes in the column
             while True:
                 # If all nodes have been checked, return None
-                if not target:
+                if target is None:
                     return None
                 # If this node has the correct height, return it
                 height = len(target)
@@ -274,6 +277,14 @@ class ExpressionTree(ExpressionGraph):
         """Define order by rank"""
         return self.rank(self.root) < other.rank(other.root)
 
+    def __copy__(self):
+        """Define copying of Trees in terms of rank"""
+        return self.__class__(width=self.width, start_point=self.rank())
+
+    def copy(self):
+        """Define copying of Trees in terms of rank"""
+        return self.__class__(width=self.width, start_point=self.rank())
+
     def _repr_png_(self):
         """Automatically display diagrams in a Notebook"""
         return display_png(self)
@@ -289,14 +300,18 @@ class ExpressionTree(ExpressionGraph):
 
     def _get_reversed_leafs(self, node):
         """Return a list of leaf nodes in the subtree rooted at node"""
+        if node is None:
+            return []
         if len(node.children) == 0:
             return [node]
         else:
-            return [n for c in node.children for n in self._get_reversed_leafs(c)]
+            return [
+                n for c in node.children for n in self._get_reversed_leafs(c)
+            ]
 
     def _get_leafs(self, node=None):
         """Return a sorted list of leaf nodes in the subtree rooted at node"""
-        if not node:
+        if node is None:
             node = self.root
         return list(reversed(self._get_reversed_leafs(node)))
 
@@ -339,7 +354,10 @@ class ExpressionTree(ExpressionGraph):
             raise TypeError("index must be an integer")
         if index < -self.radix or index > self.radix - 1:
             raise ValueError(
-                ("Tree nodes may not have more edges" "than the radix of the tree")
+                (
+                    "Tree nodes may not have more edges"
+                    "than the radix of the tree"
+                )
             )
 
         # Normalize index
@@ -371,6 +389,136 @@ class ExpressionTree(ExpressionGraph):
         diagram_pos = "{0},{1}!".format(x_pos * -1, y_pos * -1)
         self.nodes[child]["pos"] = diagram_pos
 
+    def detach_subtree(self, node, return_data=True):
+        """Detach the subtree rooted at node
+
+        Args:
+            node (Node): The root of the subtree to detach
+            return_data (bool): Whether to return the data of the subtree
+
+        Returns:
+            rank (int): The rank of the subtree
+            leafs (list): The leaf nodes of the subtree
+        """
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+
+        # Save the rank and leafs
+        if return_data:
+            rank = self.rank(node=node)
+            leafs = self._get_leafs(node)
+            labels = [self.nodes[n]["label"] for n in leafs]
+
+        # Remove the subtree at node
+        for c in node.children:
+            self.detach_subtree(c, return_data=False)
+        if node.parent is not None:
+            self.remove_edge(node.parent, node)
+        self.remove_node(node)
+
+        # Return the data
+        if return_data:
+            return rank, leafs, labels
+
+    def attach_subtree(self, parent, index, rank, leafs, labels, lspine=False):
+        """Attach the subtree rooted at node
+
+        Args:
+            parent (Node): The parent node
+            index (int): The index of the parent's input port
+            rank (int): The rank of the subtree
+            width (int): The width of the subtree
+            leafs (list): The leaf nodes of the subtree
+        """
+        if not isinstance(parent, Node):
+            raise TypeError("Parent must be an Node")
+        if not isinstance(index, int):
+            raise TypeError("index must be an integer")
+        if not isinstance(rank, int):
+            raise TypeError("rank must be an integer")
+        if not isinstance(leafs, list):
+            raise TypeError("leafs must be a list")
+        if not all(isinstance(leaf, Node) for leaf in leafs):
+            raise TypeError("leafs must be a list of Nodes")
+
+        # Add the leafs to the tree
+        for leaf, label in zip(leafs, labels):
+            self.add_node(leaf, label=label)
+
+        # Get the width of the subtree, based on the number of leafs
+        width = len(leafs) - 1
+
+        # Build the subtree
+        return self.unrank(parent, index, rank, width, leafs, lspine=lspine)
+
+    def mirror_subtree(self, node):
+        """Mirror the subtree rooted at node"""
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+
+        # Get the parent and index of the node
+        parent = node.parent
+        index = node.parent.children.index(node)
+
+        # Detach the subtree
+        rank, leafs, labels = self.detach_subtree(node)
+        width = len(leafs) - 1
+
+        # Mirror the rank
+        high_bound = catalan_mirror_point(width) - 1
+        low_bound = catalan(width) - high_bound - 1
+        if rank > low_bound and rank < high_bound:
+            raise ValueError("Cannot mirror tree with rank {0}".format(rank))
+        rank = catalan(width) - rank - 1
+
+        # Attach the mirrored subtree
+        return self.attach_subtree(parent, index, rank, leafs, labels)
+
+    def graft_branch_left(self, node):
+        """Detach the subtree rooted at node, and graft it to the left
+
+        Args:
+            node (Node): The root of the subtree to detach
+
+        Returns:
+            rootstock (Node): The rootstock of the graft
+        """
+        if not isinstance(node, Node):
+            raise TypeError("Node must be an Node")
+        if self._on_lspine(node):
+            raise ValueError("There is nothing to the left of this node")
+
+        # Get the parent and index of the node
+        parent = node.parent
+        index = node.parent.children.index(node)
+
+        # Detach the scion
+        rank, leafs, labels = self.detach_subtree(node)
+
+        # Find the rootstock
+        rootstock = parent.rightmost_leaf()
+        r_parent = rootstock.parent
+        r_index = r_parent.children.index(rootstock)
+
+        # Check whether the scion will be attached onto the left spine
+        lspine = r_index == 0 and self._on_lspine(r_parent)
+
+        # Re-attach the rightmost leaf of the scion
+        self.attach_subtree(parent, index, 0, [leafs.pop(0)], [labels.pop(0)])
+
+        # Detach the leaf attached to the rootstock
+        _, leaf, label = self.detach_subtree(rootstock)
+
+        # Combine this leaf with the scion
+        leafs += leaf
+        labels += label
+
+        # Graft the scion to the rootstock
+        self.attach_subtree(r_parent, r_index, rank, leafs, labels, lspine)
+
+        # Return the rootstock
+        return rootstock
+
     def optimize_nodes(self):
         """Optimizes nodes in the tree by removing unnecessary logic
 
@@ -388,22 +536,6 @@ class ExpressionTree(ExpressionGraph):
 
         # First fix node positions
         self._fix_diagram_positions()
-
-        # If rspine nodes are defined, swap them in
-        node = self.root
-        while True:
-            if "rspine" in self.node_defs and node.value == self.node_defs["cocycle"]:
-                node = self.swap_node_def(node, self.node_defs["rspine"])
-            if (
-                "rspine_buf" in self.node_defs
-                and node.value == self.node_defs["buffer"]
-            ):
-                node = self.swap_node_def(node, self.node_defs["rspine_buf"])
-            if "rspine_pre" in self.node_defs and node.value == self.node_defs["pre"]:
-                node = self.swap_node_def(node, self.node_defs["rspine_pre"])
-            if not node.children:
-                break
-            node = node[-1]
 
     def swap_node_def(self, node, new_def):
         """Change a node's module definition
@@ -672,6 +804,23 @@ class ExpressionTree(ExpressionGraph):
             node = self.left_rotate(node)
             return self.right_shift(node)
 
+    def _mass_left_shift(self, node):
+        """This method is used in the factorization of trees.
+
+        Its intended purpose is to create a tree that will be stereoscopically
+            combined with self without increasing the depth of any leaf.
+
+        It shifts a node to the left, and if this has increased the height of
+            the subtree, it shifts its left child to the left.
+
+        Args:
+            node (Node): The node at which the shift starts
+
+        Returns:
+            ExpresionTree: The resulting tree, or None if the shift failed
+        """
+        pass
+
     def insert_buffer(self, node):
         """Insert a buffer as the parent of a node
 
@@ -733,7 +882,9 @@ class ExpressionTree(ExpressionGraph):
 
         return child
 
-    def unrank(self, parent, index, rank, width, leafs, mirror=False, lspine=False):
+    def unrank(
+        self, parent, index, rank, width, leafs, mirror=False, lspine=False
+    ):
         """Generate a binary tree under a node by unranking it"""
 
         # The unranking function is symmetrical around the midpoint
@@ -829,7 +980,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Account for mirroring
         dir_switched = new_mirror != mirror
-        rank = catalan(width) - 1 - rank if dir_switched else rank
+        rank = catalan(width) - rank - 1 if dir_switched else rank
         return rank
 
     def _fix_diagram_positions(self):
@@ -932,8 +1083,9 @@ class ExpressionTree(ExpressionGraph):
             return None
 
         # Characterize each child as under_full or over_full
-        under_full = [1 << (target_height - 1) > bin(c.leafs).count("1") for c in node]
-        over_full = [1 << (target_height - 1) < bin(c.leafs).count("1") for c in node]
+        max_leafs = 1 << (target_height - 1)
+        under_full = [max_leafs > bin(c.leafs).count("1") for c in node]
+        over_full = [max_leafs < bin(c.leafs).count("1") for c in node]
 
         # Reduce the height of bad children
         for a in range(len(c_heights)):

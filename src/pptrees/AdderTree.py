@@ -54,10 +54,7 @@ class AdderTree(ExpressionTree):
             "buffer": "ppa_buffer",
             "lspine_pre": "ppa_lspine_pre",
             "lspine": "ppa_lspine",
-            "rspine": "ppa_rspine",
-            "rspine_pre": "ppa_rspine_pre",
-            "rspine_buf": "ppa_rspine_buffer",
-            "small_root": "ppa_post_no_g",
+            "small_root": "ppa_small_root",
             "small_pre": "ppa_lspine_pre_simple",
         }
 
@@ -100,6 +97,19 @@ class AdderTree(ExpressionTree):
         ## Handle width < 2 case
         if self.width < self.radix:
             return
+
+        ## Go down the right spine and optimize all nodes on it
+        node = self.root
+        while True:
+            if node.value == self.node_defs["cocycle"]:
+                node = self.swap_node_def(node, "ppa_rspine")
+            if node.value == self.node_defs["buffer"]:
+                node = self.swap_node_def(node, "ppa_rspine_buffer")
+            if node.value == self.node_defs["pre"]:
+                node = self.swap_node_def(node, "ppa_rspine_pre")
+            if not node.children:
+                break
+            node = node[-1]
 
         ## If there is no lspine, swap out the root
         if not self.root[0].children:

@@ -27,5 +27,5 @@ jobs:
           sudo apt install pandoc
       - name: Test documentation
         run: |
-          cd docs
+          cd doc
           make html

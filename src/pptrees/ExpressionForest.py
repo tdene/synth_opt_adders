@@ -61,8 +61,9 @@ class ExpressionForest(ExpressionGraph):
             name (string): The name of the graph
             alias (string): The starting structure of the forest [LEGACY]
             tree_start_points (list of int): Catalan IDs for each tree
-            initialized_trees (list): A list of trees to initialize the forest with
-                If this parameter is set, the forest will undergo an alternate constructor
+            initialized_trees (list): A list of trees to initialize the forest
+                If this parameter is set,
+                the forest will undergo an alternate constructor
             radix (int): The radix of the tree
             idem (bool): Whether the tree's main operator is idempotent
             node_defs (dict): A dictionary that must define these nodes:
@@ -106,9 +107,9 @@ class ExpressionForest(ExpressionGraph):
         for required in ["pre", "root", "cocycle", "buffer"]:
             if required not in node_defs:
                 raise ValueError(
-                    ("Tree node definitions must contain" " the node {}").format(
-                        required
-                    )
+                    (
+                        "Tree node definitions must contain" " the node {}"
+                    ).format(required)
                 )
 
         # If both kinds of start points are specified,
@@ -318,9 +319,6 @@ class ExpressionForest(ExpressionGraph):
 
         See the description of _calc_node_fanout for details
         """
-        # Calculate equivalence classes
-        self.find_equivalent_nodes()
-
         for t in self.trees:
             for n in t:
                 self._calc_node_fanout(n)
@@ -370,9 +368,6 @@ class ExpressionForest(ExpressionGraph):
 
         See the description of _calc_node_tracks for details
         """
-        # Calculate equivalence classes
-        self.find_equivalent_nodes()
-
         for t in self.trees:
             for n in t:
                 self._calc_node_tracks(n)
@@ -382,10 +377,10 @@ class ExpressionForest(ExpressionGraph):
 
         # Check if arguments are valid
         if not (node in node.graph):
-            raise ValueError("Node is not in its graph. This should not happen.")
+            raise ValueError("Node is not in its graph. Impossible error.")
         if not (node.graph in self.trees):
             raise ValueError(
-                "Node graph is not in this forest. This should not happen."
+                "Node graph is not in this forest. Impossible error."
             )
         if not (tree in self.trees):
             raise ValueError("Trying to decouple fanout in an invalid tree.")
@@ -398,7 +393,7 @@ class ExpressionForest(ExpressionGraph):
                 other_node = a
                 break
         if other_node is None:
-            raise ValueError("Trying to decouple fanout in an innapropriate tree.")
+            raise ValueError("Trying to decouple fanout in innapropriate tree.")
 
         # Decouple fanout
         buffer = tree.insert_buffer(other_node)
@@ -420,7 +415,7 @@ class ExpressionForest(ExpressionGraph):
     def optimize_nodes(self):
         """Greedily attempt to swap in nodes with same footprint
 
-        All node node_data have a footprint attribute, clarifying which node_data
+        All node node_data have a footprint attribute clarifying which node_data
         refer to the same node concept. All node node_data also have a priority
         attribute, used to determine which module is most "optimal".
 
@@ -529,6 +524,10 @@ class ExpressionForest(ExpressionGraph):
 
         return hdl, module_defs, file_out_hdl
 
+    def gif(self, out="forest.gif"):
+        with open(out, "wb") as fout:
+            fout.write(self._repr_png_())
+
     ### NOTE: ALL METHODS BELOW ARE FOR LEGACY SUPPORT ONLY ###
 
     def LF(self, x, y=None):
@@ -601,7 +600,11 @@ class ExpressionForest(ExpressionGraph):
         # Get node's equivalence class
         ec = node.equiv_class
         # Filter out nodes whose parents are equivalent
-        ec = [x for x in ec if x.parent is None or x.parent.equiv_class[0] is x.parent]
+        ec = [
+            x
+            for x in ec
+            if x.parent is None or x.parent.equiv_class[0] is x.parent
+        ]
         # Decouple fanout
         ctr = 0
         for a in range(len(ec)):

@@ -8,194 +8,184 @@
   ><img alt="'unit_tests' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&style=flat-square&label=unit_tests&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
-  <a title="'docs' workflow Status"
+  <a title="'doc workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
+  ><img alt="'doc workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/doc/main?longCache=true&style=flat-square&label=doc&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
 
-# Prefix tree generation scripts
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/doc/notebooks/intro.ipynb)
 
-## Table of Contents
+For detailed documentation, please click the "Read now" button above.
 
-[Introduction](#introduction)
+# Hardware synthesis of arithmetic operations
 
-[How to install](#installation-instructions)
+Arithmetic operations are important. Addition, in particular, is ubiquitous. When a RISC-V processor boots into Linux, for example, roughly 70% of the assembly instructions use addition.
 
-[How to use](#user-guide)
+Circuit design involves trade-offs, typically phrased in terms of power vs performance (speed) vs area.<br>
+These trade-offs certainly apply to arithmetic operations. Circuits can be very fast and power-hungry, very slow and power-efficient, or anywhere in between.
 
-[References](#references)
+Moreso, these trade-offs occur on a bit-by-bit basis. If a circuit generates a 64-bit result, each bit of the result can be optimized for power, speed, or area.<br>
+Often this becomes essential, as some bits must be processed faster than others.
 
-## Introduction
+These trade-offs create a Pareto front of possible circuits, each optimal for a specific situation.<br>
+The implementation of such arithmetic circuits is non-trivial, as is the design space, for reasons elaborated upon in the main documentation.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/adder_transforms.gif?raw=true" width="400"/>
+## Traditional framework
 
-In general, prefix tree adders are usually generated from scratch. That is, either previously-named families of adders are used, or hybrid adders are created by combining / concatenating previously-named families of adders.
+How can these circuits be generated and explored, especially when it comes to arithmetic operations?<br>
+Historically, one particular method for hardware addition has been used and researched since the 1980s.<br>
+This method conceptualizes circuits using the type of diagram shown below, and is implemented by version v0.4.5 of this library.
 
-In addition, current taxonomies of adders cannot properly describe the entire space of all valid prefix tree adder structures.
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/sklansky_old.png" width="400"/>
 
-Despite the overall elegance and great usefulness of Harris's taxonomy, for example, the two adders below would be classified as the same structure in spite of significant differences. [2]
+The diagram above displays a binary expression graph that performs the desired computation.<br>
+The lines in the diagram are edges in the graph, carrying data from the top to the bottom. Each ■ represents a node that performs a simple computation.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles1.png?raw=true" width="250"/>
+This type of diagram, and of implementation, can best be described as an **n**-rooted binary tree that is drawn upside-down.<br>
+There are many ways to design such circuits, and the design space can be explored as seen below.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/knowles2.png?raw=true" width="250"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/adder_transforms.gif?raw=true" width="400"/>
 
-What if there was a way to navigate the entire space of valid adder trees, incrementally and bit-targeted, using a minimal and circular, transform group?
+Such an exploration is performed by identifying the following three simple patterns throughout the graph, and performing point-targeted transforms.
 
-This repository seeks to implement this using transforms between the following three states \[L, T, F\]: [4]
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/L.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/L.png?raw=true" width="150"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/T.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/T.png?raw=true" width="150"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/F.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/demo/F.png?raw=true" width="150"/>
+This method is computationally expensive, requiring exponential run-time.
 
-The L\<-\>F transform was previously discussed by Fishburn [1]. The L\<-\>T transform and F\<-\>T transforms have not been found in published works by the author.
+Moreover, any such exploration using classic diagrams and conceptualization is incomplete and overly complicated.<br>
+It is unclear how large the design space, and it is impossible to represent all valid designs.<br>
+Under this framework, simple structures become obfuscated, while more advanced optimizations become impossible to implement or theoretically describe.
 
-## Installation Instructions
+Arithmetic computation architectures are not **n**-rooted binary trees.
 
-In order to use this repository, the following programs are required:
+## Revised framework
 
- * Python3.6+ (`apt install python3`)
- * pip3 (`apt install python3-pip`)
- * GraphViz (`apt install graphviz`)
+Instead, this library chooses to express arithmetic computation in terms of forests of **n** trees.
 
-Then simply install this repository as a local Python package:
-```
-pip3 install git+https://github.com/tdene/synth_opt_adders.git --user
-```
+This approach results directly from the underlying mathematics, allowing circuit designers to leverage decades of research in graph theory and toplogy.
 
-## User Guide
 
-The bulk of this tool's source code is currently contained in two modules:
-[prefix_graph.py](src/prefix_graph.py) and [prefix_tree.py](src/prefix_tree.py).
+```python
+from pptrees.AdderForest import AdderForest as forest
 
-Some examples of how to use the methods within these two modules can be found
-in [unit_tests/tree_test.py](unit_tests/tree_test.py).
-
-The guide below will show how to generate a Sklansky / Brent-Kung hybrid,
-modify it slightly towards Kogge-Stone, flatten its worst path, and finally
-print out a diagram and HDL representation. This guide seeks to showcase
-some of the flexibility that this library offers.
-
-Begin by opening a new Python shell or creating a new file. It is simplest to
-perform this demo within a shell:
-```
-python3
+width = 17
+f = forest(width, alias = "sklansky")
+f
 ```
 
-First, import the classes and methods that will be used for this demo:
-```
-from pptrees.prefix_graph import prefix_node as node
-from pptrees.adder_tree import adder_tree as tree
-from pptrees.util import lg
+
+
+
+
+![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_19_0.png)
+
+
+
+
+The diagram above displays the same circuit as the one from the previous section.
+
+Each frame of the animation computes an individual bit of the final sum.
+
+It is immediately clear how large the design space is:
+
+
+```python
+from pptrees.util import catalan
+
+width = 17
+number_of_designs = 1
+for a in range(width):
+  number_of_designs = number_of_designs * catalan(a)
+print(number_of_designs)
 ```
 
-Next, initialize a prefix tree of width 32. For brevity, we will initialize
-directly to the Sklansky structure:
-```
-g = tree(32,"sklansky")
+    323828772071827218688291208408423952910530531102720000000
+
+
+It is straightforward to generate any valid tree in O(n lg(n)) time:
+
+
+```python
+from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 17
+print("The maximum tree sizes for a forest of width {0} are {1}".format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214, 670, 2000, 5463, 12351, 135151, 461614, 1512512, 8351854, 3541563])
+f
 ```
 
-If so desired, you may at this point print out a diagram of the tree to follow
-alongside its progress. To view the diagram, simply open the specified .png
-file in a new window.
-```
-g.png('1.png')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/1.png?raw=true" width="1200"/>
+    The maximum tree sizes for a forest of width 17 are [0, 0, 1, 4, 13, 41, 131, 428, 1429, 4861, 16795, 58785, 208011, 742899, 2674439, 9694844, 35357669]
 
-Next, we will turn this Sklansky adder into a Sklansky / Brent-Kung hybrid.
-This is done by taking "Harris steps" on the adder's less-significant half. As
-an example, take one Harris step in the FL direction and view the output:
-```
-g.harris_step('FL',1,top_bit=32//2)
-g.png('2.png')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/2.png?raw=true" width="1200"/>
 
-You will notice that the bottom half of the prefix structure is now a
-Ladner-Fischer structure with maximum fan-out of 4. By taking several more
-Harris steps, a Brent-Kung structure can be reached. Note that a "Harris step"
-is defined in the source code as well in the author's publications, and is
-simply a loop of its respective transforms.
-```
-g.harris_step('FL',3,top_bit=32//2)
-g.harris_step('FL',1,top_bit=32//4)
-g.harris_step('FL',1,top_bit=32//8)
-g.png('3.png')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/3.png?raw=true" width="1200"/>
 
-Looking at "3.png", a hybrid Sklansky / Brent-Kung hybrid is easily
-recognizable. Let us now perform some point-targeted transforms. For example,
-we may choose to decouple some of the fanout:
-```
-g.FL(31,5)
-g.FL(30,5)
-g.FL(29,5)
-g.FL(28,5)
 
-g.FL(19,5)
-g.FL(18,5)
-g.FL(17,5)
-g.FL(16,5)
-g.png('4.png')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/4.png?raw=true" width="1200"/>
 
-We may also choose to turn some of the fan-out for wire-tracks. Note that in
-the current version of this code-base, this operation runs in O(n^2) time.
-Future optimizations will reduce this run-time.
-```
-g.FT(16,6)
-g.FT(17,6)
-g.png('5.png')
-g.FT(13,6)
-g.png('6.png')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/6.png?raw=true" width="1200"/>
 
-At any point in time, we may query the data structure in a multitude of ways.
-The next example queries what node is present at the coordinates (13,6), its
-diagonal predecessor, and its vertical black node predecessor:
-```
-print(g[13,6])
-print(g.pre(g[13,6]))
-print(g.r_top(g[13,6]))
+![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_24_1.png)
+
+
+
+
+Similarly, it is straightforward to label any valid tree in O(n lg(n)) time:
+
+
+```python
+from pptrees.AdderForest import AdderForest as forest
+
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214, 670, 2000, 5463, 12351, 135151, 461614, 1512512, 8351854, 3541563])
+for t in enumerate(f.trees):
+    print("The rank of tree {0} in this forest is {1}".format(t[0],t[1].rank()))
 ```
 
-In its current form, the netlist would be written using hierarchical modules.
-The HDL can also be output flat, or partially flat. This next example will
-choose the estimated three worst paths of the design and flatten only those:
+    The rank of tree 0 in this forest is 0
+    The rank of tree 1 in this forest is 0
+    The rank of tree 2 in this forest is 0
+    The rank of tree 3 in this forest is 2
+    The rank of tree 4 in this forest is 5
+    The rank of tree 5 in this forest is 37
+    The rank of tree 6 in this forest is 74
+    The rank of tree 7 in this forest is 214
+    The rank of tree 8 in this forest is 214
+    The rank of tree 9 in this forest is 670
+    The rank of tree 10 in this forest is 2000
+    The rank of tree 11 in this forest is 5463
+    The rank of tree 12 in this forest is 12351
+    The rank of tree 13 in this forest is 135151
+    The rank of tree 14 in this forest is 461614
+    The rank of tree 15 in this forest is 1512512
+    The rank of tree 16 in this forest is 8351854
+
+
+Factorization optimizations such that of Ling, a concept that cannot be described by the olforestd framework, are a straightforward decomposition of the "gp" pre-processing nodes into "g" and "p", followed by a stereoscopic combination of two such tree halves.
+
+Sparseness, another concept that is difficult to understand under the old framework, arises naturally.
+
+Nested sparseness, a novel concept that can reduce the circuits' logical depth, has not been discovered by prior literature due to its incompatibility with the traditional framework.
+
+
+```python
+from pptrees.AdderTree import AdderTree as tree
+
+width = 8
+t = tree(width, start_point = 214)
+t
 ```
-g.recalc_weights()
-worst_path_1 = g.longest_path()
-g.add_block(*worst_path_1)
-worst_path_2 = g.longest_path()
-g.add_block(*worst_path_2)
-worst_path_3 = g.longest_path()
-g.add_block(*worst_path_3)
-g.png('7.png')
-g.hdl('sample.v')
-```
-<img src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/demo/7.png?raw=true" width="1200"/>
 
-The final output image, "7.png", contains a visualization of the flattening
-performed by the last step. The file "sample.v" contains HDL for the design
-written in the Verilog standard.
 
-Numerous possibilities exist for the use of this library. Future efforts will
-include the creation of a fully automatic constraint-driven adder synthesis
-tool, as well as the implementation of sparsity and multi-level Ling
-optimization.
 
-## References
 
-[1] J. P. Fishburn. A depth-decreasing heuristic for combinational logic; or how to convert a ripple-carry adder into a carrylookahead adder or anything in-between. In Proc. 27th Design Automation Conf., pages 361–364, 1990
 
-[2] D. Harris, "A taxonomy of parallel prefix networks," The Thirty-Seventh Asilomar Conference on Signals, Systems & Computers, 2003, 2003, pp. 2213-2217 Vol.2
+![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_28_0.png)
 
-[3] R. Zimmermann, "Non-Heuristic Optimization and Synthesis of Parallel-Prefix Adders", in Proc. Int. Workshop on Logic and Architecture Synthesis (IWLAS'96), Grenoble, France, Dec. 1996, pp. 123-132.
 
-[4] T. Ene and J. E. Stine, "A Comprehensive Exploration of the Parallel Prefix Adder Tree Space," 2021 IEEE 39th International Conference on Computer Design (ICCD), 2021, pp. 125-129, doi: 10.1109/ICCD53106.2021.00030.
+
+
+This framework allows for a full and efficient exploration of the entire design space.
+
+In addition, these concepts don't just apply to binary addition. They apply to a wide range of hardware operations.

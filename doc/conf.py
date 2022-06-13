@@ -10,7 +10,18 @@ sys.path.insert(0, abspath("."))
 
 # -- General configuration ------------------------------------------------
 
+project = "pptrees"
+version = "1.0.8"
+copyright = "2020, tdene"
+author = "tdene"
+
+autodoc_member_order = "bysource"
+
 extensions = [
+    "matplotlib.sphinxext.plot_directive",
+    "myst_parser",
+    "nbsphinx",
+    "sphinx.ext.doctest",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
@@ -21,6 +32,9 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinxcontrib.bibtex",
+    "sphinx_autodoc_typehints",
+    "sphinx_click",
+    "sphinx_markdown_tables",
 ]
 
 bibtex_default_style = "plain"
@@ -44,6 +58,8 @@ templates_path = ["_templates"]
 
 source_suffix = {
     ".rst": "restructuredtext",
+    ".txt": "markdown",
+    ".md": "markdown",
 }
 
 master_doc = "index"
@@ -59,9 +75,16 @@ release = version  # The full version, including alpha/beta/rc tags.
 # for a list of supported languages.
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
-exclude_patterns = []
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "**.ipynb_checkpoints",
+    "build",
+    "extra",
+]
 
 # reST settings
 prologPath = "prolog.inc"
@@ -74,6 +97,13 @@ except Exception as ex:
     rst_prolog = ""
 
 # -- Options for HTML output ----------------------------------------------
+
+myst_html_meta = {
+    "description lang=en": "metadata description",
+    "description lang=fr": "description des métadonnées",
+    "keywords": "Sphinx, MyST",
+    "property=og:locale": "en_US",
+}
 
 html_context = {}
 ctx = ROOT / "context.json"

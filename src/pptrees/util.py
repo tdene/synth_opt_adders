@@ -165,13 +165,17 @@ def hdl_entity(name, ins, outs, language="verilog"):
     syntax = hdl_syntax[language]
     ports_str = []
     for port in ins:
-        port_range = syntax["port_range"].format(port[1] - 1, 0) if port[1] > 1 else ""
+        port_range = (
+            syntax["port_range"].format(port[1] - 1, 0) if port[1] > 1 else ""
+        )
         next_port = syntax["entity_port"].format(
             syntax["entity_in"], port[0], port_range
         )
         ports_str.append(next_port)
     for port in outs:
-        port_range = syntax["port_range"].format(port[1] - 1, 0) if port[1] > 1 else ""
+        port_range = (
+            syntax["port_range"].format(port[1] - 1, 0) if port[1] > 1 else ""
+        )
         next_port = syntax["entity_port"].format(
             syntax["entity_out"], port[0], port_range
         )
@@ -202,7 +206,9 @@ def hdl_inst(name, ports, language="verilog"):
     """
     syntax = hdl_syntax[language]
     ports = [(port[0], syntax["slice_markers"](port[1])) for port in ports]
-    ports_list = [syntax["inst_port"].format(port[0], port[1]) for port in ports]
+    ports_list = [
+        syntax["inst_port"].format(port[0], port[1]) for port in ports
+    ]
     return syntax["inst"].format(name, ",\n".join(ports_list))
 
 

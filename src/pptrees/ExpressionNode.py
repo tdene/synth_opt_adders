@@ -126,7 +126,8 @@ class ExpressionNode:
             raise TypeError("Cannot compare to non-ExpressionNode")
 
         # Check whether self and other are equivalent
-        ret = not (self > other) and not (self < other) and self.value == other.value
+        ret = not (self > other) and not (self < other)
+        ret = ret and self.value == other.value
 
         # Check whether their subtrees are also equivalent
         for a in range(len(self.children)):
@@ -142,7 +143,8 @@ class ExpressionNode:
     def set_equiv(self, other):
         """Sets two nodes as equivalent
 
-        If either already has an equivalence class assigned, the two classes are merged.
+        If either already has an equivalence class assigned,
+        the two classes are merged.
 
         If the nodes are in a graph that possesses a width attribute,
         priority is given to the nodes with higher width.
@@ -204,7 +206,9 @@ class ExpressionNode:
 
         # If either node is not the representative of its equivalence class
         # There is no physical meaning to this metric
-        if (self.equiv_class[0] is not self) or (other.equiv_class[0] is not other):
+        if (self.equiv_class[0] is not self) or (
+            other.equiv_class[0] is not other
+        ):
             return False
 
         # Check if the edges lead to parallel routes
