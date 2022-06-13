@@ -9,10 +9,8 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - name: Install pandoc
-      run: |
-          sudo apt install pandoc
     - uses: actions/checkout@v2
-    - uses: buildthedocs/btd@v0
+
+    - uses: tdene/btd@v1
       with:
         token: ${{ github.token }}
