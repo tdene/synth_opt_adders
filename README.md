@@ -8,13 +8,13 @@
   ><img alt="'unit_tests' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&style=flat-square&label=unit_tests&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
-  <a title="'doc workflow Status"
+  <a title="'docs workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'doc workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/doc/main?longCache=true&style=flat-square&label=doc&logo=GitHub%20Actions&logoColor=fff"
+  ><img alt="'docs workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/doc/notebooks/intro.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/intro.ipynb)
 
 For detailed documentation, please click the "Read now" button above.
 
@@ -37,7 +37,7 @@ How can these circuits be generated and explored, especially when it comes to ar
 Historically, one particular method for hardware addition has been used and researched since the 1980s.<br>
 This method conceptualizes circuits using the type of diagram shown below, and is implemented by version v0.4.5 of this library.
 
-![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/sklansky_old.png)
+![png](https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/sklansky_old.png)
 
 The diagram above displays a binary expression graph that performs the desired computation.<br>
 The lines in the diagram are edges in the graph, carrying data from the top to the bottom. Each ■ represents a node that performs a simple computation.
@@ -45,15 +45,15 @@ The lines in the diagram are edges in the graph, carrying data from the top to t
 This type of diagram, and of implementation, can best be described as an **n**-rooted binary tree that is drawn upside-down.<br>
 There are many ways to design such circuits, and the design space can be explored as seen below.
 
-![gif](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/adder_transforms.gif)
+![gif](https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/adder_transforms.gif)
 
 Such an exploration is performed by identifying the following three simple patterns throughout the graph, and performing point-targeted transforms.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/L.png?raw=true" width="150"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/L.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/T.png?raw=true" width="150"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/T.png?raw=true" width="150"/>
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/F.png?raw=true" width="150"/>
+<img src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/F.png?raw=true" width="150"/>
 
 This method is computationally expensive, requiring exponential run-time.
 
@@ -82,7 +82,7 @@ f
 
 
 
-![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_19_0.png)
+![png](https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/intro_19_0.png)
 
 
 
@@ -127,7 +127,7 @@ f
 
 
 
-![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_24_1.png)
+![png](https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/intro_24_1.png)
 
 
 
@@ -181,7 +181,7 @@ t
 
 
 
-![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/intro_28_0.png)
+![png](https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/intro_28_0.png)
 
 
 

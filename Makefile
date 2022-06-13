@@ -1,7 +1,7 @@
 install:
 	pip install -e .
 	pip install -r requirements.txt --upgrade
-	pip install -r doc/requirements.txt --upgrade
+	pip install -r docs/requirements.txt --upgrade
 	pre-commit install
 
 test:
@@ -26,7 +26,7 @@ lintd:
 	pydocstyle pptrees
 
 doc8:
-	doc8 doc/
+	doc8 docs/
 
 update:
 	pur

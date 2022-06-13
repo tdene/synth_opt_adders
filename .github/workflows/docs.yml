@@ -1,4 +1,4 @@
-name: 'doc'
+name: 'docs'
 
 on:
   push:
