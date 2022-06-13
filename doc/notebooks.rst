@@ -7,4 +7,4 @@ Tutorial
    :titlesonly:
    :caption: Contents:
 
-   notebooks/intro.ipynb
+   notebooks/hardware_addition.ipynb

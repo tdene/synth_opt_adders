@@ -1,8 +1,6 @@
 Parallel Prefix Tree generation and exploration
 ###############################################
 
-This is an example cite: :cite:p:`tdene21`.
-
 Contents:
 
 .. toctree::
@@ -13,8 +11,6 @@ Contents:
 
 .. toctree::
     :caption: Appendix
-
-    References
 
 * :ref:`genindex`
 * :ref:`modindex`
