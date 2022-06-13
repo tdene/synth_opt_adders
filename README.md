@@ -8,9 +8,9 @@
   ><img alt="'unit_tests' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&style=flat-square&label=unit_tests&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
-  <a title="'docs' workflow Status"
+  <a title="'doc workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
+  ><img alt="'doc workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/doc/main?longCache=true&style=flat-square&label=doc&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
 
