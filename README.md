@@ -37,7 +37,7 @@ How can these circuits be generated and explored, especially when it comes to ar
 Historically, one particular method for hardware addition has been used and researched since the 1980s.<br>
 This method conceptualizes circuits using the type of diagram shown below, and is implemented by version v0.4.5 of this library.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/sklansky_old.png" width="400"/>
+![png](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/sklansky_old.png)
 
 The diagram above displays a binary expression graph that performs the desired computation.<br>
 The lines in the diagram are edges in the graph, carrying data from the top to the bottom. Each ■ represents a node that performs a simple computation.
@@ -45,7 +45,7 @@ The lines in the diagram are edges in the graph, carrying data from the top to t
 This type of diagram, and of implementation, can best be described as an **n**-rooted binary tree that is drawn upside-down.<br>
 There are many ways to design such circuits, and the design space can be explored as seen below.
 
-<img src="https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/adder_transforms.gif?raw=true" width="400"/>
+![gif](https://github.com/tdene/synth_opt_adders/blob/main/doc/diagrams/adder_transforms.gif)
 
 Such an exploration is performed by identifying the following three simple patterns throughout the graph, and performing point-targeted transforms.
 
@@ -162,7 +162,7 @@ for t in enumerate(f.trees):
     The rank of tree 16 in this forest is 8351854
 
 
-Factorization optimizations such that of Ling, a concept that cannot be described by the olforestd framework, are a straightforward decomposition of the "gp" pre-processing nodes into "g" and "p", followed by a stereoscopic combination of two such tree halves.
+Factorization optimizations such that of Ling, a concept that cannot be described by the old framework, are a straightforward decomposition of the "gp" pre-processing nodes into "g" and "p", followed by a stereoscopic combination of two such tree halves.
 
 Sparseness, another concept that is difficult to understand under the old framework, arises naturally.
 
