@@ -1,5 +1,5 @@
 input: docs
-output: _build
+output: build
 requirements: requirements.txt
 target: gh-pages
 formats: [ html, pdf, man ]
