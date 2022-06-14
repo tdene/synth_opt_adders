@@ -1,9 +1,6 @@
 pptrees package
 ===============
 
-Submodules
-----------
-
 ExpressionNode submodule
 --------------------------
 
@@ -56,14 +53,6 @@ util submodule
 -------------------
 
 .. automodule:: pptrees.util
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pptrees
    :members:
    :undoc-members:
    :show-inheritance:

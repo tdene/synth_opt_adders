@@ -7,7 +7,8 @@ Contents:
     :maxdepth: 2
 
     src/pptrees
-    notebooks
+    src/theory
+    src/tutorial
 
 .. toctree::
     :caption: Appendix
