@@ -230,7 +230,7 @@ class ExpressionGraph(nx.DiGraph):
         ]
 
         if len(valid_nodes) < 2:
-            return
+            return []
 
         # Get subgraph view with only valid nodes
         subgraph = self.subgraph(valid_nodes)
