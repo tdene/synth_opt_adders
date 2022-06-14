@@ -118,11 +118,15 @@ class AdderTree(ExpressionTree):
             self._swap_node_def(self.root, None, None, "ppa_post_nolspine")
             self._swap_node_def(child, self.root, 0, "ppa_lspine_pre_simple")
             self.add_edge(self.root, other_child, 1)
+
         ## If an lspine node has a leaf as right child, simplify it
+        opt_list = []
         for node in self.nodes:
             if self._on_lspine(node) and node.children and node.parent:
                 if not node[1].children:
-                    self.swap_node_def(node, "ppa_lspine_single")
+                    opt_list.append(node)
+        for node in opt_list:
+            self.swap_node_def(node, "ppa_lspine_single")
 
 
 if __name__ == "__main__":
