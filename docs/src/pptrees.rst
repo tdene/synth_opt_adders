@@ -4,39 +4,55 @@ pptrees package
 Submodules
 ----------
 
-pptrees.adder\_tree module
+ExpressionNode submodule
 --------------------------
 
-.. automodule:: pptrees.adder_tree
+.. automodule:: pptrees.ExpressionNode
    :members:
    :undoc-members:
    :show-inheritance:
 
-pptrees.modules module
+ExpressionGraph submodule
 ----------------------
 
-.. automodule:: pptrees.modules
+.. automodule:: pptrees.ExpressionGraph
    :members:
    :undoc-members:
    :show-inheritance:
 
-pptrees.prefix\_graph module
+ExpressionTree submodule
 ----------------------------
 
-.. automodule:: pptrees.prefix_graph
+.. automodule:: pptrees.ExpressionTree
    :members:
    :undoc-members:
    :show-inheritance:
 
-pptrees.prefix\_tree module
+ExpressionForest submodule
 ---------------------------
 
-.. automodule:: pptrees.prefix_tree
+.. automodule:: pptrees.ExpressionForest
    :members:
    :undoc-members:
    :show-inheritance:
 
-pptrees.util module
+AdderTree submodule
+----------------------------
+
+.. automodule:: pptrees.AdderTree
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+AdderForest submodule
+---------------------------
+
+.. automodule:: pptrees.AdderForest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+util submodule
 -------------------
 
 .. automodule:: pptrees.util
