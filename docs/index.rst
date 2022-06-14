@@ -1,4 +1,4 @@
-Parallel Prefix Tree generation and exploration
+Hardware synthesis of arithmetic operations
 ###############################################
 
 Contents:
@@ -7,8 +7,8 @@ Contents:
     :maxdepth: 2
 
     src/pptrees
-    src/theory
     src/tutorial
+    src/theory
 
 .. toctree::
     :caption: Appendix

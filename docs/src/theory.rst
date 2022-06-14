@@ -3,7 +3,6 @@ Theory and Discussion
 
 .. toctree::
 
-   ../notebooks/intro.ipynb
    ../notebooks/adder_theory.ipynb
    ../notebooks/traditional_addition.ipynb
    ../notebooks/sparseness.ipynb
