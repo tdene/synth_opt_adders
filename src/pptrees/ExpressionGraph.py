@@ -460,10 +460,10 @@ class ExpressionGraph(nx.DiGraph):
         if merge_mapping:
             # Parse the mapping file
             file_suffix = syntax["file_extension"]
-            mappings_path = importlib.resources.path("pptrees", "mappings")
-            with mappings_path as pkg_map_dir:
-                pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
-            mapping_dict = parse_mapping(pkg_map_file)
+            map_file = "{0}_map{1}".format(mapping, file_suffix)
+            map_path = importlib.resources.path("pptrees.mappings", map_file)
+            with map_path as pkg_map_file:
+                mapping_dict = parse_mapping(pkg_map_file)
 
         # Pull in the HDL description of nodes outside of blocks
         # If fully flattening them, need to rename "w*" internal wires
@@ -627,9 +627,9 @@ class ExpressionGraph(nx.DiGraph):
 
         # Verify that the mapping is supported
         file_suffix = syntax["file_extension"]
-        mappings_path = importlib.resources.path("pptrees", "mappings")
-        with mappings_path as pkg_map_dir:
-            pkg_map_file = pkg_map_dir / (mapping + "_map" + file_suffix)
+        map_file = "{0}_map{1}".format(mapping, file_suffix)
+        map_path = importlib.resources.path("pptrees.mappings", map_file)
+        with map_path as pkg_map_file:
             local_map_file = outdir / (mapping + "_map" + file_suffix)
 
             if not pkg_map_file.is_file():
