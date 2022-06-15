@@ -16,7 +16,28 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/intro.ipynb)
 
+# Quick-start guide
+
 For detailed documentation, please click the "Read now" button above.
+
+To install this tool:
+
+
+```python
+pip install --upgrade pptrees
+```
+
+To generate a test adder:
+
+
+```python
+from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = "sklansky")
+f.hdl('adder.v')
+f.gif('adder.gif')
+```
 
 # Hardware synthesis of arithmetic operations
 

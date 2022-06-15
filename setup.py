@@ -19,6 +19,7 @@ setup(
     packages=find_namespace_packages(where="src"),
     package_data={"pptrees": ["mappings/*.v"]},
     long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     python_requires=">=3.7.*",
     install_requires=["networkx", "pydot", "graphviz", "Pillow"],
 )
