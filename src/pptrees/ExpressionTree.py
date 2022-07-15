@@ -1027,8 +1027,18 @@ class ExpressionTree(ExpressionGraph):
 
         # Correct the positions of the nodes
         self._fix_diagram_positions()
+
+        # Cast all edge attributes to string so that they pass nx_pydot colon tests
+        # If not converted, it would try to iterate on int and float values.
+        # But is this a good workaround? Memory overhead?
+        dotcopy = self.copy()
+        for u, v, edgedata in dotcopy.edges(data=True):
+            for k in edgedata:
+                j = edgedata[k]
+                edgedata[k] = str(j)
+
         # Convert the graph to pydot
-        pg = nx.drawing.nx_pydot.to_pydot(self)
+        pg = nx.drawing.nx_pydot.to_pydot(dotcopy)
         pg.set_splines("false")
         pg.set_concentrate("true")
 
