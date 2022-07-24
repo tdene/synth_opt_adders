@@ -322,21 +322,21 @@ class ExpressionNode:
         """
 
         # Break the pins apart into names and indices
-        pn1, pi1 = pin1
-        pn2, pi2 = pin2
+        pin_name1, pin_index1 = pin1
+        pin_name2, pin_index2 = pin2
 
-        if pn1 not in self.in_nets or pn2 not in child.out_nets:
+        if pin_name1 not in self.in_nets or pin_name2 not in child.out_nets:
             raise ValueError("Invalid pin connection")
 
         ## Check if net already exists
-        if not (self.in_nets[pn1][pi1] is None):
-            net_name = self.in_nets[pn1][pi1]
-        elif not (child.out_nets[pn2][pi2] is None):
-            net_name = child.out_nets[pn2][pi2]
+        if not (self.in_nets[pin_name1][pin_index1] is None):
+            net_name = self.in_nets[pin_name1][pin_index1]
+        elif not (child.out_nets[pin_name2][pin_index2] is None):
+            net_name = child.out_nets[pin_name2][pin_index2]
 
         ## Assign net name to ports
-        self.in_nets[pn1][pi1] = net_name
-        child.out_nets[pn2][pi2] = net_name
+        self.in_nets[pin_name1][pin_index1] = net_name
+        child.out_nets[pin_name2][pin_index2] = net_name
 
         # If nodes are not already connected, connect them
         if child.parent is not self:
@@ -364,18 +364,18 @@ class ExpressionNode:
         child.parent = None
 
         # Reset net names in parent (inpins only!)
-        for pn, pins in self.in_nets.items():
+        for pin_name, pins in self.in_nets.items():
             # Check if port is connected to this child
-            vrs = verso_pin(pn)
+            vrs = verso_pin(pin_name)
             if vrs not in child.out_nets:
                 continue
             # If so, query the port pin by pin
-            for pi in range(len(pins)):
-                net = pins[pi]
-                if pi is None:
+            for pin_index in range(len(pins)):
+                net = pins[pin_index]
+                if net is None:
                     continue
                 if net in child.out_nets[vrs]:
-                    pins[pi] = None
+                    pins[pin_index] = None
 
         # Recalculate leafs recursively
         self._recalculate_leafs()
