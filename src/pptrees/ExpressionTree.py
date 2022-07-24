@@ -492,13 +492,14 @@ class ExpressionTree(ExpressionGraph):
         parent = node.parent
         index = node.parent.children.index(node)
 
-        # Detach the scion
-        rank, leafs, labels = self.detach_subtree(node)
-
         # Find the rootstock
-        rootstock = parent.rightmost_leaf()
+        stock_id = lg(node.leafs) + 1
+        rootstock = self._get_leafs(self.root)[stock_id]
         r_parent = rootstock.parent
         r_index = r_parent.children.index(rootstock)
+
+        # Detach the scion
+        rank, leafs, labels = self.detach_subtree(node)
 
         # Check whether the scion will be attached onto the left spine
         lspine = r_index == 0 and self._on_lspine(r_parent)
@@ -803,23 +804,6 @@ class ExpressionTree(ExpressionGraph):
         except ValueError:
             node = self.left_rotate(node)
             return self.right_shift(node)
-
-    def _mass_left_shift(self, node):
-        """This method is used in the factorization of trees.
-
-        Its intended purpose is to create a tree that will be stereoscopically
-            combined with self without increasing the depth of any leaf.
-
-        It shifts a node to the left, and if this has increased the height of
-            the subtree, it shifts its left child to the left.
-
-        Args:
-            node (Node): The node at which the shift starts
-
-        Returns:
-            ExpresionTree: The resulting tree, or None if the shift failed
-        """
-        pass
 
     def insert_buffer(self, node):
         """Insert a buffer as the parent of a node
