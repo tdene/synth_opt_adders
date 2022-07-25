@@ -1009,10 +1009,7 @@ class ExpressionTree(ExpressionGraph):
     def png(self, out="tree.png"):
         """Generate a PNG representation of the tree using GraphViz"""
 
-        # Correct the positions of the nodes
-        self._fix_diagram_positions()
-
-        # Cast all edge attributes to string so that they pass nx_pydot colon tests
+        # Cast all edge attributes to string to pass nx_pydot colon tests
         # If not converted, it would try to iterate on int and float values.
         # But is this a good workaround? Memory overhead?
         dotcopy = self.copy()
@@ -1020,6 +1017,9 @@ class ExpressionTree(ExpressionGraph):
             for k in edgedata:
                 j = edgedata[k]
                 edgedata[k] = str(j)
+
+        # Correct the positions of the nodes
+        dotcopy._fix_diagram_positions()
 
         # Convert the graph to pydot
         pg = nx.drawing.nx_pydot.to_pydot(dotcopy)
