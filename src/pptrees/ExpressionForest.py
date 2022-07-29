@@ -157,9 +157,9 @@ class ExpressionForest(ExpressionGraph):
                 catalan_id = 0
 
             t = self.tree_type(
-                a,
-                tree_in_ports,
-                tree_out_ports,
+                width=a,
+                in_ports=tree_in_ports,
+                out_ports=tree_out_ports,
                 name="tree_{}".format(a - 1),
                 radix=radix,
                 start_point=catalan_id,

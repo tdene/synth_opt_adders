@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from .node_data import node_data
 from .util import lg, parse_net, verso_pin
 
@@ -11,6 +13,7 @@ class ExpressionNode:
             and the first child is leftmost
         parent (ExpressionNode): The parent node
         value (str): The value of the node; a module name
+        node_data (dict): The data associated with the node
         leafs (int): A binary encoding of all leafs reachable from this node
         graph (ExpressionGraph): The graph this node belongs to
         block (int): The block number of this node's HDL (if applicable)
@@ -27,7 +30,7 @@ class ExpressionNode:
             parallel wires in the layout. No node in this list is special.
     """
 
-    def __init__(self, value, x_pos=0, y_pos=0):
+    def __init__(self, value, x_pos=0, y_pos=0, custom_data=None):
         """Initializes a new ExpressionNode
 
         Args:
@@ -39,17 +42,21 @@ class ExpressionNode:
             raise TypeError("X-coordinate must be a number")
         if not isinstance(y_pos, (int, float)):
             raise TypeError("Y-coordinate must be a number")
-        if value not in node_data:
+        if value not in node_data and custom_data is None:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Node attributes
         self.value = value
+        if custom_data is None:
+            self.node_data = deepcopy(node_data[value])
+        else:
+            self.node_data = deepcopy(custom_data)
         self.children = []
         self.parent = None
 
         # HDL-related attributes
-        self.in_nets = {x: [None] * y for x, y, *z in node_data[value]["ins"]}
-        self.out_nets = {x: [None] * y for x, y in node_data[value]["outs"]}
+        self.in_nets = {x: [None] * y for x, y, *z in self.node_data["ins"]}
+        self.out_nets = {x: [None] * y for x, y in self.node_data["outs"]}
 
         # Graph-related attributes
         self.leafs = 0
@@ -415,9 +422,9 @@ class ExpressionNode:
             list: Set of HDL module definitions used in the node
         """
         if not flat and language == "verilog":
-            return (self._verilog(), (node_data[self.value][language],))
+            return (self._verilog(), (self.node_data[language],))
         if not flat and language == "vhdl":
-            return (self._vhdl(), (node_data[self.value][language],))
+            return (self._vhdl(), (self.node_data[language],))
         if flat and language == "verilog":
             return (self._verilog_flat(), set())
         if flat and language == "vhdl":
@@ -490,7 +497,7 @@ class ExpressionNode:
         ### Grab only instantiated cells from the HDL definiton
 
         # Iterate over each line in the HDL definition
-        hdl_def = node_data[self.value]["verilog"].splitlines()
+        hdl_def = self.node_data["verilog"].splitlines()
 
         # Flag whether we're currently looking at a cell
         in_std_cell = False

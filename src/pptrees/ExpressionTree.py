@@ -224,48 +224,43 @@ class ExpressionTree(ExpressionGraph):
         """Redefine the len() function to return the height of the tree"""
         return len(self.root) + 1
 
-    ### NOTE: This is meant to work with the classic representation of n-rooted
-    ### prefix tree structures, with no regard for post-processing nodes. How
-    ### does this interact with post-processing nodes?
-    ### TO-DO: Consider replacing this legacy method with non-legacy code
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
-        This method is defined to correspond to a classic view of hardware
-        prefix tree structures. In a way, this is upside-down from the natural,
-        tree, view. For example, the root node corresponds to x = tree.width,
-        y = len(tree), as opposed to the x = 0, y = 0 that would be expected.
+        This method must be called with two attributes, such as tree[a,b] with
+        a >= b. It will then return the root of the subtree that spans the
+        interval [a,b].
 
-        Calling tree[x,y] will return the node in the xth column and yth row.
-        The columns are 0-indexed starting from the LSB.
-        The rows are 0-indexed starting from the leaves.
+        This general representation works for all points in a tree.
+
+        If the specified node does not exist, this method returns an IndexError.
         """
         # Don't overwrite the parent __getitem__
+        # There is a chance that the parent __getitem__ is needed by NetworkX
         if isinstance(key, tuple) and len(key) == 2:
-            # Find the branch that corresponds to the desired column
-            col = self._get_leafs(self.root)[key[0]]
-            # Find the correct row in the desired column
-            target = col
-            # Iterate through nodes in the column
+
+            if not isinstance(key[0], int) or not isinstance(key[1], int):
+                raise TypeError("Node indices must be integers")
+            if key[0] < key[1]:
+                raise ValueError("First index must be greater than second")
+
+            # Find the leaf that corresponds to the first index
+            start = self._get_leafs(self.root)[key[0]]
+            # Find the leaf that corresponds to the second index
+            target = self._get_leafs(self.root)[key[1]]
+            # Iterate up the tree until the target is met
+            node = start
             while True:
-                # If all nodes have been checked, return None
-                if target is None:
-                    return None
-                # If this node has the correct height, return it
-                height = len(target)
-                if height == key[1]:
-                    return target
-                # If we have moved beyond the target height, return None
-                elif height > key[1]:
-                    return None
-                # Otherwise, proceed to check its parent
-                else:
-                    parent = target.parent
-                    # But if the node is not its parent's left-most child
-                    # the iteration has left the desired column
-                    if parent.children[0] != target:
-                        return None
-                target = parent
+                # Check whether we have gone too far
+                if (node.leafs & (start.leafs << 1)) or (
+                    node.leafs & (target.leafs >> 1)
+                ):
+                    raise IndexError("Requested node does not exist")
+                # Check whether we have combined the two leafs
+                if node.leafs & target.leafs:
+                    return node
+                # Move up the tree
+                node = node.parent
         else:
             return super().__getitem__(key)
 
