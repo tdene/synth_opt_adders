@@ -112,7 +112,11 @@ class AdderTree(ExpressionTree):
             node = node[-1]
 
         ## If there is no lspine, swap out the root
-        if not self.root[0].children:
+        if (
+            not self.root[0].children
+            and self.root.value == self.node_defs["root"]
+            and self.root[0].value == self.node_defs["lspine_pre"]
+        ):
             child = self.root[0]
             other_child = self.root[1]
             self._swap_node_def(self.root, None, None, "ppa_post_nolspine")
@@ -126,7 +130,8 @@ class AdderTree(ExpressionTree):
                 if not node[1].children:
                     opt_list.append(node)
         for node in opt_list:
-            self.swap_node_def(node, "ppa_lspine_single")
+            if node.value == self.node_defs["lspine_pre"]:
+                self.swap_node_def(node, "ppa_lspine_single")
 
 
 if __name__ == "__main__":
