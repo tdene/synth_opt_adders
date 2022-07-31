@@ -199,7 +199,7 @@ class ExpressionGraph(nx.DiGraph):
         return edge_data
 
     ### NOTE: Improve the heuristic used herein
-    def update_edge_weight(self, parent, child):
+    def update_edge_weight(self, parent, child, weight_fun=None):
         """Updates the weight of an edge from parent to child
 
         Args:
@@ -214,13 +214,16 @@ class ExpressionGraph(nx.DiGraph):
         if not self.has_edge(parent, child):
             raise ValueError("Edge does not exist")
 
-        edge_data = self.get_edge_data(parent, child)
-
         ### This is a bad estimate of delay
-        weight = edge_data["delay"] + edge_data["fanout"] + edge_data["tracks"]
+        if weight_fun is None:
+            edge_data = self.get_edge_data(parent, child)
+            weight = edge_data["delay"]
+            weight += edge_data["fanout"]
+            weight += edge_data["tracks"]
+        else:
+            weight = weight_fun(parent, child)
 
         edge_data["weight"] = weight
-
         return weight
 
     def critical_path(self):
