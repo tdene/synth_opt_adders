@@ -18,6 +18,7 @@ from .util import (
     parse_net,
     sub_brackets,
     sub_ports,
+    wrap_quotes,
 )
 
 
@@ -100,15 +101,8 @@ class ExpressionGraph(nx.DiGraph):
         kwargs["style"] = kwargs.get("style", "filled")
         kwargs["pos"] = "{0},{1}!".format(node.x_pos * -1, node.y_pos * -1)
 
-        def add_quotes(original: str):
-            # We have to make sure we only quote *once*, or bad things may happen.
-            out = original
-            if len(original) < 2 or original[0] != '"' or original[-1] != '"':
-                out = f'"{out}"'
-            return out
-
-        kwargs["verilog"] = add_quotes(kwargs.get("verilog", ""))
-        kwargs["vhdl"] = add_quotes(kwargs.get("vhdl", ""))
+        kwargs["verilog"] = wrap_quotes(kwargs.get("verilog", ""))
+        kwargs["vhdl"] = wrap_quotes(kwargs.get("vhdl", ""))
 
         # Add the node to the graph
         node.graph = self

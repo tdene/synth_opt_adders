@@ -3,7 +3,7 @@ import re
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
 from .node_data import node_data
-from .util import display_gif, increment_iname
+from .util import display_gif, increment_iname, wrap_quotes
 
 
 class ExpressionForest(ExpressionGraph):
@@ -237,7 +237,7 @@ class ExpressionForest(ExpressionGraph):
                         continue
                     col = t.nodes(data=True)[n]["fillcolor"]
                     t.nodes(data=True)[n]["orig_color"] = col
-                    new_col = "red;0.5:{0};0.5".format(col)
+                    new_col = wrap_quotes("red;0.5:{0};0.5".format(col))
                     t.nodes(data=True)[n]["fillcolor"] = new_col
                     t.nodes(data=True)[n]["gradientangle"] = "135"
 

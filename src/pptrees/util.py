@@ -17,6 +17,14 @@ def sub_brackets(x):
     return x.replace("[", "_").replace("]", "")
 
 
+def wrap_quotes(original: str):
+    """Wrap double quotes around a string"""
+    out = original
+    if len(original) < 2 or original[0] != '"' or original[-1] != '"':
+        out = f'"{out}"'
+    return out
+
+
 def verso_pin(x):
     """Returns the verso version of a pin"""
     return x.replace("out", "in") if "out" in x else x.replace("in", "out")
