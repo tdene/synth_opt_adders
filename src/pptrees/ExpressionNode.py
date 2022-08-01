@@ -190,6 +190,24 @@ class ExpressionNode:
         # Return the final equivalence class
         return ec
 
+    def make_representative(self):
+        """Makes this node the representative of its equivalence class"""
+        ec = self.equiv_class.copy()
+        # If the representative is not the first node in the class,
+        # swap it with the first node in the class
+        if ec[0] != self:
+            ec.remove(self)
+            ec.insert(0, self)
+        # Reset equiv_wires
+        equiv_wires = [wire for net in ec[0].out_nets.values() for wire in net]
+        # Set all nodes in the class to the representative
+        for n in ec:
+            n.equiv_class = ec
+            n.equiv_wires = equiv_wires
+
+        # Return the final equivalence class
+        return ec
+
     ### NOTE: Where this logic belongs is an open question
     def tracks(self, other):
         """Checks if self and other cause a need for parallel wires
