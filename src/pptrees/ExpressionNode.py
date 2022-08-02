@@ -208,6 +208,27 @@ class ExpressionNode:
         # Return the final equivalence class
         return ec
 
+    def is_bifurcation(self):
+        """Checks whether the equivalence class of this node bifurcates
+
+        That is to say, this answers ∃n ≡ self s.t n.parent !≡ self.parent
+        """
+        # Filter out None parents
+        if self.parent is None:
+            self_parent_equiv = None
+        else:
+            self_parent_equiv = self.parent.equiv_class[0]
+
+        ret = False
+        for n in self.equiv_class:
+            if n.parent is None:
+                continue
+            n_parent_equiv = n.parent.equiv_class[0]
+            if n_parent_equiv != self_parent_equiv:
+                ret = True
+                break
+        return ret
+
     ### NOTE: Where this logic belongs is an open question
     def tracks(self, other):
         """Checks if self and other cause a need for parallel wires
