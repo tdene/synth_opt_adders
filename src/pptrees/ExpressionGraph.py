@@ -18,6 +18,7 @@ from .util import (
     parse_net,
     sub_brackets,
     sub_ports,
+    wrap_quotes,
 )
 
 
@@ -100,15 +101,8 @@ class ExpressionGraph(nx.DiGraph):
         kwargs["style"] = kwargs.get("style", "filled")
         kwargs["pos"] = "{0},{1}!".format(node.x_pos * -1, node.y_pos * -1)
 
-        def add_quotes(original: str):
-            # We have to make sure we only quote *once*, or bad things may happen.
-            out = original
-            if len(original) < 2 or original[0] != '"' or original[-1] != '"':
-                out = f'"{out}"'
-            return out
-
-        kwargs["verilog"] = add_quotes(kwargs.get("verilog", ""))
-        kwargs["vhdl"] = add_quotes(kwargs.get("vhdl", ""))
+        kwargs["verilog"] = wrap_quotes(kwargs.get("verilog", ""))
+        kwargs["vhdl"] = wrap_quotes(kwargs.get("vhdl", ""))
 
         # Add the node to the graph
         node.graph = self
@@ -205,7 +199,7 @@ class ExpressionGraph(nx.DiGraph):
         return edge_data
 
     ### NOTE: Improve the heuristic used herein
-    def update_edge_weight(self, parent, child):
+    def update_edge_weight(self, parent, child, weight_fun=None):
         """Updates the weight of an edge from parent to child
 
         Args:
@@ -220,13 +214,16 @@ class ExpressionGraph(nx.DiGraph):
         if not self.has_edge(parent, child):
             raise ValueError("Edge does not exist")
 
-        edge_data = self.get_edge_data(parent, child)
-
         ### This is a bad estimate of delay
-        weight = edge_data["delay"] + edge_data["fanout"] + edge_data["tracks"]
+        if weight_fun is None:
+            edge_data = self.get_edge_data(parent, child)
+            weight = edge_data["delay"]
+            weight += edge_data["fanout"]
+            weight += edge_data["tracks"]
+        else:
+            weight = weight_fun(parent, child)
 
         edge_data["weight"] = weight
-
         return weight
 
     def critical_path(self):
@@ -331,8 +328,12 @@ class ExpressionGraph(nx.DiGraph):
             return self.add_best_blocks()
         return
 
-    def _get_internal_nets(self):
+    def _get_internal_nets(self, null_flag=False):
         """Returns the internal nets of the graph"""
+
+        # Compatibility issue
+        if null_flag:
+            return (set(), set())
 
         # Get all nets in the graph
         in_nets = set()
@@ -556,10 +557,10 @@ class ExpressionGraph(nx.DiGraph):
         # all wires that are inputs into the module are not internal
         # all wires that are outputs from from the cells are not internal
         # therefore, no wires are internal
-        if not is_block:
-            in_wires, out_wires = self._get_internal_nets()
-            wires = in_wires | out_wires
-            wires = sorted(list(wires), key=natural_keys)
+        in_wires, out_wires = self._get_internal_nets(null_flag=is_block)
+        wires = in_wires | out_wires
+        wires = sorted(list(wires), key=natural_keys)
+        if len(wires) > 0:
             wire_hdl = syntax["wire_def"].format(", ".join(wires))
         else:
             wire_hdl = ""
