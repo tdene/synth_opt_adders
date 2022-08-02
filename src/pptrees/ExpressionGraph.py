@@ -328,8 +328,12 @@ class ExpressionGraph(nx.DiGraph):
             return self.add_best_blocks()
         return
 
-    def _get_internal_nets(self):
+    def _get_internal_nets(self, null_flag=False):
         """Returns the internal nets of the graph"""
+
+        # Compatibility issue
+        if null_flag:
+            return (set(), set())
 
         # Get all nets in the graph
         in_nets = set()
@@ -553,10 +557,10 @@ class ExpressionGraph(nx.DiGraph):
         # all wires that are inputs into the module are not internal
         # all wires that are outputs from from the cells are not internal
         # therefore, no wires are internal
-        if not is_block:
-            in_wires, out_wires = self._get_internal_nets()
-            wires = in_wires | out_wires
-            wires = sorted(list(wires), key=natural_keys)
+        in_wires, out_wires = self._get_internal_nets(null_flag=is_block)
+        wires = in_wires | out_wires
+        wires = sorted(list(wires), key=natural_keys)
+        if len(wires) > 0:
             wire_hdl = syntax["wire_def"].format(", ".join(wires))
         else:
             wire_hdl = ""
