@@ -245,7 +245,7 @@ class ExpressionGraph(nx.DiGraph):
         # Find the critical path
         return nx.dag_longest_path(subgraph)
 
-    def add_block(self, *nodes):
+    def add_block(self, *nodes, graph_type=None):
         """Creates a new module block of nodes
 
         This is a sub-graph of nodes that will be flattened together into a
@@ -271,7 +271,10 @@ class ExpressionGraph(nx.DiGraph):
             node.block = block_id
 
         # Create the block
-        new_block = ExpressionGraph(name="block_{0}".format(block_id))
+        if graph_type is None:
+            new_block = ExpressionGraph(name="block_{0}".format(block_id))
+        else:
+            new_block = graph_type(name="block_{0}".format(block_id))
         subgraph = self.subgraph(nodes)
         del subgraph.nodes
         new_block.add_nodes_from(subgraph.nodes(data=True))
@@ -316,16 +319,16 @@ class ExpressionGraph(nx.DiGraph):
         self.next_block = 0
         self.blocks = [None]
 
-    def add_best_blocks(self):
+    def add_best_blocks(self, graph_type=None):
         """Groups nodes into blocks based on critical paths"""
 
         path = self.critical_path()
 
         # Add a block
         if len(path) > 1:
-            self.add_block(*path)
+            self.add_block(*path, graph_type=graph_type)
             # Recurse
-            return self.add_best_blocks()
+            return self.add_best_blocks(graph_type=graph_type)
         return
 
     def _get_internal_nets(self, null_flag=False):
