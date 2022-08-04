@@ -81,7 +81,9 @@ class ExpressionNode:
 
     def __repr__(self):
         """Returns a string representation of this node"""
-        return "{0}_{1}_{2}".format(self.value, self.x_pos, self.y_pos)
+        return "{0}_{1}_{2}".format(
+            self.value, lg(self.leafs), lg(self.leafs & -self.leafs)
+        )
 
     def __len__(self):
         """Returns the height of the subtree rooted at this node"""
