@@ -545,7 +545,7 @@ class ExpressionNode:
         ret = ""
 
         for line in hdl_def:
-            if "assign" in line:
+            if "assign" in line or "wire" in line:
                 ret += line + "\n\n"
             else:
                 if "U" in line:
