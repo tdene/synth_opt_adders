@@ -81,7 +81,9 @@ class ExpressionNode:
 
     def __repr__(self):
         """Returns a string representation of this node"""
-        return "{0}_{1}_{2}".format(self.value, self.x_pos, self.y_pos)
+        return "{0}_{1}_{2}".format(
+            self.value, lg(self.leafs), lg(self.leafs & -self.leafs)
+        )
 
     def __len__(self):
         """Returns the height of the subtree rooted at this node"""
@@ -133,8 +135,10 @@ class ExpressionNode:
             raise TypeError("Cannot compare to non-ExpressionNode")
 
         # Check whether self and other are equivalent
-        ret = not (self > other) and not (self < other)
-        ret = ret and self.value == other.value
+        if self > other or self < other:
+            return False
+        if self.value != other.value:
+            return False
 
         # Check whether their subtrees are also equivalent
         for a in range(len(self.children)):
@@ -143,9 +147,10 @@ class ExpressionNode:
                     other_c = other[a]
                 except IndexError:
                     return False
-                ret = ret and self[a].equiv(other_c)
+                if not self[a].equiv(other_c):
+                    return False
 
-        return ret
+        return True
 
     def set_equiv(self, other):
         """Sets two nodes as equivalent
@@ -162,21 +167,16 @@ class ExpressionNode:
         """
         if not isinstance(other, ExpressionNode):
             raise TypeError("Cannot compare to non-ExpressionNode")
-        if not self.equiv(other):
-            raise ValueError("Nodes are not equivalent")
 
         # Grab both nodes' equivalence classes
         ec1 = self.equiv_class
         ec2 = other.equiv_class
         # Merge them
         ec = ec1.copy()
-        for n in ec2:
-            if n not in ec:
-                ec.append(n)
-        # If the two nodes' graphs have a width attribute,
-        # sort the nodes by width
-        if hasattr(self.graph, "width") and hasattr(other.graph, "width"):
-            ec.sort(key=lambda x: x.graph.width, reverse=True)
+        sec1 = set(ec1)
+        sec2 = set(ec2)
+        for n in sec2 - sec1:
+            ec.append(n)
 
         # In order to write out correct HDL,
         # each node must be aware of its representative's output nets.
@@ -545,7 +545,7 @@ class ExpressionNode:
         ret = ""
 
         for line in hdl_def:
-            if "assign" in line:
+            if "assign" in line or "wire" in line:
                 ret += line + "\n\n"
             else:
                 if "U" in line:
