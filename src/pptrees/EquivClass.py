@@ -10,7 +10,7 @@ class EquivClass:
     Attributes:
         nodes (set of ExpressionNode): The nodes in this equivalence class
         rep (ExpressionNode): The representative of this equivalence class
-        parents (list of EquivClass): The parents of this equivalence class
+        parents (set of EquivClass): The parents of this equivalence class
         wires (set of strings): The set of wires that are output by the
             representative node of this equivalence class
     """
@@ -30,7 +30,15 @@ class EquivClass:
         self.wires = {wire for net in rep.out_nets.values() for wire in net}
         self.parents = {rep.parent}
 
-    def is_equiv(self, other):
+    def __len__(self):
+        """Returns the number of nodes in this equivalence class"""
+        return len(self.nodes)
+
+    def __iter__(self):
+        """Iterates over the nodes in this equivalence class"""
+        return iter(self.nodes)
+
+    def __eq__(self, other):
         """Returns whether this equivalence class is equivalent to another
 
         Args:
@@ -67,7 +75,7 @@ class EquivClass:
         """
         if not isinstance(other, EquivClass):
             raise TypeError("other must be an EquivClass")
-        if not self.is_equiv(other):
+        if not self == other:
             raise ValueError("Cannot merge non-equivalent equivalence classes")
 
         # Merge the equivalence classes
