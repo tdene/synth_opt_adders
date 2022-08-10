@@ -5,12 +5,12 @@ data = dict()
 data[
     "verilog"
 ] = """
-module ppa_small_root(pin, sum);
+module ppa_small_root(xin, sum);
 
-	input pin;
+	input xin;
 	output sum;
 
-	assign sum = pin;
+	assign sum = xin;
 
 endmodule
 """
@@ -20,7 +20,7 @@ data[
 ] = """
 entity ppa_small_root is
 	port (
-		pin : in std_logic;
+		xin : in std_logic;
 		sum : out std_logic
 	);
 end entity;
@@ -28,7 +28,7 @@ end entity;
 architecture behavior of ppa_small_root is
 begin
 
-	sum <= pin;
+	sum <= xin;
 
 end architecture;
 """
@@ -41,10 +41,10 @@ data["fixedsize"] = "shape"
 data["penwidth"] = "4.0"
 data["fontsize"] = "52"
 
-data["ins"] = [("pin", 1, 1, 0)]
+data["ins"] = [("xin", 1, 1, 0)]
 data["outs"] = [("sum", 1)]
 
-data["logic"] = lambda pin: [pin]
+data["logic"] = lambda xin: [xin]
 
 data["pd"] = 0
 data["le"] = [0, 0]
