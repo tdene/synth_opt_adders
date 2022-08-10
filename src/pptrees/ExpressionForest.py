@@ -2,7 +2,6 @@ import re
 
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
-from .node_data import node_data
 from .util import display_gif, increment_iname, wrap_quotes
 
 
@@ -315,7 +314,7 @@ class ExpressionForest(ExpressionGraph):
         # Modify the relevant edge's data
         e_data = tree.get_edge_data(node.parent, node)
         index = node.parent.children.index(node)
-        g = node_data[node.value]["le"][index]
+        g = node.node_data["le"][index]
         ### This is a bad estimate of fanout's effect on delay
         e_data["fanout"] = g * fanout
         tree.update_edge_weight(node.parent, node)

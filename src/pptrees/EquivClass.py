@@ -10,6 +10,7 @@ class EquivClass:
     Attributes:
         nodes (set of ExpressionNode): The nodes in this equivalence class
         rep (ExpressionNode): The representative of this equivalence class
+        out_nets (dict): The output nets of this equivalence class
         parents (set of EquivClass): The parents of this equivalence class
     """
 
@@ -22,6 +23,7 @@ class EquivClass:
         """
         self.rep = rep
         self.nodes = {rep}
+        self.out_nets = rep.out_nets
         self.parents = {rep.parent.equiv_class.rep if rep.parent else None}
 
     def __len__(self):
@@ -85,8 +87,11 @@ class EquivClass:
             raise ValueError("new_rep must be in this equivalence class")
 
         for node in self:
-            change_in_nets(node.parent, self.rep.out_nets, new_rep.out_nets)
+            parent = node.parent
+            index = parent.children.index(node)
+            change_in_nets(parent, self.out_nets, new_rep.out_nets, index)
         self.rep = new_rep
+        self.out_nets = new_rep.out_nets
         return
 
     def merge(self, other, check_equiv=True):
@@ -104,11 +109,18 @@ class EquivClass:
         self.nodes |= other.nodes
         self.parents |= other.parents
 
+        # Merge the out_nets
+        for k, v in self.out_nets.items():
+            if v is [None]:
+                self.out_nets[k] = other.out_nets[k]
+
         # Assign the correct equivalence class to new nodes
         # Overwrite input nets of new nodes
         for node in other.nodes:
             node.equiv_class = self
-            change_in_nets(node.parent, node.out_nets, self.rep.out_nets)
+            parent = node.parent
+            index = parent.children.index(node)
+            change_in_nets(parent, node.out_nets, self.rep.out_nets, index)
 
         return self
 
@@ -123,7 +135,9 @@ class EquivClass:
         """Resets the equivalence classes of all nodes in this class"""
         for node in self:
             node.equiv_class = EquivClass(node)
-            change_in_nets(node.parent, self.rep.out_nets, node.out_nets)
+            parent = node.parent
+            index = parent.children.index(node)
+            change_in_nets(parent, self.rep.out_nets, node.out_nets, index)
         return
 
 
