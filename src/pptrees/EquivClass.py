@@ -63,9 +63,13 @@ class EquivClass:
 
     def __str__(self):
         """Returns a string representation of this equivalence class"""
-        return "Equivalence class with {} nodes and representative {}".format(
-            len(self.nodes), self.rep
-        )
+        return "ec({})#{}".format(self.rep, len(self))
+
+    def __repr__(self):
+        return str(self)
+
+    def __hash__(self):
+        return str(self).__hash__()
 
     def _overwrite_nets(self, node, rep):
         """Overwrites the input nets of the given node's parent"""
@@ -86,6 +90,13 @@ class EquivClass:
             parent.in_nets[verso] = parent_port
         return
 
+    def _recalculate_parents(self):
+        """Recalculates the parents of this equivalence class"""
+        self.parents = set()
+        for node in self:
+            self.parents.add(node.parent.equiv_class.rep)
+        return
+
     def change_rep(self, new_rep):
         """Changes the representative of this equivalence class"""
         if new_rep not in self.nodes:
@@ -96,7 +107,7 @@ class EquivClass:
             self._overwrite_nets(node)
         return
 
-    def merge(self, other):
+    def merge(self, other, check_equiv=True):
         """Merges this equivalence class with another equivalence class
 
         Args:
@@ -104,7 +115,7 @@ class EquivClass:
         """
         if not isinstance(other, EquivClass):
             raise TypeError("other must be an EquivClass")
-        if not self == other:
+        if check_equiv and not self == other:
             raise ValueError("Cannot merge non-equivalent equivalence classes")
 
         # Merge the equivalence classes

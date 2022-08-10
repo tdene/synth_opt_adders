@@ -19,7 +19,7 @@ class ExpressionForest(ExpressionGraph):
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
         cocycle_shape (int, int): The shape of the main recurrence node's output
-        equiv_reps (list of EquivClass): The equivalence classes of the graph
+        equiv_classes (list of EquivClass): The equivalence classes of the graph
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -169,7 +169,7 @@ class ExpressionForest(ExpressionGraph):
 
         # Initialize the graph
         super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
-        self.equiv_reps = set()
+        self.equiv_classes = set()
 
         # If tree_start_points was provided, ignore the alias
         if tree_start_points is not None:
@@ -229,11 +229,15 @@ class ExpressionForest(ExpressionGraph):
                         # Try to merge equivalence classes
                         # Raise exception if they are not equivalent
                         try:
+                            old_ec = n2.equiv_class
                             n1.equiv_class.merge(n2.equiv_class)
-                            self.equiv_reps.add(n1.equiv_class.rep)
-                            self.equiv_reps.remove(n2.equiv_class.rep)
+                            self.equiv_classes.add(n1.equiv_class)
+                            if old_ec in self.equiv_classes:
+                                self.equiv_classes.remove(old_ec)
                         except ValueError:
                             pass
+        for ec in self.equiv_classes:
+            ec._recalculate_parents()
         self.mark_equivalent_nodes()
 
     def mark_equivalent_nodes(self):
@@ -252,8 +256,8 @@ class ExpressionForest(ExpressionGraph):
     def reset_equivalent_nodes(self):
         """Resets the equivalence classes of all nodes"""
         self.unmark_equivalent_nodes()
-        for er in self.equiv_reps:
-            er.equiv_class.reset()
+        for ec in self.equiv_classes:
+            ec.reset()
 
     def unmark_equivalent_nodes(self):
         """Remove stripes from all redundant nodes on diagrams"""
