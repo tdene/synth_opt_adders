@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from .EquivClass import EquivClass
 from .node_data import node_data
 from .util import lg, parse_net, verso_pin
 
@@ -21,11 +22,7 @@ class ExpressionNode:
         out_nets (dict): A dictionary of output nets
         x_pos (float): The x-coordinate of this node's graphical representation
         y_pos (float): The y-coordinate of this node's graphical representation
-        equiv_class (list of ExpressionNode): The list of all nodes equivalent
-            to this one. The first node in the list is special, and is known
-            as the representative of the equivalence class.
-        equiv_wires (set of strings): The set of wires that are output by the
-            representative node of this node's equivalence class.
+        equiv_class (EquivClass): The equivalence class of this node
         tracks_class (list of ExpressionNode): The list of all nodes that cause
             parallel wires in the layout. No node in this list is special.
     """
@@ -62,8 +59,7 @@ class ExpressionNode:
         self.leafs = 0
         self.graph = None
         self.block = None
-        self.equiv_class = [self]
-        self.equiv_wires = set()
+        self.equiv_class = EquivClass(self)
         self.tracks_class = set()
         self.tracks_class.add(self)
 
@@ -121,114 +117,6 @@ class ExpressionNode:
         """Shorthand for __copy__"""
         return self.__copy__()
 
-    ### NOTE: This should just convert the subtrees each node roots
-    ### into their labels, and then compare the two strings
-    ### TO-DO: Implement the above
-    def equiv(self, other):
-        """Checks if this node is equivalent to another node
-        Cannot do this with __eq__ because NetworkX uses __eq__
-
-        Args:
-            other (ExpressionNode): The node to compare to
-        """
-        if not isinstance(other, ExpressionNode):
-            raise TypeError("Cannot compare to non-ExpressionNode")
-
-        # Check whether self and other are equivalent
-        if self > other or self < other:
-            return False
-        if self.value != other.value:
-            return False
-
-        # Check whether their subtrees are also equivalent
-        for a in range(len(self.children)):
-            if self[a] is not None:
-                try:
-                    other_c = other[a]
-                except IndexError:
-                    return False
-                if not self[a].equiv(other_c):
-                    return False
-
-        return True
-
-    def set_equiv(self, other):
-        """Sets two nodes as equivalent
-
-        If either already has an equivalence class assigned,
-        the two classes are merged.
-
-        If the nodes are in a graph that possesses a width attribute,
-        priority is given to the nodes with higher width.
-        Otherwise, priority is given to self.
-
-        Args:
-            other (ExpressionNode): The node to compare to
-        """
-        if not isinstance(other, ExpressionNode):
-            raise TypeError("Cannot compare to non-ExpressionNode")
-
-        # Grab both nodes' equivalence classes
-        ec1 = self.equiv_class
-        ec2 = other.equiv_class
-        # Merge them
-        ec = ec1.copy()
-        sec1 = set(ec1)
-        sec2 = set(ec2)
-        for n in sec2 - sec1:
-            ec.append(n)
-
-        # In order to write out correct HDL,
-        # each node must be aware of its representative's output nets.
-        equiv_wires = [wire for net in ec[0].out_nets.values() for wire in net]
-        # Set all nodes' equivalence classes to the result
-        for n in ec:
-            n.equiv_class = ec
-            # Set each node's equiv_wires
-            n.equiv_wires = set(equiv_wires)
-
-        # Return the final equivalence class
-        return ec
-
-    def make_representative(self):
-        """Makes this node the representative of its equivalence class"""
-        ec = self.equiv_class.copy()
-        # If the representative is not the first node in the class,
-        # swap it with the first node in the class
-        if ec[0] != self:
-            ec.remove(self)
-            ec.insert(0, self)
-        # Reset equiv_wires
-        equiv_wires = [wire for net in ec[0].out_nets.values() for wire in net]
-        # Set all nodes in the class to the representative
-        for n in ec:
-            n.equiv_class = ec
-            n.equiv_wires = equiv_wires
-
-        # Return the final equivalence class
-        return ec
-
-    def is_bifurcation(self):
-        """Checks whether the equivalence class of this node bifurcates
-
-        That is to say, this answers ∃n ≡ self s.t n.parent !≡ self.parent
-        """
-        # Filter out None parents
-        if self.parent is None:
-            self_parent_equiv = None
-        else:
-            self_parent_equiv = self.parent.equiv_class[0]
-
-        ret = False
-        for n in self.equiv_class:
-            if n.parent is None:
-                continue
-            n_parent_equiv = n.parent.equiv_class[0]
-            if n_parent_equiv != self_parent_equiv:
-                ret = True
-                break
-        return ret
-
     ### NOTE: Where this logic belongs is an open question
     def tracks(self, other):
         """Checks if self and other cause a need for parallel wires
@@ -252,8 +140,8 @@ class ExpressionNode:
 
         # If either node is not the representative of its equivalence class
         # There is no physical meaning to this metric
-        if (self.equiv_class[0] is not self) or (
-            other.equiv_class[0] is not other
+        if (self.equiv_class.rep is self) or (
+            other.equiv_class.rep is not other
         ):
             return False
 
@@ -514,23 +402,28 @@ class ExpressionNode:
 
         # If this node is part of an equivalence class,
         # but not the main representative,
-        # replace its HDL by assign statements
-        if self is not self.equiv_class[0]:
+        # destructively change the net names of its parent
+        if self.equiv_class.rep is not self:
+            parent = self.parent
             # But if this node is part of a bigger subtree
             # There is no need to even do assign statements
             # The equivalent subtree will take care of everything
-            if self.parent.equiv_class[0] != self.parent:
+            if parent.equiv_class.rep is not parent:
                 return ""
             ret = ""
-            virtual = self.equiv_class[0].out_nets
-            for v in virtual:
-                port = virtual[v]
+            virtual = self.equiv_class.rep.out_nets
+            translated = {}
+            for k in virtual:
+                port = virtual[k]
+                self_port = self.out_nets[k]
+                verso = verso_pin(k)
+                parent_port = parent.in_nets[verso]
                 for a in range(len(port)):
-                    net = port[a]
-                    n = ExpressionNode("invis")
-                    n.in_nets["A"][0] = net
-                    n.out_nets["Y"][0] = self.out_nets[v][a]
-                    ret += n.hdl(language="verilog", flat=True)[0]
+                    rep_net = port[a]
+                    this_net = self_port[a]
+                    translated[this_net] = rep_net
+                parent_port = [translated.get(x, x) for x in parent_port]
+                parent.in_nets[verso] = parent_port
             return ret
 
         ### Grab only instantiated cells from the HDL definiton

@@ -5,12 +5,12 @@ data = dict()
 data[
     "verilog"
 ] = """
-module ppa_lspine_pre_simple(a_in, b_in, pout);
+module ppa_lspine_pre_simple(a_in, b_in, xout);
 
 	input a_in, b_in;
-	output pout;
+	output xout;
 
-	xor2  U1(pout,a_in,b_in);
+	xor2  U1(xout,a_in,b_in);
 
 endmodule
 """
@@ -22,7 +22,7 @@ entity ppa_lspine_pre_simple is
 	port (
 		a_in : in std_logic;
 		b_in : in std_logic;
-		pout : out std_logic
+		xout : out std_logic
 	);
 end entity;
 
@@ -33,7 +33,7 @@ U1: xor2
 	port map (
 		A => a_in,
 		B => b_in,
-		Y => pout
+		Y => xout
 	);
 
 end architecture;
@@ -45,7 +45,7 @@ data["label"] = "pre"
 data["style"] = "dashed"
 
 data["ins"] = [("a_in", 1, 1, 0), ("b_in", 1, 0, 1)]
-data["outs"] = [("pout", 1)]
+data["outs"] = [("xout", 1)]
 
 data["logic"] = lambda pin, gin: [pin ^ gin]
 

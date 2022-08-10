@@ -233,7 +233,7 @@ class ExpressionGraph(nx.DiGraph):
         valid_nodes = [
             node
             for node in self.nodes
-            if node.block is None and node.equiv_class[0] is node
+            if node.block is None and node.equiv_class.rep is node
         ]
 
         if len(valid_nodes) < 2:
@@ -345,7 +345,7 @@ class ExpressionGraph(nx.DiGraph):
         # Get the nets from nodes
         for node in self.nodes:
             # Ignore any nodes that are not the representative of their class
-            if node.equiv_class[0] is not node:
+            if node.equiv_class.rep is not node:
                 continue
             for net in node.in_nets.values():
                 in_nets.update([parse_net(x) for x in net])
@@ -494,15 +494,23 @@ class ExpressionGraph(nx.DiGraph):
             # bring up its internal wires to the top level
             if (
                 any([x not in self for x in node.equiv_class])
-                and node.parent.equiv_class[0] == node.parent
+                and node.parent.equiv_class.rep is node.parent
             ):
 
                 # If this node is the representative, its wires become outputs
-                if node.equiv_class[0] == node:
-                    self.out_extras += [parse_net(x) for x in node.equiv_wires]
+                if node.equiv_class.rep is node:
+                    self.out_extras += [
+                        parse_net(wire)
+                        for net in node.equiv_class.rep.out_nets.values()
+                        for wire in net
+                    ]
                 # Otherwise, its wires become inputs
                 else:
-                    self.in_extras += [parse_net(x) for x in node.equiv_wires]
+                    self.in_extras += [
+                        parse_net(wire)
+                        for net in node.equiv_class.rep.out_nets.values()
+                        for wire in net
+                    ]
 
             # Check whether the node is in a block, and whether this is it
             # If the node is not inside a block, it's automatically usable

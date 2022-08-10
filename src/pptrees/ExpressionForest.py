@@ -19,6 +19,7 @@ class ExpressionForest(ExpressionGraph):
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
         cocycle_shape (int, int): The shape of the main recurrence node's output
+        equiv_classes (list of EquivClass): The equivalence classes of the graph
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -168,6 +169,7 @@ class ExpressionForest(ExpressionGraph):
 
         # Initialize the graph
         super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
+        self.equiv_classes = set()
 
         # If tree_start_points was provided, ignore the alias
         if tree_start_points is not None:
@@ -224,15 +226,25 @@ class ExpressionForest(ExpressionGraph):
                 t2 = self.trees[i2]
                 for n1 in t1.nodes:
                     for n2 in t2.nodes:
-                        if n1.equiv(n2):
-                            n1.set_equiv(n2)
+                        # Try to merge equivalence classes
+                        # Raise exception if they are not equivalent
+                        try:
+                            old_ec = n2.equiv_class
+                            n1.equiv_class.merge(n2.equiv_class)
+                            self.equiv_classes.add(n1.equiv_class)
+                            if old_ec in self.equiv_classes:
+                                self.equiv_classes.remove(old_ec)
+                        except ValueError:
+                            pass
+        for ec in self.equiv_classes:
+            ec._recalculate_parents()
         self.mark_equivalent_nodes()
 
     def mark_equivalent_nodes(self):
         """Mark all redundant nodes with stripes on diagrams"""
         for t in self.trees:
             for n in t.nodes:
-                if n.equiv_class[0] is not n:
+                if n.equiv_class.rep is not n:
                     if t.nodes(data=True)[n].get("gradientangle", "0") == "135":
                         continue
                     col = t.nodes(data=True)[n]["fillcolor"]
@@ -244,9 +256,8 @@ class ExpressionForest(ExpressionGraph):
     def reset_equivalent_nodes(self):
         """Resets the equivalence classes of all nodes"""
         self.unmark_equivalent_nodes()
-        for t in self.trees:
-            for n in t.nodes:
-                n.equiv_class = [n]
+        for ec in self.equiv_classes:
+            ec.reset()
 
     def unmark_equivalent_nodes(self):
         """Remove stripes from all redundant nodes on diagrams"""
@@ -292,17 +303,14 @@ class ExpressionForest(ExpressionGraph):
         # Grab the node's equivalence class
         ec = node.equiv_class
         # If node is not ec's representative, do nothing
-        if ec[0] is not node:
+        if ec.rep is not node:
             return
         # If node is root, do noting
         if node.parent is None:
             return
 
         # Count the fanout
-        ctr = set()
-        for n in ec:
-            ctr.add(n.parent.equiv_class[0])
-        fanout = len(ctr)
+        fanout = len(ec.parents)
 
         # Modify the relevant edge's data
         e_data = tree.get_edge_data(node.parent, node)
@@ -338,7 +346,7 @@ class ExpressionForest(ExpressionGraph):
         """
         tree = node.graph
         # If node is not its equivalence class representative, do nothing
-        if node.equiv_class[0] is not node:
+        if node.equiv_class.rep is not node:
             return
         # If node is root, do noting
         if node.parent is None:
@@ -347,7 +355,7 @@ class ExpressionForest(ExpressionGraph):
         # Compare node to all other nodes in the forest
         for t in self.trees:
             for n in t:
-                if n.equiv_class[0] is not n:
+                if n.equiv_class.rep is not n:
                     continue
                 if node.tracks(n):
                     node.set_tracks(n)
@@ -399,12 +407,13 @@ class ExpressionForest(ExpressionGraph):
         buffer = tree.insert_buffer(other_node)
 
         # Fix equivalence classes
-        buffer.equiv_class = [buffer]
-        for a in ec:
-            parent = a.parent
+        for p in ec.parents:
             # Try to add new buffer to other equivalence classes
-            if a is not other_node and parent.equiv(buffer):
-                parent.set_equiv(buffer)
+            try:
+                p.merge(buffer.equiv_class)
+            except ValueError:
+                pass
+        ec.parents.add(buffer)
 
         # Fix fanout
         for a in ec:
@@ -603,7 +612,7 @@ class ExpressionForest(ExpressionGraph):
         ec = [
             x
             for x in ec
-            if x.parent is None or x.parent.equiv_class[0] is x.parent
+            if x.parent is None or x.parent.equiv_class.rep is x.parent
         ]
         # Decouple fanout
         ctr = 0
@@ -627,7 +636,7 @@ class ExpressionForest(ExpressionGraph):
         targets = []
         for t in reversed(self.trees[1:]):
             for n in t:
-                if (n.parent is not None) and (n.equiv_class[0] == n):
+                if (n.parent is not None) and (n.equiv_class.rep is n):
                     targets.append(n)
         for n in targets:
             self.legacy_decouple_node_fanout(n, maximum_fanout)
