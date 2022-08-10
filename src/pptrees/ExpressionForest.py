@@ -1,6 +1,5 @@
 import re
 
-from .EquivClass import EquivClass
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
 from .node_data import node_data
@@ -20,6 +19,7 @@ class ExpressionForest(ExpressionGraph):
         in_shape (list of int): The shape of each leaf node's input
         out_shape (list of int): The shape of the root node's output
         cocycle_shape (int, int): The shape of the main recurrence node's output
+        equiv_reps (list of EquivClass): The equivalence classes of the graph
 
     Attributes inherited from ExpressionGraph:
         name (string): The name of the graph
@@ -169,6 +169,7 @@ class ExpressionForest(ExpressionGraph):
 
         # Initialize the graph
         super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
+        self.equiv_reps = set()
 
         # If tree_start_points was provided, ignore the alias
         if tree_start_points is not None:
@@ -229,6 +230,8 @@ class ExpressionForest(ExpressionGraph):
                         # Raise exception if they are not equivalent
                         try:
                             n1.equiv_class.merge(n2.equiv_class)
+                            self.equiv_reps.add(n1.equiv_class.rep)
+                            self.equiv_reps.remove(n2.equiv_class.rep)
                         except ValueError:
                             pass
         self.mark_equivalent_nodes()
@@ -249,9 +252,8 @@ class ExpressionForest(ExpressionGraph):
     def reset_equivalent_nodes(self):
         """Resets the equivalence classes of all nodes"""
         self.unmark_equivalent_nodes()
-        for t in self.trees:
-            for n in t.nodes:
-                n.equiv_class = EquivClass(n)
+        for er in self.equiv_reps:
+            er.equiv_class.reset()
 
     def unmark_equivalent_nodes(self):
         """Remove stripes from all redundant nodes on diagrams"""

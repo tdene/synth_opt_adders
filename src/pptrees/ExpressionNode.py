@@ -402,24 +402,28 @@ class ExpressionNode:
 
         # If this node is part of an equivalence class,
         # but not the main representative,
-        # replace its HDL by assign statements
+        # destructively change the net names of its parent
         if self.equiv_class.rep is not self:
+            parent = self.parent
             # But if this node is part of a bigger subtree
             # There is no need to even do assign statements
             # The equivalent subtree will take care of everything
-            if self.parent.equiv_class.rep is not self.parent:
+            if parent.equiv_class.rep is not parent:
                 return ""
             ret = ""
-            return ret
-            virtual = self.equiv_class.wires
-            for v in virtual:
-                port = virtual[v]
+            virtual = self.equiv_class.rep.out_nets
+            translated = {}
+            for k in virtual:
+                port = virtual[k]
+                self_port = self.out_nets[k]
+                verso = verso_pin(k)
+                parent_port = parent.in_nets[verso]
                 for a in range(len(port)):
-                    net = port[a]
-                    n = ExpressionNode("invis")
-                    n.in_nets["A"][0] = net
-                    n.out_nets["Y"][0] = self.out_nets[v][a]
-                    ret += n.hdl(language="verilog", flat=True)[0]
+                    rep_net = port[a]
+                    this_net = self_port[a]
+                    translated[this_net] = rep_net
+                parent_port = [translated.get(x, x) for x in parent_port]
+                parent.in_nets[verso] = parent_port
             return ret
 
         ### Grab only instantiated cells from the HDL definiton

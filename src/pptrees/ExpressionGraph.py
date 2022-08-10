@@ -500,12 +500,16 @@ class ExpressionGraph(nx.DiGraph):
                 # If this node is the representative, its wires become outputs
                 if node.equiv_class.rep is node:
                     self.out_extras += [
-                        parse_net(x) for x in node.equiv_class.wires
+                        parse_net(wire)
+                        for net in node.equiv_class.rep.out_nets.values()
+                        for wire in net
                     ]
                 # Otherwise, its wires become inputs
                 else:
                     self.in_extras += [
-                        parse_net(x) for x in node.equiv_class.wires
+                        parse_net(wire)
+                        for net in node.equiv_class.rep.out_nets.values()
+                        for wire in net
                     ]
 
             # Check whether the node is in a block, and whether this is it

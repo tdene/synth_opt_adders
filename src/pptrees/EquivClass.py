@@ -1,4 +1,4 @@
-from .ExpressionNode import ExpressionNode
+from .util import verso_pin
 
 
 class EquivClass:
@@ -11,8 +11,6 @@ class EquivClass:
         nodes (set of ExpressionNode): The nodes in this equivalence class
         rep (ExpressionNode): The representative of this equivalence class
         parents (set of EquivClass): The parents of this equivalence class
-        wires (set of strings): The set of wires that are output by the
-            representative node of this equivalence class
     """
 
     def __init__(self, rep):
@@ -22,13 +20,9 @@ class EquivClass:
             rep (ExpressionNode): The representative of this equivalence class
             nodes (list of ExpressionNode): The nodes in this equivalence class
         """
-        if not isinstance(rep, ExpressionNode):
-            raise TypeError("rep must be an ExpressionNode")
-
         self.rep = rep
         self.nodes = {rep}
-        self.wires = {wire for net in rep.out_nets.values() for wire in net}
-        self.parents = {rep.parent}
+        self.parents = {rep.parent.equiv_class.rep if rep.parent else None}
 
     def __len__(self):
         """Returns the number of nodes in this equivalence class"""
@@ -51,7 +45,7 @@ class EquivClass:
         # Check whether the two representatives are equivalent
         if self.rep > other.rep or self.rep < other.rep:
             return False
-        if self.value != other.value:
+        if self.rep.value != other.rep.value:
             return False
 
         # Check whether their subtrees are also equivalent
@@ -62,10 +56,45 @@ class EquivClass:
                     other_c = other_rep[a]
                 except IndexError:
                     return False
-                if not this_c.equiv_class.is_equiv(other_c.equiv_class):
+                if not this_c.equiv_class == other_c.equiv_class:
                     return False
 
         return True
+
+    def __str__(self):
+        """Returns a string representation of this equivalence class"""
+        return "Equivalence class with {} nodes and representative {}".format(
+            len(self.nodes), self.rep
+        )
+
+    def _overwrite_nets(self, node, rep):
+        """Overwrites the input nets of the given node's parent"""
+        parent = node.parent
+        # Loop through all output nets of rep / node, making a dictionary
+        rep_nets = rep.out_nets
+        dic = {}
+        for k in rep.out_nets:
+            rep_port = rep_nets[k]
+            other_port = node.out_nets[k]
+            verso = verso_pin(k)
+            parent_port = parent.in_nets[verso]
+            for a in range(len(rep_port)):
+                rep_pin = rep_port[a]
+                other_pin = other_port[a]
+                dic[other_pin] = rep_pin
+            parent_port = [dic.get(x, x) for x in parent_port]
+            parent.in_nets[verso] = parent_port
+        return
+
+    def change_rep(self, new_rep):
+        """Changes the representative of this equivalence class"""
+        if new_rep not in self.nodes:
+            raise ValueError("new_rep must be in this equivalence class")
+
+        self.rep = new_rep
+        for node in self:
+            self._overwrite_nets(node)
+        return
 
     def merge(self, other):
         """Merges this equivalence class with another equivalence class
@@ -82,9 +111,11 @@ class EquivClass:
         self.nodes |= other.nodes
         self.parents |= other.parents
 
-        # Assign the correct equivalence class to all nodes
+        # Assign the correct equivalence class to new nodes
+        # Overwrite input nets of new nodes
         for node in other.nodes:
             node.equiv_class = self
+            self._overwrite_nets(node, self.rep)
 
         return self
 
@@ -94,6 +125,13 @@ class EquivClass:
         That is to say, this answers ∃n ≡ self s.t n.parent !≡ self.parent
         """
         return len(self.parents) > 1
+
+    def reset(self):
+        """Resets the equivalence classes of all nodes in this class"""
+        for node in self:
+            node.equiv_class = EquivClass(node)
+            node.equiv_class._overwrite_nets(self.rep, node)
+        return
 
 
 if __name__ == "__main__":
