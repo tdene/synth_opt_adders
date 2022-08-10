@@ -24,7 +24,7 @@ class EquivClass:
         self.rep = rep
         self.nodes = {rep}
         self.out_nets = rep.out_nets
-        self.parents = {rep.parent.equiv_class.rep if rep.parent else None}
+        self.parents = set()
 
     def __len__(self):
         """Returns the number of nodes in this equivalence class"""
