@@ -5,7 +5,6 @@ import shutil
 import networkx as nx
 
 from .ExpressionNode import ExpressionNode
-from .node_data import node_data
 from .util import (
     hdl_arch,
     hdl_entity,
@@ -93,7 +92,7 @@ class ExpressionGraph(nx.DiGraph):
             raise TypeError("Node must be an ExpressionNode")
 
         # Add GraphViz attributes
-        kwargs = node_data[node.value]
+        kwargs = node.node_data
         kwargs.update(attr)
         kwargs["shape"] = kwargs.get("shape", "square")
         kwargs["fillcolor"] = kwargs.get("fillcolor", "white")
@@ -156,7 +155,7 @@ class ExpressionGraph(nx.DiGraph):
         # This is later modified by logical effort and cross-track cap
         kwargs["fanout"] = 1
         kwargs["tracks"] = 0
-        kwargs["delay"] = node_data[child.value]["pd"]
+        kwargs["delay"] = child.node_data["pd"]
         kwargs["weight"] = kwargs["delay"]
 
         # If the two nodes are already connnected, simply update the pins
@@ -501,14 +500,14 @@ class ExpressionGraph(nx.DiGraph):
                 if node.equiv_class.rep is node:
                     self.out_extras += [
                         parse_net(wire)
-                        for net in node.equiv_class.rep.out_nets.values()
+                        for net in node.equiv_class.out_nets.values()
                         for wire in net
                     ]
                 # Otherwise, its wires become inputs
                 else:
                     self.in_extras += [
                         parse_net(wire)
-                        for net in node.equiv_class.rep.out_nets.values()
+                        for net in node.equiv_class.out_nets.values()
                         for wire in net
                     ]
 

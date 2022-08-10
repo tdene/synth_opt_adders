@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from .EquivClass import EquivClass
 from .node_data import node_data
-from .util import lg, parse_net, verso_pin
+from .util import change_in_nets, lg, parse_net, verso_pin
 
 
 class ExpressionNode:
@@ -177,11 +177,19 @@ class ExpressionNode:
         """
         if self.parent is not None or any([x is not None for x in self]):
             raise ValueError("Cannot morph a node with children or parents")
-        if value not in node_data:
+        if not isinstance(value, str) and not isinstance(value, dict):
+            raise TypeError("Invalid value type")
+        if isinstance(value, str) and value not in node_data:
             raise ValueError("Invalid module name: {}".format(value))
 
         # Create new node
-        new_node = ExpressionNode(value, self.x_pos, self.y_pos)
+        if isinstance(value, dict):
+            name = value["verilog"].split("module ")[1].split("(")[0]
+            new_node = ExpressionNode(
+                name, self.x_pos, self.y_pos, custom_data=value
+            )
+        else:
+            new_node = ExpressionNode(value, self.x_pos, self.y_pos)
         new_node.leafs = self.leafs
         new_node.block = self.block
 
@@ -411,19 +419,10 @@ class ExpressionNode:
             if parent.equiv_class.rep is not parent:
                 return ""
             ret = ""
-            virtual = self.equiv_class.rep.out_nets
-            translated = {}
-            for k in virtual:
-                port = virtual[k]
-                self_port = self.out_nets[k]
-                verso = verso_pin(k)
-                parent_port = parent.in_nets[verso]
-                for a in range(len(port)):
-                    rep_net = port[a]
-                    this_net = self_port[a]
-                    translated[this_net] = rep_net
-                parent_port = [translated.get(x, x) for x in parent_port]
-                parent.in_nets[verso] = parent_port
+            index = parent.children.index(self)
+            change_in_nets(
+                parent, self.out_nets, self.equiv_class.out_nets, index
+            )
             return ret
 
         ### Grab only instantiated cells from the HDL definiton
@@ -450,7 +449,7 @@ class ExpressionNode:
 
         # Create list of all instance pins and copy in unformatted net IDs
         pins = self.in_nets.copy()
-        pins.update(self.out_nets)
+        pins.update(self.equiv_class.out_nets)
 
         # Format net IDs and replace them into module's HDL
         for a in pins:

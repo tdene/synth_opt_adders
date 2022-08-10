@@ -4,8 +4,6 @@ import uuid
 
 import PIL.Image
 
-from .node_data import node_data
-
 
 def lg(x):
     """Returns the base-2 logarithm of x, rounded down"""
@@ -58,8 +56,8 @@ def match_nodes(parent, child, index):
     """Attempts to match the ports of two nodes
 
     Args:
-        parent (string): The parent node's module
-        child (string): The child node's module
+        parent (Node): The parent node
+        child (Node): The child node
         index (int): The index of the parent's input port
     """
     # If no match is found, will return None
@@ -68,8 +66,8 @@ def match_nodes(parent, child, index):
     ret = []
 
     # Get the parent and child ports
-    parent_ports = node_data[parent]["ins"]
-    child_ports = node_data[child]["outs"]
+    parent_ports = parent.node_data["ins"]
+    child_ports = child.node_data["outs"]
 
     # Iterate over all input ports
     for port in parent_ports:
@@ -93,11 +91,11 @@ def match_nodes(parent, child, index):
     return ret
 
 
-def change_in_nets(node, old_nets, new_nets):
+def change_in_nets(node, old_nets, new_nets, index):
     """Overwrites the input nets of a node's parent with new nets
 
     Args:
-        node (Node): The node whose parent's nets to change
+        node (Node): The node whose in_nets will change
         old_nets (dict): A dictionary that is node.child.out_nets
         new_nets (dict): A dictionary similar to old_nets
     """
@@ -107,7 +105,20 @@ def change_in_nets(node, old_nets, new_nets):
         new_port = new_nets[k]
         old_port = old_nets[k]
         verso = verso_pin(k)
-        node_port = node.in_nets[verso]
+        # Check if the net is in the node's inputs
+        try:
+            node_port = node.in_nets[verso]
+        except KeyError:
+            continue
+        # Check if the net is on the correct side of the node's inputs
+        flag = False
+        for tup in node.node_data["ins"]:
+            if tup[0] == verso and tup[2 + index] == 0:
+                flag = True
+                break
+        if flag:
+            continue
+        # Change the net names
         for a in range(len(new_port)):
             dic[old_port[a]] = new_port[a]
         node_port = [dic.get(x, x) for x in node_port]

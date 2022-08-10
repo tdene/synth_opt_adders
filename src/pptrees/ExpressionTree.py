@@ -359,7 +359,7 @@ class ExpressionTree(ExpressionGraph):
         index = index % self.radix
 
         # Attempt to match the nodes' ports
-        pin_pairs = match_nodes(parent.value, child.value, index)
+        pin_pairs = match_nodes(parent, child, index)
         if pin_pairs is None:
             raise ValueError("Nodes do not have matching ports")
 
