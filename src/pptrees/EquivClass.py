@@ -1,4 +1,4 @@
-from .util import verso_pin
+from .util import change_in_nets
 
 
 class EquivClass:
@@ -32,7 +32,7 @@ class EquivClass:
         """Iterates over the nodes in this equivalence class"""
         return iter(self.nodes)
 
-    def __eq__(self, other):
+    def equiv(self, other):
         """Returns whether this equivalence class is equivalent to another
 
         Args:
@@ -63,38 +63,20 @@ class EquivClass:
 
     def __str__(self):
         """Returns a string representation of this equivalence class"""
-        return "ec({})#{}".format(self.rep, len(self))
+        return "ec({}@{})#{}".format(self.rep, self.rep.graph, len(self))
 
     def __repr__(self):
         return str(self)
-
-    def __hash__(self):
-        return str(self).__hash__()
-
-    def _overwrite_nets(self, node, rep):
-        """Overwrites the input nets of the given node's parent"""
-        parent = node.parent
-        # Loop through all output nets of rep / node, making a dictionary
-        rep_nets = rep.out_nets
-        dic = {}
-        for k in rep.out_nets:
-            rep_port = rep_nets[k]
-            other_port = node.out_nets[k]
-            verso = verso_pin(k)
-            parent_port = parent.in_nets[verso]
-            for a in range(len(rep_port)):
-                rep_pin = rep_port[a]
-                other_pin = other_port[a]
-                dic[other_pin] = rep_pin
-            parent_port = [dic.get(x, x) for x in parent_port]
-            parent.in_nets[verso] = parent_port
-        return
 
     def _recalculate_parents(self):
         """Recalculates the parents of this equivalence class"""
         self.parents = set()
         for node in self:
-            self.parents.add(node.parent.equiv_class.rep)
+            parent = node.parent
+            if parent is None:
+                self.parents.add(None)
+            else:
+                self.parents.add(parent.equiv_class.rep)
         return
 
     def change_rep(self, new_rep):
@@ -102,9 +84,9 @@ class EquivClass:
         if new_rep not in self.nodes:
             raise ValueError("new_rep must be in this equivalence class")
 
-        self.rep = new_rep
         for node in self:
-            self._overwrite_nets(node)
+            change_in_nets(node.parent, self.rep.out_nets, new_rep.out_nets)
+        self.rep = new_rep
         return
 
     def merge(self, other, check_equiv=True):
@@ -115,7 +97,7 @@ class EquivClass:
         """
         if not isinstance(other, EquivClass):
             raise TypeError("other must be an EquivClass")
-        if check_equiv and not self == other:
+        if check_equiv and not self.equiv(other):
             raise ValueError("Cannot merge non-equivalent equivalence classes")
 
         # Merge the equivalence classes
@@ -126,7 +108,7 @@ class EquivClass:
         # Overwrite input nets of new nodes
         for node in other.nodes:
             node.equiv_class = self
-            self._overwrite_nets(node, self.rep)
+            change_in_nets(node.parent, node.out_nets, self.rep.out_nets)
 
         return self
 
@@ -141,7 +123,7 @@ class EquivClass:
         """Resets the equivalence classes of all nodes in this class"""
         for node in self:
             node.equiv_class = EquivClass(node)
-            node.equiv_class._overwrite_nets(self.rep, node)
+            change_in_nets(node.parent, self.rep.out_nets, node.out_nets)
         return
 
 

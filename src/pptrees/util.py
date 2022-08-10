@@ -93,6 +93,28 @@ def match_nodes(parent, child, index):
     return ret
 
 
+def change_in_nets(node, old_nets, new_nets):
+    """Overwrites the input nets of a node's parent with new nets
+
+    Args:
+        node (Node): The node whose parent's nets to change
+        old_nets (dict): A dictionary that is node.child.out_nets
+        new_nets (dict): A dictionary similar to old_nets
+    """
+    # Loop through all output nets, making a dictionary
+    dic = {}
+    for k in new_nets:
+        new_port = new_nets[k]
+        old_port = old_nets[k]
+        verso = verso_pin(k)
+        node_port = node.in_nets[verso]
+        for a in range(len(new_port)):
+            dic[old_port[a]] = new_port[a]
+        node_port = [dic.get(x, x) for x in node_port]
+        node.in_nets[verso] = node_port
+    return node
+
+
 def get_matching_port(port, other_ports):
     """Returns the port in other_ports that is the verso of port
 
