@@ -557,7 +557,7 @@ class ExpressionGraph(nx.DiGraph):
         # If the graph is a block, then it has individual ports
         # for each bit of every input and output port.
         # So the HDL should reflect through judicious use of net name fixing
-        if is_block:
+        if is_block and not flat:
             (in_ports, out_ports) = self._get_ports()
             for a in in_ports + out_ports:
                 hdl = hdl.replace(a[1], a[0][0])
