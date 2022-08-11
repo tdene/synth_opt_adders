@@ -288,6 +288,7 @@ class ExpressionNode:
             except ValueError:
                 self.children.append(child)
             child.parent = self
+            child.equiv_class.parents.add(self)
             # Recalculate leafs recursively
             self._recalculate_leafs()
 
@@ -304,6 +305,7 @@ class ExpressionNode:
         index = self.children.index(child)
         self.children[index] = None
         child.parent = None
+        child.equiv_class.parents.discard(self)
 
         # Reset net names in parent (inpins only!)
         for pin_name, pins in self.in_nets.items():

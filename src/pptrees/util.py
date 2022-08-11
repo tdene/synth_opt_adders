@@ -255,7 +255,7 @@ def hdl_inst(name, ports, language="verilog"):
 
 def sub_ports(hdl, ports):
     """Substitutes port in an HDL string with corresponding module ports"""
-    for port in ports:
+    for port in sorted(ports, key=lambda x: natural_keys(x[1]), reverse=True):
         ((local, num), remote) = port
         if num == 1:
             hdl = hdl.replace(local, remote)
