@@ -938,7 +938,7 @@ class ExpressionTree(ExpressionGraph):
 
         # Calculate info that the children need
         width = lwidth + rwidth + 1
-        new_mirror = lwidth > rwidth
+        new_mirror = lwidth >= rwidth if mirror else lwidth > rwidth
 
         # Account for mirroring
         if new_mirror:

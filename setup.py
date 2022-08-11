@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name="pptrees",
-    version="1.2.2",
+    version="1.2.3",
     description="Parallel Prefix tree generation library",
     url="https://github.com/tdene/synth_opt_adders",
     author="tdene",
