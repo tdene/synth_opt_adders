@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from .EquivClass import EquivClass
 from .node_data import node_data
 from .util import change_in_nets, lg, parse_net, verso_pin
@@ -44,10 +42,13 @@ class ExpressionNode:
 
         # Node attributes
         self.value = value
+        ### NOTE: This is not a deepcopy
+        ### This is done for performance purposes.
+        ### It causes no problems, for now.
         if custom_data is None:
-            self.node_data = deepcopy(node_data[value])
+            self.node_data = node_data[value].copy()
         else:
-            self.node_data = deepcopy(custom_data)
+            self.node_data = custom_data.copy()
         self.children = []
         self.parent = None
 
