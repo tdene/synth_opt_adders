@@ -1,8 +1,6 @@
-import re
-
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
-from .util import display_gif, increment_iname, wrap_quotes
+from .util import display_gif, increment_iname, increment_wname, wrap_quotes
 
 
 class ExpressionForest(ExpressionGraph):
@@ -511,10 +509,7 @@ class ExpressionForest(ExpressionGraph):
                 module_name="{0}_{1}".format(module_name, t.name),
                 description_string=desc,
             )
-            w = re.findall(r"w\d+", t_hdl)
-            for x in set(w):
-                t_hdl = t_hdl.replace(x, "w{}".format(w_ctr))
-                w_ctr += 1
+            t_hdl, w_ctr = increment_wname(t_hdl, w_ctr)
             hdl.append(t_hdl)
             module_defs |= t_module_defs
         hdl = "\n".join(hdl)
