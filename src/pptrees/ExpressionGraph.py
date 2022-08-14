@@ -11,6 +11,7 @@ from .util import (
     hdl_inst,
     hdl_syntax,
     increment_iname,
+    increment_wname,
     merge_mapping_into_cells,
     natural_keys,
     parse_mapping,
@@ -451,6 +452,10 @@ class ExpressionGraph(nx.DiGraph):
         module_defs = set()
 
         # Pull in the HDL description of blocks
+        # This HDL description will have multiple cell-internal wires
+        # By default, these are named w*
+        # These names need to be made unique
+        w_ctr = 0
         for block_id in range(len(self.blocks)):
             if self.blocks[block_id] is None:
                 continue
@@ -465,7 +470,7 @@ class ExpressionGraph(nx.DiGraph):
                 module_name="{0}_block_{1}".format(module_name, block_id),
                 description_string="block {0}".format(block_id),
             )
-
+            block_hdl, w_ctr = increment_wname(block_hdl, w_ctr)
             hdl += block_hdl
             hdl += "\n"
             module_defs.update(block_defs)
@@ -526,8 +531,7 @@ class ExpressionGraph(nx.DiGraph):
             node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
             # If the cell is flat, rename the internal wires
             if node_flat:
-                node_hdl = node_hdl.replace("w1", "w{0}".format(w_ctr))
-                w_ctr += 1
+                node_hdl, w_ctr = increment_wname(node_hdl, w_ctr)
 
             # If the mapping file is intended to be merged in, do so
             if merge_mapping:

@@ -356,6 +356,26 @@ def increment_iname(hdl):
     return good_hdl + hdl
 
 
+def increment_wname(hdl, w_ctr):
+    """Assigns unique instances names for all internal wires in the HDL block
+
+    By default, internal wires are named w0, w1, w2, etc.
+    These names need to be made unique.
+    """
+    w = re.findall(r"w\d+", hdl)
+    # Get the list of all wire names, in reverse
+    w = sorted(list(set(w)), reverse=True)
+    # Substitute them in reverse as well
+    # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all wires == 3
+    # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the wires good
+    w_ctr = w_ctr + len(w)
+    final_w_ctr = w_ctr
+    for x in w:
+        hdl = hdl.replace(x, "w{}".format(final_w_ctr))
+        final_w_ctr -= 1
+    return hdl, w_ctr
+
+
 def display_png(graph, *args, **kwargs):
     """Given a graph, executes its png() method and displays the image
 
