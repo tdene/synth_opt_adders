@@ -130,7 +130,7 @@ class AdderTree(ExpressionTree):
                 if not node[1].children:
                     opt_list.append(node)
         for node in opt_list:
-            if node.value == self.node_defs["lspine_pre"]:
+            if node.value == self.node_defs["lspine"]:
                 self.swap_node_def(node, "ppa_lspine_single")
 
 
