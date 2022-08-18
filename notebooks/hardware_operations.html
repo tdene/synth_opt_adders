@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logical synthesis of general hardware operations &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Sample traversal through the space of binary trees" href="tree_traversal.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="adder_theory.html">Brief theory of addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html">Traditional hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html#Revised-hardware-addition">Revised hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparseness.html">Adder-specific optimizations [Sparseness]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="factorization.html">Adder-specific optimizations [Factorization]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tree_traversal.html">Sample traversal through the space of binary trees</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Logical synthesis of general hardware operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Theory">Theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#The-recipe-for-any-operation">The recipe for any operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Binary-addition">Binary addition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Theory-(skip-if-this-is-your-first-read?)">Theory (skip if this is your first read?)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Just-addition">Just addition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Carry-generation-(non-local-aspect-of-addition)">Carry-generation (non-local aspect of addition)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Using-the-recipe">Using the recipe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Putting-it-all-together">Putting it all together</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Possible-expansion:-addition-based-comparator">Possible expansion: addition-based comparator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Discussion">Discussion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Using-the-recipe-(unsigned-numbers)">Using the recipe (unsigned numbers)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Putting it all together</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Analysis-(unsigned-numbers)">Analysis (unsigned numbers)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Area">Area</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Delay">Delay</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Possible-expansion:-non-addition-based-comparator">Possible expansion: non addition-based comparator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Discussion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Using the recipe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Putting it all together</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Analysis (unsigned numbers)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Area</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Delay</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">Delay</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Possible-expansion:-adding-a-constant-value">Possible expansion: adding a constant value</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Discussion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Using the recipe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Putting it all together</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/theory.html">Theory and Discussion</a> &raquo;</li>
+      <li>Logical synthesis of general hardware operations</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/hardware_operations.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Logical-synthesis-of-general-hardware-operations">
+<h1>Logical synthesis of general hardware operations<a class="headerlink" href="#Logical-synthesis-of-general-hardware-operations" title="Permalink to this heading">¶</a></h1>
+<section id="Theory">
+<h2>Theory<a class="headerlink" href="#Theory" title="Permalink to this heading">¶</a></h2>
+<p>Multi-digit operations have a “local” and “non-local” component.</p>
+<p>The “local” component uses digit <span class="math notranslate nohighlight">\(i\)</span> of the inputs to influence digit <span class="math notranslate nohighlight">\(i\)</span> of the output.</p>
+<p>The “non-local” component uses non-<span class="math notranslate nohighlight">\(i\)</span> digits of the inputs to influence digit <span class="math notranslate nohighlight">\(i\)</span> of the output. The <strong>pptrees</strong> library works under the assumption that this non-locality only goes in one direction, for example, that only digits less significant than <span class="math notranslate nohighlight">\(i\)</span> influence the output. Operations that are non-local in both directions exist, and these must be handled by stacking two trees in series, one for each direction.</p>
+<p>The <strong>pptrees</strong> library assumes that all strictly non-local components can be phrased in terms of if statements (nested ones, if needed). A formal proof can most likely be derived from group cohomology theory, which I do not know sufficiently.</p>
+<p>The local and non-local components can be combined into the final result through a simple if-then statement:</p>
+<p>if the non-local component modifies the final result then return a modified local result else return the original local result</p>
+<p>This if-then statement, or multiplexer logic gate, can have multiple branches, depending on how many ways the final result may be modified in. A formal approach to this problem can most likely be derived from group cohomology theory, which I do not know sufficiently.</p>
+<p>Because everything so far is composed of if-then statements, it can all associate.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if cond1:
+  if cond2:
+    if cond3:
+      if cond4:
+        do_this
+</pre></div>
+</div>
+<p>is equivalent to</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if cond1 and cond2:
+  if cond3 and cond4:
+    do_this
+</pre></div>
+</div>
+<p>This is just one way in which if-then statements can associate.</p>
+<p>Note that this notebook will use the short-hand of <span class="math notranslate nohighlight">\(s ?\; a : b\)</span> to mean</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if s then a else b
+</pre></div>
+</div>
+</section>
+<section id="The-recipe-for-any-operation">
+<h2>The recipe for any operation<a class="headerlink" href="#The-recipe-for-any-operation" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Make sure that bit <span class="math notranslate nohighlight">\(i\)</span> of the result only depends on bits <span class="math notranslate nohighlight">\(0\)</span> through <span class="math notranslate nohighlight">\(i\)</span> of the input.</p></li>
+</ol>
+<p>If this is not true, manually split the operation up into two parts, one that depends on bits <span class="math notranslate nohighlight">\(0\)</span> through <span class="math notranslate nohighlight">\(i\)</span> and another that depends on bits <span class="math notranslate nohighlight">\(i+1\)</span> through <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<ol class="arabic simple" start="2">
+<li><p>Figure out what part is local (output at bit <span class="math notranslate nohighlight">\(i\)</span> only depends on bit <span class="math notranslate nohighlight">\(i\)</span> of the inputs).</p></li>
+</ol>
+<ol class="arabic simple" start="3">
+<li><p>Obtain an expression for the final result at bit <span class="math notranslate nohighlight">\(i\)</span> using the template</p></li>
+</ol>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if, the non-local component is X
+  then, the final result is something other than the local result, to be determined
+  otherwise, the final result is the local result
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Find an operation that answers the question “is the non-local component X”?</p></li>
+</ol>
+<p>Define this operation as an if-statement, or series of nested if-statements.</p>
+<ol class="arabic simple" start="5">
+<li><p>Repeat steps 1 through 5 for this new operation if the formula has any non-local terms that are not itself.</p></li>
+</ol>
+<p>For example, the following formula would not need more work, since it’s only written in terms of itself and local aspects:</p>
+<p><span class="math notranslate nohighlight">\(f_i\)</span> = if <span class="math notranslate nohighlight">\(s_i\)</span> then <span class="math notranslate nohighlight">\(g_i\)</span> else <span class="math notranslate nohighlight">\(f_{i-1}\)</span>, where <span class="math notranslate nohighlight">\(s_i\)</span> and <span class="math notranslate nohighlight">\(g_i\)</span> are local.</p>
+<p>While the following formula would need to be broken apart:</p>
+<p><span class="math notranslate nohighlight">\(f_i\)</span> = if <span class="math notranslate nohighlight">\(s_i\)</span> then <span class="math notranslate nohighlight">\(g_i\)</span> else <span class="math notranslate nohighlight">\(f_{i-1}\)</span>, where <span class="math notranslate nohighlight">\(g_i\)</span> is non-local.</p>
+<ol class="arabic simple" start="6">
+<li><p>Use if-statement association rules to associate this operation.</p></li>
+</ol>
+<p>This is explained more in the binary addition theory section.</p>
+</section>
+<section id="Binary-addition">
+<h2>Binary addition<a class="headerlink" href="#Binary-addition" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="Theory-(skip-if-this-is-your-first-read?)">
+<h2>Theory (skip if this is your first read?)<a class="headerlink" href="#Theory-(skip-if-this-is-your-first-read?)" title="Permalink to this heading">¶</a></h2>
+<section id="Just-addition">
+<h3>Just addition<a class="headerlink" href="#Just-addition" title="Permalink to this heading">¶</a></h3>
+<p>Let us define the operands of addition as the digit-vectors <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, and the result as the digit-vector <span class="math notranslate nohighlight">\(s\)</span>.</p>
+<p>The local component of addition at digit <span class="math notranslate nohighlight">\(i\)</span> is</p>
+<p><span class="math notranslate nohighlight">\(s_i^L = a_i \oplus b_i = p_i\)</span></p>
+<p>The non-local component of addition at digit <span class="math notranslate nohighlight">\(i\)</span> can be expressed as</p>
+<p><span class="math notranslate nohighlight">\(s^{nL}_i = c_i\)</span></p>
+<p>Where <span class="math notranslate nohighlight">\(c\)</span> stands for “carry”.</p>
+<p>The final result of addition is <span class="math notranslate nohighlight">\(s_i = s^{nL}_i ?\; \overline{s}^L_i : s^L_i\)</span>, or in other words <span class="math notranslate nohighlight">\(c_i ?\; \overline{p}_i : p_i\)</span></p>
+<p>If there’s no carry, keep the local component. If there’s a carry, negate the local component, since negating is the same thing as adding 1.</p>
+</section>
+<section id="Carry-generation-(non-local-aspect-of-addition)">
+<h3>Carry-generation (non-local aspect of addition)<a class="headerlink" href="#Carry-generation-(non-local-aspect-of-addition)" title="Permalink to this heading">¶</a></h3>
+<p>Let us define the operands of carry-generation as the digit-vectors <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, and the result as the digit-vector <span class="math notranslate nohighlight">\(c\)</span>.</p>
+<p>There is no local component of the carry, it only depends on previous digits.</p>
+<p>The non-local component of addition at digit <span class="math notranslate nohighlight">\(i\)</span> in plain English is:</p>
+<p>If the previous pair of digits adds up to 0 (that is, <span class="math notranslate nohighlight">\(\overline{a\oplus b}\)</span>), there is a carry out of them if both of the digits are 1.</p>
+<p>Otherwise, the pair of digits adds up to 1. Then, the carry coming out of them is the same as the carry going into them. Whether or not they overflow depends on whether or not the previous pair of digits also overflowed.</p>
+<p><span class="math notranslate nohighlight">\(c_i = \overline{p}_{i-1} ?\; g_{i-1} : c_{i-1}\)</span></p>
+<p>Where <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i\)</span> from before, while <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i\)</span>.</p>
+<p>Since only <span class="math notranslate nohighlight">\(c_0\)</span> is known a priori, all <span class="math notranslate nohighlight">\(c_i\)</span> must be expressed in terms of it.</p>
+<p>For example, <span class="math notranslate nohighlight">\(c_5 = \overline{p}_4 ?\; g_4 : \left(\overline{p}_3 ?\; g_3 : \left(\overline{p}_2 ?\; g_2 : \left(\overline{p}_1 ?\; g_1 : \left(c_0\right)\right)\right)\right)\)</span></p>
+<p>This is where associativity comes into play.</p>
+<p>These if-statements</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if not p_4:
+  g_4
+elif not p_3:
+  g_3
+elif not p_2:
+  g_2
+elif not p_1:
+  g_1
+else:
+  c_0
+</pre></div>
+</div>
+<p>are equivalent to</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if not p_4 or not p_3:
+  not p_4 ? g_4 : g_3
+elif not p_2 or not p_1:
+  not p_2 ? g_2 : g_1
+else:
+  c_0
+</pre></div>
+</div>
+<p>Long story short, the general rule is the following.</p>
+<p>Instead of <span class="math notranslate nohighlight">\(c_5\)</span>, call it <span class="math notranslate nohighlight">\(c_{5:0}\)</span>. The weird <span class="math notranslate nohighlight">\(\overline{p}_2 ?\; g_2 : g_1\)</span> thing? Call it <span class="math notranslate nohighlight">\(c_{3:2}\)</span>. <span class="math notranslate nohighlight">\(g_1\)</span>? Call it <span class="math notranslate nohighlight">\(c_{2:2}\)</span>. <span class="math notranslate nohighlight">\(g_2\)</span>? Call it <span class="math notranslate nohighlight">\(c_{3:3}\)</span>.</p>
+<p>The whole (<span class="math notranslate nohighlight">\(\overline{p}_3\)</span> or <span class="math notranslate nohighlight">\(\overline{p}_2\)</span> or <span class="math notranslate nohighlight">\(\overline{p}_1\)</span>)? Call it <span class="math notranslate nohighlight">\(\overline{p}_{3:1}\)</span>.</p>
+<p>The recurrence then becomes</p>
+<p><span class="math notranslate nohighlight">\(c_{i:k} = \overline{p}_{i-1:j-1} ?\; c_{i:j} : c_{j:k}\)</span></p>
+<p>We must also then keep track of <span class="math notranslate nohighlight">\(p_{i:k}\)</span>:</p>
+<p><span class="math notranslate nohighlight">\(\overline{p}_{i:k} = \overline{p}_{i:j} + \overline{p}_{j:k}\)</span></p>
+<p>Or to put it all together in terms of some operator, ■</p>
+<p><span class="math notranslate nohighlight">\((c_{i:k}, \overline{p}_{i-1:k-1}) = (c_{i:j}, \overline{p}_{i-1:j-1}) ■ (c_{j:k}, \overline{p}_{j-1:k-1}) = (\overline{p}_{i-1:j-1} ?\; c_{i:j} : c_{j:k}\;,\; \overline{p}_{i-1:j-1} + \overline{p}_{j-1:k-1})\)</span></p>
+<p>Or even shorter</p>
+<p><span class="math notranslate nohighlight">\((C, \overline{P}) ■ (C', \overline{P'}) = (\overline{P} \;?\; C : C', \overline{P} + \overline{P'})\)</span></p>
+<p>Sorry about the off-by-one issue, that’s just carry-generation for ya.</p>
+<p>In general though, this is how if statements associate. This applies for all operations that are non-local in a single direction.</p>
+<p>For carry-generation <strong>in particular</strong>, the previous statement can be simplfied. Expanding out the boolean logic, we have: <span class="math notranslate nohighlight">\(c_{i:k} = \overline{p}_{i-1:j-1} ?\; c_{i:j} : c_{j:k} = \overline{p}_{i-1:j-1} c_{i:j} + p_{i-1:j-1}c_{j:k}\)</span></p>
+<p>However, <span class="math notranslate nohighlight">\(\overline{p}_{i-1:j-1}\)</span> and <span class="math notranslate nohighlight">\(c_{i:j}\)</span> are mutually exclusive. The formula is thus reduced to:</p>
+<p><span class="math notranslate nohighlight">\((C, P) ■ (C', P') = (C + PC', PP')\)</span></p>
+<p>The boolean algebra works out, even though it’s not shown here.</p>
+</section>
+</section>
+<section id="Using-the-recipe">
+<h2>Using the recipe<a class="headerlink" href="#Using-the-recipe" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Bit <span class="math notranslate nohighlight">\(i\)</span> of the sum only depends on bits 0 through <span class="math notranslate nohighlight">\(i\)</span> of the input.</p></li>
+</ol>
+<ol class="arabic simple" start="2">
+<li><p><span class="math notranslate nohighlight">\(s^L_i = a_i\oplus b_i = p_i\)</span> is the local aspect.</p></li>
+</ol>
+<ol class="arabic simple" start="3">
+<li></li>
+</ol>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if the carry into bit i, henceforth called c_i, is 1
+  then, the final result is the inverse of the local result
+  otherwise, the final result is the local result
+</pre></div>
+</div>
+<p>In other words, <span class="math notranslate nohighlight">\(s_i = c_i ?\; \overline{p}_i : p_i\)</span></p>
+<ol class="arabic simple" start="4">
+<li><p><span class="math notranslate nohighlight">\(c_i\)</span> can be defined as</p></li>
+</ol>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if the local sum of the i-1 pair of input bits is 0
+  then, c_i is 1 if both the bits are 1 [1 + 1 = 0 with an overflow]
+  otherwise, the local sum of the i-1 pair would be 1,
+    so c_i happens only if c_i-1 happens
+</pre></div>
+</div>
+<p>In other words, <span class="math notranslate nohighlight">\(c_i = \overline{p}_i ?\; g_i : c_{i-1}\)</span></p>
+<p>Where <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i\)</span> and <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i\)</span></p>
+<ol class="arabic simple" start="5">
+<li><p><span class="math notranslate nohighlight">\(c_i\)</span> has no other non-local aspects, so it is fine.</p></li>
+</ol>
+<ol class="arabic simple" start="6">
+<li><p>The previous section shows how step 4’s definition of <span class="math notranslate nohighlight">\(c_i\)</span> becomes</p></li>
+</ol>
+<p><span class="math notranslate nohighlight">\((C, \overline{P}) ■ (C', \overline{P'}) = (\overline{P} \;?\; C : C', \overline{P} + \overline{P'})\)</span></p>
+<p>and can then be simplified to</p>
+<p><span class="math notranslate nohighlight">\((C, P) ■ (C', P') = (C + PC', PP')\)</span></p>
+</section>
+<section id="Putting-it-all-together">
+<h2>Putting it all together<a class="headerlink" href="#Putting-it-all-together" title="Permalink to this heading">¶</a></h2>
+<p>The <strong>pptrees</strong> library defines an <em>AdderTree</em> as an <em>ExpressionTree</em> with the following nodes:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>node_defs = {
+    &quot;pre&quot;: &quot;ppa_pre&quot;,
+    &quot;root&quot;: &quot;ppa_post&quot;,
+    &quot;cocycle&quot;: &quot;ppa_cocycle&quot;,
+    &quot;buffer&quot;: &quot;ppa_buffer&quot;,
+    &quot;lspine_pre&quot;: &quot;ppa_lspine_pre&quot;,
+    &quot;lspine&quot;: &quot;ppa_lspine&quot;,
+    &quot;small_root&quot;: &quot;ppa_small_root&quot;,
+    &quot;small_pre&quot;: &quot;ppa_lspine_pre_simple&quot;,
+}
+</pre></div>
+</div>
+<p>A couple of short-hands were introduced in the recipe: <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i\)</span> and <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i\)</span>. This is “pre-processing” logic. These form the leafs of the tree. They are represented by the “ppa_pre” node.</p>
+<p>Step 3 of the recipe obtains an expression for the final result.</p>
+<p>This is “post-processing” logic. This forms the root of the tree. It is represented by the “ppa_post” node.</p>
+<p>Step 2 of the recipe describes the local aspect of the operation.</p>
+<p>This is represented by the “ppa_lspine_pre” node.</p>
+<p>Step 6 of the recipe describes the non-local aspect of the operation.</p>
+<p>This is represented by the “ppa_cocycle” node.</p>
+<p>The “ppa_buffer” node is used for fan-out decoupling.</p>
+<p>Since “ppa_cocycle” node operates on tuples of size 2, so does “ppa_buffer”.</p>
+<p>“ppa_lspine” takes advantage of the fact that “cocycle”, “root”, and “lspine_pre” can all be seen as if-then statements. That means they can all associate. This is a concept that has not been introduced thus far, because it’s just a cherry on top that can be discussed separately.</p>
+<p>“ppa_small_root” and “ppa_small_pre” account for the fact that a width-1 circuit doesn’t form a binary tree. There’s only one leaf, so it’s just the root node and 1 child.</p>
+<p>Perhaps the software should be able to handle this on its own, somehow, but it is currently not able.</p>
+</section>
+</section>
+<section id="Possible-expansion:-addition-based-comparator">
+<h1>Possible expansion: addition-based comparator<a class="headerlink" href="#Possible-expansion:-addition-based-comparator" title="Permalink to this heading">¶</a></h1>
+<section id="Discussion">
+<h2>Discussion<a class="headerlink" href="#Discussion" title="Permalink to this heading">¶</a></h2>
+<p>A comparator compares two numbers, gauging whether one is greater, less than, or equal to the other.</p>
+<p>Checking whether a number is greater than another can be done via addition. Just subtract B from A. If the result is negative, B &gt; A. Otherwise, not (B &gt; A).</p>
+<p>Subtracting two numbers via two’s complement addition is straight-forward:</p>
+<ol class="arabic simple">
+<li><p>Invert <span class="math notranslate nohighlight">\(B\)</span> into <span class="math notranslate nohighlight">\(\overline{B}\)</span></p></li>
+<li><p>Add <span class="math notranslate nohighlight">\(A + \overline{B} + 1\)</span>.</p></li>
+</ol>
+<p>The “+1” can be handled by adding an extra digit to the addition operation.</p>
+<p>That digit can be real, in which case both A and B would have a least-significant <span class="math notranslate nohighlight">\(1\)</span> appended to them.</p>
+<p>That digit could instead be virtual: an extra leaf is added to the carry-chain tree, with the leaf output being a constant <span class="math notranslate nohighlight">\(1\)</span> instead of <span class="math notranslate nohighlight">\(a_{-1} \wedge b_{-1}\)</span></p>
+<p>Finally, binary addition of two <span class="math notranslate nohighlight">\(n\)</span>-bit numbers has an <span class="math notranslate nohighlight">\(n\)</span>-bit result.</p>
+<p>But comparators only need 1 bit of result. So the structure necessary isn’t <span class="math notranslate nohighlight">\(n\)</span> trees, but rather only 1 tree.</p>
+<p>The specific bit that needs to be checked depends on whether the numbers are signed or unsigned.</p>
+<p>For unsigned numbers, A - B can be performed using two’s complement subtraction. This will require both the “+1” padding trick, as well as an extra sign bit on the most-significant side.</p>
+<p>B &gt; A if the operation overflows into the sign bits. But since the sign bits are both 0, we don’t need to calculate the actual sum, just the carry.</p>
+<p>The answer is “B &gt; A = <span class="math notranslate nohighlight">\(c_{n+1}\)</span>”, the result of a <span class="math notranslate nohighlight">\(n+1\)</span> bit carry generation.</p>
+<p>For signed numbers, A - B can be performed using two’s complement subtraction. This will require the “+1” padding trick.</p>
+<p>But that can only work if <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> are both positive or negative. If the two numbers are of opposite polarity, some magic is required.</p>
+</section>
+<section id="Using-the-recipe-(unsigned-numbers)">
+<h2>Using the recipe (unsigned numbers)<a class="headerlink" href="#Using-the-recipe-(unsigned-numbers)" title="Permalink to this heading">¶</a></h2>
+<p>The recipe doesn’t need to be used per se. This is just the carry-generation portion of an adder.</p>
+</section>
+<section id="id1">
+<h2>Putting it all together<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<p>The tree would just be a variant on the <em>AdderTree</em>.</p>
+<p>The main differences are:</p>
+<ul class="simple">
+<li><p>Signed numbers should be handled in some way.</p></li>
+<li><p>lspine_pre and lspine can be omitted, making them use the normal nodes. This changes it from an addition circuit to a carry-computation circuit.</p></li>
+<li><p>The software should invert one of the inputs on its own, in a modified pre-processing node, instead of forcing the user to do it in HDL.</p></li>
+<li><p>The software should pad the least-significant bit on its own, to account for the +1. This can be done by increasing the width by 1 and throwing in an extra pre node. The extra pre node should perform the operation <code class="docutils literal notranslate"><span class="pre">assign</span> <span class="pre">gout</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
+<li><p>The tree should always be balanced, because that’s just the best option if there’s only one tree. Left-balanced vs right-balanced shouldn’t make a difference.</p></li>
+<li><p>The circuit should be a forest consisting of one tree, because writing out HDL from Forests is tested, but writing out HDL from Trees is not. This is just a cautionary note due to the beta version of the software.</p></li>
+</ul>
+</section>
+<section id="Analysis-(unsigned-numbers)">
+<h2>Analysis (unsigned numbers)<a class="headerlink" href="#Analysis-(unsigned-numbers)" title="Permalink to this heading">¶</a></h2>
+<p>The circuit is a single tree, of width <span class="math notranslate nohighlight">\(n+1\)</span>.</p>
+<p>The tree is a carry-generation tree, where the cocycle nodes are an AOI and NAND cell each.</p>
+<p>Note that this circuit ONLY calculates B &gt; A, not also A &gt; B nor B = A.</p>
+<section id="Area">
+<h3>Area<a class="headerlink" href="#Area" title="Permalink to this heading">¶</a></h3>
+<p>A single tree of width <span class="math notranslate nohighlight">\(n+1\)</span> has <span class="math notranslate nohighlight">\(n\)</span> nodes. The pre-processing logic leads to <span class="math notranslate nohighlight">\(n+1\)</span> leafs, since the 0th is special (+1).</p>
+<p>Each tree node is basically an AOI and a NAND. Each tree leaf is basically two NANDs.</p>
+<p>The total area is thus roughly 3n NANDs + n AOIs.</p>
+<p>A complete adder-based circuit would have roughly 2n + 2n lg(n) NANDs, 2n lg(n) AOIs, and n XORs.</p>
+<p>The area savings over a complete adder would thus be roughly:</p>
+<ul class="simple">
+<li><p>n XOR gates</p></li>
+<li><p>2n lg(n) - n AOI gates</p></li>
+<li><p>2n lg(n) - n NAND gates</p></li>
+</ul>
+<p>For a 64-bit word size, this is roughly an 85% area savings.</p>
+</section>
+<section id="Delay">
+<h3>Delay<a class="headerlink" href="#Delay" title="Permalink to this heading">¶</a></h3>
+<p>The critical path through the tree requires <span class="math notranslate nohighlight">\(\lceil lg(n+1)\rceil\)</span> AOI nodes. Pre-processing add one NAND node. There is no fan-out or wire tracks.</p>
+<p>The total delay is thus roughly <span class="math notranslate nohighlight">\(1 + \lceil lg(n+1)\rceil\)</span></p>
+<p>A complete adder-based circuit would have the same critical path.</p>
+<p>However, that critical path would be fraught with fan-out and tracks.</p>
+<p>For a 64-bit word size, that represents a roughly 20-25% difference in delay.</p>
+</section>
+</section>
+</section>
+<section id="Possible-expansion:-non-addition-based-comparator">
+<h1>Possible expansion: non addition-based comparator<a class="headerlink" href="#Possible-expansion:-non-addition-based-comparator" title="Permalink to this heading">¶</a></h1>
+<section id="id2">
+<h2>Discussion<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<p>This typically takes the form of adding a constant +1 to increment, or adding a constant +4 to the program counter.</p>
+<p>The benefit of knowing the constant value, <span class="math notranslate nohighlight">\(B\)</span>, being added is:</p>
+<ul class="simple">
+<li><p>Anywhere where <span class="math notranslate nohighlight">\(b_i = 0\)</span>, <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i = 0\)</span>, while <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i = a_i\)</span></p></li>
+<li><p>Anywhere where <span class="math notranslate nohighlight">\(b_i = 1\)</span>, <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i = a_i\)</span>, while <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i = \overline{a}_i\)</span></p></li>
+</ul>
+<p>Let’s call <span class="math notranslate nohighlight">\(G = (B &gt; A)\)</span>, <span class="math notranslate nohighlight">\(L = (B &lt; A)\)</span>, and <span class="math notranslate nohighlight">\(E = (A == B)\)</span></p>
+<p>But wait. If we look at the most significant bits of <span class="math notranslate nohighlight">\(B\)</span> and <span class="math notranslate nohighlight">\(A\)</span>, and <span class="math notranslate nohighlight">\(B &gt; A\)</span>, then it is certain that <span class="math notranslate nohighlight">\(B &gt; A\)</span>.</p>
+<p>So the non-local component doesn’t come from the less significant bits like it does for addition or carry-generation. It comes from the more significant bits.</p>
+<p>What can be done about this?</p>
+<p>Easy: just reverse the bit string.</p>
+</section>
+<section id="id3">
+<h2>Using the recipe<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><span class="math notranslate nohighlight">\(G\)</span> and <span class="math notranslate nohighlight">\(L\)</span> only get affected by more-significant bits, never by less-significant bits.</p></li>
+</ol>
+<p>Reversing the inputs into the tree can make the data flow into its standard direction that is assumed by <strong>pptrees</strong>.</p>
+<ol class="arabic simple" start="2">
+<li><p>The local aspects are</p></li>
+</ol>
+<p><span class="math notranslate nohighlight">\(G_i^L = \overline{a}_ib_i\)</span></p>
+<p><span class="math notranslate nohighlight">\(L_i^L = a_i\overline{b}_i\)</span></p>
+<p>Explanation: the only way <span class="math notranslate nohighlight">\(b_i &gt; a_i\)</span> is if <span class="math notranslate nohighlight">\(b_i = 1\)</span> and <span class="math notranslate nohighlight">\(a_i = 0\)</span>.</p>
+<ol class="arabic simple" start="3">
+<li></li>
+</ol>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if the non-local component is (not E)
+  then, the final result is not the local result
+  otherwise, the final result is the local result
+</pre></div>
+</div>
+<p>For both <span class="math notranslate nohighlight">\(G\)</span> and <span class="math notranslate nohighlight">\(L\)</span> the situation is the same. Even if, locally, <span class="math notranslate nohighlight">\(G\)</span> is true, that only matters if the non-local <span class="math notranslate nohighlight">\(E\)</span> is false.</p>
+<p>That is to say, the less-significant digits only matter if the more-significant digits are all equals.</p>
+<p>The math then is</p>
+<p><span class="math notranslate nohighlight">\(G_i = \overline{E}_{i+1} ?\; G_{i+1} : G^L_{i}\)</span></p>
+<p><span class="math notranslate nohighlight">\(L_i = \overline{E}_{i+1} ?\; L_{i+1} : L^L_{i}\)</span></p>
+<ol class="arabic simple" start="4">
+<li><p><span class="math notranslate nohighlight">\(E_i\)</span> can be defined as</p></li>
+</ol>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>if (not G_i) and (not L_i)
+  then, E
+  otherwise, (not E)
+</pre></div>
+</div>
+<p>In other words, <span class="math notranslate nohighlight">\(E_i = \overline{G}_i\overline{L}_i ? \; 1 : 0\)</span></p>
+<p>Or to simplify it, <span class="math notranslate nohighlight">\(E_i = \overline{G}_i\overline{L}_i\)</span></p>
+<ol class="arabic simple" start="5">
+<li><p>At first glance, in step 3, it seems like <span class="math notranslate nohighlight">\(E\)</span> is going to need its own separate tree.</p></li>
+</ol>
+<p>But <span class="math notranslate nohighlight">\(E\)</span> only depends on <span class="math notranslate nohighlight">\(G\)</span> and <span class="math notranslate nohighlight">\(L\)</span>.</p>
+<p>That is why we are computing both <span class="math notranslate nohighlight">\(G\)</span> and <span class="math notranslate nohighlight">\(L\)</span> at the same time. Because they’re both needed anyway.</p>
+<ol class="arabic simple" start="6">
+<li><p>Let’s just go through the math, even if you already see the answer.</p></li>
+</ol>
+<p><span class="math notranslate nohighlight">\((G, L, \overline{E}) ■ (G', L', \overline{E'}) = (\overline{E'} \;?\; G' : G, \overline{E'} \;?\; L' : L, \overline{E} + \overline{E'})\)</span></p>
+<p>expanding this once:</p>
+<p><span class="math notranslate nohighlight">\((G, L, \overline{E}) ■ (G', L', \overline{E'}) = (\overline{E'}G' + E'G, \overline{E'}L' + E'L, \overline{E} + \overline{E'})\)</span></p>
+<p>substituting the definition of <span class="math notranslate nohighlight">\(E\)</span>, into just one part for brevity:</p>
+<p><span class="math notranslate nohighlight">\((G,\;,\;) ■ (G',\;,\;) = ((G'+L')G' + \overline{G'}\overline{L'}G,\;,\;) = (G' + \overline{G'}\overline{L'}G,\;,\;) = (G' + \overline{L'}G,\;,\;)\)</span></p>
+<p>It turns out that we no longer need <span class="math notranslate nohighlight">\(E\)</span> at all, so we can eliminate it from our consideration.</p>
+<p><span class="math notranslate nohighlight">\((G,L) ■ (G',L') = (G' + \overline{L'}G, L' + \overline{G'}L)\)</span></p>
+</section>
+<section id="id4">
+<h2>Putting it all together<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<p>The tree would inherit <em>AdderTree</em>.</p>
+<p>The main differences from <em>AdderTree</em> are:</p>
+<ul class="simple">
+<li><p>New nodes would need to be defined for pre-processing a constant bit of 1, pre-processing a constant bit of 0, and the two modified ■ nodes.</p></li>
+<li><p>The optimize_nodes() method would first call its super(), then it’d do additional things:</p></li>
+</ul>
+<ol class="arabic simple">
+<li><p>Somehow take in info about where the constant has 1’s and 0’s, and morph the pre-processing nodes.</p></li>
+<li><p>Keep track of whether there’s a chain of 0’s on-going (can be done through the nodes’ <em>leafs</em> attributes, which is a binary-encoded list of all the leafs that feed into a certain node), and then morphs the ■ node accordingly.</p></li>
+</ol>
+</section>
+<section id="id5">
+<h2>Analysis (unsigned numbers)<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<p>The circuit is a single tree, of width <span class="math notranslate nohighlight">\(n\)</span>.</p>
+<p>The cocycle (main node) of the tree is composed of two AOI cells, possibly with some inverters, but smart synthesis can eliminate the need for inverters.</p>
+<p>The pre-processing nodes seem to be two NAND2B cells, but in order to enable smart synthesis of the tree, it’s better to make them two NAND cells and an inverter.</p>
+<p>Note that this circuit calculates both B &gt; A and A &gt; B. This is in contrast to the previous section, which cannot calculate both of these values. Thus in a normal application, this circuit on its own would suffice, while the circuit from the previous section would need to be duplicated. Take this into account when considering the values presented below.</p>
+<section id="id6">
+<h3>Area<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<p>A single tree of width <span class="math notranslate nohighlight">\(n\)</span> has <span class="math notranslate nohighlight">\(n\)</span> nodes. The pre-processing logic leads to <span class="math notranslate nohighlight">\(n+1\)</span> leafs.</p>
+<p>Each tree node is basically two AOIs. Each tree leaf is basically two NANDs and an inverter.</p>
+<p>The total area is thus roughly 2n NANDs + 2n AOIs + n INVs.</p>
+<p>For a 64-bit word size, this is about 50% larger than the previous section, but still about 80-85% smaller than a complete adder-based circuit.</p>
+</section>
+<section id="id7">
+<h3>Delay<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<p>The critical path through the tree requires <span class="math notranslate nohighlight">\(\lceil lg(n)\rceil\)</span> AOI nodes. Pre-processing adds one NAND node and one INV node. There is no fan-out or wire tracks.</p>
+<p>The total delay is thus roughly <span class="math notranslate nohighlight">\(2 + \lceil lg(n)\rceil\)</span>.</p>
+<p>This is slightly faster than the previous section for word-size that is a power of 2, and slightly slower for other word sizes.</p>
+<p>It remains an estimated 20-25% faster than a complete adder-based circuit.</p>
+</section>
+<section id="id8">
+<h3>Delay<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
+<p>The critical path through the tree requires <span class="math notranslate nohighlight">\(\lceil lg(n+1)\rceil\)</span> AOI nodes. Pre-processing add one NAND node. There is no fan-out.</p>
+<p>The total delay is thus roughly <span class="math notranslate nohighlight">\(1 + \lceil lg(n+1)\rceil\)</span></p>
+</section>
+</section>
+</section>
+<section id="Possible-expansion:-adding-a-constant-value">
+<h1>Possible expansion: adding a constant value<a class="headerlink" href="#Possible-expansion:-adding-a-constant-value" title="Permalink to this heading">¶</a></h1>
+<section id="id9">
+<h2>Discussion<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
+<p>This typically takes the form of adding a constant +1 to increment, or adding a constant +4 to the program counter.</p>
+<p>The benefit of knowing the constant value, <span class="math notranslate nohighlight">\(B\)</span>, being added is:</p>
+<ul class="simple">
+<li><p>Anywhere where <span class="math notranslate nohighlight">\(b_i = 0\)</span>, <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i = 0\)</span>, while <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i = a_i\)</span></p></li>
+<li><p>Anywhere where <span class="math notranslate nohighlight">\(b_i = 1\)</span>, <span class="math notranslate nohighlight">\(g_i = a_i \wedge b_i = a_i\)</span>, while <span class="math notranslate nohighlight">\(p_i = a_i \oplus b_i = \overline{a}_i\)</span></p></li>
+</ul>
+<p>This allows for the pre-processing logic at those specific spots to be optimized.</p>
+<p>But the <span class="math notranslate nohighlight">\(b_i = 0 \implies g_i = 0\)</span> is interesting. Continuous chains of <span class="math notranslate nohighlight">\(b_i = 0\)</span> lead to continuous chains of <span class="math notranslate nohighlight">\(g_i = 0\)</span>. And continuous chains of <span class="math notranslate nohighlight">\(g_i = 0\)</span> means large sub-blocks of <span class="math notranslate nohighlight">\(C_{i:j} = 0\)</span>.</p>
+<p>To show this, consider:</p>
+<p><span class="math notranslate nohighlight">\(C_{i:i} = g_{i-1}\)</span></p>
+<p><span class="math notranslate nohighlight">\(C_{i:i-1} = C_{i:i} + P_{i-1:i-1} C_{i-1:i-1}\)</span></p>
+<p>If both those corresponding <span class="math notranslate nohighlight">\(g\)</span> bits are 0, due to the constant value, then the entire <span class="math notranslate nohighlight">\(C_{i:i-1}\)</span> block is 0. Entire <span class="math notranslate nohighlight">\(C_{i:j}\)</span> blocks can be hard-coded to 0 in this way.</p>
+<p>So the pre-processing logic optimization is clear.</p>
+<p>But this tree, cocycle node optimization.</p>
+<p>First off, the previous cell leads to the conclusion that <span class="math notranslate nohighlight">\(C_{i:j}\)</span> is 0 if <span class="math notranslate nohighlight">\(g_{i-1}\)</span> through <span class="math notranslate nohighlight">\(g_{j-1}\)</span> are all zero. So if such a chain is encountered in the tree logic, the normal cocycle node of</p>
+<p><span class="math notranslate nohighlight">\((C, P) ■ (C', P') = (C + PC', PP')\)</span></p>
+<p>can be reduced to</p>
+<p><span class="math notranslate nohighlight">\((, P) ■ (, P') = (, PP')\)</span></p>
+<p>This saves area and power for sure. Probably delay, it’s hard to tell?</p>
+<p>But once the chain of zeroes ends, and these weird nodes must combine with the rest of the tree, what do we do?</p>
+<p>Say, for example, we have the addition <span class="math notranslate nohighlight">\(A + 0000\;0100\)</span></p>
+<p>There’s a chain of 5 zeroes in the front. Let’s look at that. We handle it as above, simplifying ■. How do we combine it with the stuff on the right?</p>
+<p>In other words, what is</p>
+<p><span class="math notranslate nohighlight">\((, P) ■ (C', P')\)</span></p>
+<p>Well, we know that missing <span class="math notranslate nohighlight">\(C\)</span> is 0. So it’s just</p>
+<p><span class="math notranslate nohighlight">\((0, P) ■ (C', P') = (PC', PP')\)</span></p>
+<p>A similar effect can occur for chain of 1’s, but that’s a topic for another day.</p>
+</section>
+<section id="id10">
+<h2>Using the recipe<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h2>
+<p>The recipe doesn’t need to be used per se.</p>
+<p>Yes, the ■ operator changes. But it can be thought of as just a synthesis optimization, something to be done after the tree structure is generated.</p>
+</section>
+<section id="id11">
+<h2>Putting it all together<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
+<p>The tree would inherit <em>AdderTree</em>.</p>
+<p>The main differences from <em>AdderTree</em> are:</p>
+<ul class="simple">
+<li><p>New nodes would need to be defined for pre-processing a constant bit of 1, pre-processing a constant bit of 0, and the two modified ■ nodes.</p></li>
+<li><p>The optimize_nodes() method would first call its super(), then it’d do additional things:</p></li>
+</ul>
+<ol class="arabic simple">
+<li><p>Somehow take in info about where the constant has 1’s and 0’s, and morph the pre-processing nodes.</p></li>
+<li><p>Keep track of whether there’s a chain of 0’s on-going (can be done through the nodes’ <em>leafs</em> attributes, which is a binary-encoded list of all the leafs that feed into a certain node), and then morphs the ■ node accordingly.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tree_traversal.html" class="btn btn-neutral float-left" title="Sample traversal through the space of binary trees" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

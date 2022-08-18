@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adder-specific optimizations [Factorization] &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Sample traversal through the space of binary trees" href="tree_traversal.html" />
+    <link rel="prev" title="Adder-specific optimizations [Sparseness]" href="sparseness.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="adder_theory.html">Brief theory of addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html">Traditional hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html#Revised-hardware-addition">Revised hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparseness.html">Adder-specific optimizations [Sparseness]</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Adder-specific optimizations [Factorization]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)">Setup (RUN ME before executing any code in this section)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Integrating-the-pre-processing-logic-into-the-tree">Integrating the pre-processing logic into the tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Ling-factorization">Ling factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-is-the-Ling-factorization-expressed-in-terms-of-trees?">What is the Ling factorization expressed in terms of trees?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Arbitrary-combination-of-Ling-and-sparseness">Arbitrary combination of Ling and sparseness</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Adder-specific?">Adder-specific?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tree_traversal.html">Sample traversal through the space of binary trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html">Logical synthesis of general hardware operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-addition-based-comparator">Possible expansion: addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-non-addition-based-comparator">Possible expansion: non addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-adding-a-constant-value">Possible expansion: adding a constant value</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/theory.html">Theory and Discussion</a> &raquo;</li>
+      <li>Adder-specific optimizations [Factorization]</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/factorization.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/factorization.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Adder-specific-optimizations-[Factorization]">
+<h1>Adder-specific optimizations [Factorization]<a class="headerlink" href="#Adder-specific-optimizations-[Factorization]" title="Permalink to this heading">¶</a></h1>
+<p><strong>NOTE</strong>: This is a work in progress and will not be functional until version <strong>1.1.0</strong> of the library</p>
+<section id="Setup-(RUN-ME-before-executing-any-code-in-this-section)">
+<h2>Setup (RUN ME before executing any code in this section)<a class="headerlink" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install --upgrade git+https://github.com/tdene/synth_opt_adders.git
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Collecting git+https://github.com/tdene/synth_opt_adders.git
+  Cloning https://github.com/tdene/synth_opt_adders.git to /tmp/pip-req-build-4pvpenzv
+  Running command git clone -q https://github.com/tdene/synth_opt_adders.git /tmp/pip-req-build-4pvpenzv
+Requirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (2.6.3)
+Requirement already satisfied: pydot in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (1.3.0)
+Requirement already satisfied: graphviz in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (0.10.1)
+Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (7.1.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /usr/local/lib/python3.7/dist-packages (from pydot-&gt;pptrees==1.0.5) (3.0.9)
+Building wheels for collected packages: pptrees
+  Building wheel for pptrees (setup.py) ... done
+  Created wheel for pptrees: filename=pptrees-1.0.5-py3-none-any.whl size=62245 sha256=c042ce21a9183dcaa1826ec41c68cff6d0bba214e2d59ed9d85a27ed0dec851e
+  Stored in directory: /tmp/pip-ephem-wheel-cache-c2yzrpv7/wheels/46/ba/74/bbe32b722a1f52c3c3aa52fcbdb050975cb54826ed0e4f77cd
+Successfully built pptrees
+Installing collected packages: pptrees
+Successfully installed pptrees-1.0.5
+</pre></div></div>
+</div>
+</section>
+<section id="Integrating-the-pre-processing-logic-into-the-tree">
+<h2>Integrating the pre-processing logic into the tree<a class="headerlink" href="#Integrating-the-pre-processing-logic-into-the-tree" title="Permalink to this heading">¶</a></h2>
+<p>The circuits shown so far consist of three parts:</p>
+<ul class="simple">
+<li><p>“pre-processing” logic, which encodes the inputs into an alternate form</p></li>
+<li><p>The main body of the tree, which computes the non-local aspect of the operation</p></li>
+<li><p>“post-processing” logic, which combines the non-local and local aspects of the operation</p></li>
+</ul>
+<p>The previous section shows a novel way of integrating the post-processing logic into the main body of the tree.</p>
+<p>Is there a way to integrate the pre-processing logic into the main body of the tree?</p>
+<p>In a way, yes, there is.</p>
+</section>
+<section id="Ling-factorization">
+<h2>Ling factorization<a class="headerlink" href="#Ling-factorization" title="Permalink to this heading">¶</a></h2>
+<p>An earlier section showed the following CMOS schematic of the ■ recurrence operator for addition:</p>
+<img alt="https://drive.google.com/uc?export=view&amp;id=1O0v4RCn8GlN10Adtne98e0Ir0CU-Goqg" src="https://drive.google.com/uc?export=view&amp;id=1O0v4RCn8GlN10Adtne98e0Ir0CU-Goqg" />
+<p>The section on the right is a two-input gate. The section on the left is a three-input gate.</p>
+<p>One of the inputs to that three-input gate can be factored off onto a parallel path. Below are results of a spice simulation showing the effect this has on delay.</p>
+<img alt="https://drive.google.com/uc?export=view&amp;id=1eTOBLmIOjD29-lLU9F1AemXIKTRNoeFq" src="https://drive.google.com/uc?export=view&amp;id=1eTOBLmIOjD29-lLU9F1AemXIKTRNoeFq" />
+<p>Note however that moving logic onto a parallel path leads to increased area and power consumption, and vastly increased complexity which can ultimately eliminate the benefits of the delay reduction.</p>
+</section>
+<section id="What-is-the-Ling-factorization-expressed-in-terms-of-trees?">
+<h2>What is the Ling factorization expressed in terms of trees?<a class="headerlink" href="#What-is-the-Ling-factorization-expressed-in-terms-of-trees?" title="Permalink to this heading">¶</a></h2>
+<p>This factorization can be seen as a stereoscopic composition of trees.</p>
+<p>Just like with 3D glasses, there is a red lens and a blue lens, and the images they create combine into the overall picture.</p>
+<p>Here is the blue lens:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+t = tree(5, start_point = 2, leaf_labels = [&quot;c&quot;,&quot;g&quot;,&quot;p&quot;])
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_factorization_12_0.png" src="../_images/notebooks_factorization_12_0.png" />
+</div>
+</div>
+<p>Here is one possible red lens:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+t = tree(5, start_point = 6, leaf_labels = [&quot;c&quot;,&quot;p&quot;,&quot;p&quot;])
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_factorization_14_0.png" src="../_images/notebooks_factorization_14_0.png" />
+</div>
+</div>
+<p>These two trees can be overlaid on top of each other, like transparencies on a projector screen.</p>
+<p>Their stereoscopic composition then gives rise to a new structure.</p>
+</section>
+<section id="Arbitrary-combination-of-Ling-and-sparseness">
+<h2>Arbitrary combination of Ling and sparseness<a class="headerlink" href="#Arbitrary-combination-of-Ling-and-sparseness" title="Permalink to this heading">¶</a></h2>
+<p>The framework described thus far allows for arbitrary combinations of Ling and sparseness, whereas prior work only applies them in simple, regular, fashion.</p>
+<p>Such logic would be incredibly difficult to design by hand. Luckily, a tool exists that can automatically do it.</p>
+</section>
+<section id="Adder-specific?">
+<h2>Adder-specific?<a class="headerlink" href="#Adder-specific?" title="Permalink to this heading">¶</a></h2>
+<p>Note that this optimization is not adder-specific, but instead can be applied to any operation where a similar factorization can be performed.</p>
+<p>A simple example is a leading-zero detection circuit.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sparseness.html" class="btn btn-neutral float-left" title="Adder-specific optimizations [Sparseness]" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tree_traversal.html" class="btn btn-neutral float-right" title="Sample traversal through the space of binary trees" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

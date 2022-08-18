@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick-start guide &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Quick-start guide</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/intro.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<p align="center"><p><img alt="aa22e74c8b604600a03b639acc97732a" src="https://img.shields.io/website?longCache=true&amp;style=flat-square&amp;label=tdene.github.io%2Fsynth_opt_adders&amp;logo=GitHub&amp;logoColor=fff&amp;up_color=blueviolet&amp;up_message=Read%20now%20%E2%9E%9A&amp;url=https%3A%2F%2Ftdene.github.io%2Fsynth_opt_adders%2Findex.html" /> <img alt="a4e34571f2aa491eba8ace402d9f4ee4" src="https://img.shields.io/github/license/tdene/synth_opt_adders?longCache=true&amp;style=flat-square&amp;logo=Apache&amp;label=Code" /> <img alt="'unit_tests' workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/Python%20package/main?longCache=true&amp;style=flat-square&amp;label=unit_tests&amp;logo=GitHub%20Actions&amp;logoColor=fff" /> <img alt="'docs workflow Status" src="https://img.shields.io/github/workflow/status/tdene/synth_opt_adders/docs/main?longCache=true&amp;style=flat-square&amp;label=docs&amp;logo=GitHub%20Actions&amp;logoColor=fff" /></p>
+</p><p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/intro.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Quick-start-guide">
+<h1>Quick-start guide<a class="headerlink" href="#Quick-start-guide" title="Permalink to this heading">¶</a></h1>
+<p>For detailed documentation, please click the “Read now” button above.</p>
+<p>To install this tool:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pip install --upgrade pptrees
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pptrees in /home/tdene/data/synth_opt_adders/src (1.0.9)
+Requirement already satisfied: Pillow in /home/tdene/.local/lib/python3.8/site-packages (from pptrees) (9.1.1)
+Requirement already satisfied: graphviz in /home/tdene/.local/lib/python3.8/site-packages (from pptrees) (0.19.1)
+Requirement already satisfied: networkx in /home/tdene/.local/lib/python3.8/site-packages (from pptrees) (2.7)
+Requirement already satisfied: pydot in /home/tdene/.local/lib/python3.8/site-packages (from pptrees) (1.4.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /home/tdene/.local/lib/python3.8/site-packages (from pydot-&gt;pptrees) (3.0.7)
+<span class="ansi-yellow-fg">WARNING: You are using pip version 22.0.4; however, version 22.1.2 is available.
+You should consider upgrading via the &#39;/usr/bin/python3 -m pip install --upgrade pip&#39; command.</span><span class="ansi-yellow-fg">
+</span>Note: you may need to restart the kernel to use updated packages.
+</pre></div></div>
+</div>
+<p>To generate a test adder:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = &quot;sklansky&quot;)
+f.hdl(&#39;adder.v&#39;)
+f.gif(&#39;adder.gif&#39;)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Hardware-synthesis-of-arithmetic-operations">
+<h1>Hardware synthesis of arithmetic operations<a class="headerlink" href="#Hardware-synthesis-of-arithmetic-operations" title="Permalink to this heading">¶</a></h1>
+<p>Arithmetic operations are important. Addition, in particular, is ubiquitous. When a RISC-V processor boots into Linux, for example, roughly 70% of the assembly instructions use addition.</p>
+<p>Circuit design involves trade-offs, typically phrased in terms of power vs performance (speed) vs area. These trade-offs certainly apply to arithmetic operations. Circuits can be very fast and power-hungry, very slow and power-efficient, or anywhere in between.</p>
+<p>Moreso, these trade-offs occur on a bit-by-bit basis. If a circuit generates a 64-bit result, each bit of the result can be optimized for power, speed, or area. Often this becomes essential, as some bits must be processed faster than others.</p>
+<p>These trade-offs create a Pareto front of possible circuits, each optimal for a specific situation. The implementation of such arithmetic circuits is non-trivial, as is the design space, for reasons elaborated upon in the main documentation.</p>
+<section id="Setup-(RUN-ME-before-executing-any-code-in-this-section)">
+<h2>Setup (RUN ME before executing any code in this section)<a class="headerlink" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install --upgrade git+https://github.com/tdene/synth_opt_adders.git
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/tdene/synth_opt_adders.git
+  Cloning https://github.com/tdene/synth_opt_adders.git to /tmp/pip-req-build-y5iolic5
+  Running command git clone --filter=blob:none --quiet https://github.com/tdene/synth_opt_adders.git /tmp/pip-req-build-y5iolic5
+  Resolved https://github.com/tdene/synth_opt_adders.git to commit a4234668310ef61ae48e5467f5e8e5bf0046e592
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: Pillow in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (9.1.1)
+Requirement already satisfied: graphviz in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (0.19.1)
+Requirement already satisfied: networkx in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (2.7)
+Requirement already satisfied: pydot in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (1.4.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /home/tdene/.local/lib/python3.8/site-packages (from pydot-&gt;pptrees==1.0.8) (3.0.7)
+<span class="ansi-yellow-fg">WARNING: You are using pip version 22.0.4; however, version 22.1.2 is available.
+You should consider upgrading via the &#39;/usr/bin/python3 -m pip install --upgrade pip&#39; command.</span><span class="ansi-yellow-fg">
+</span>
+</pre></div></div>
+</div>
+</section>
+<section id="Traditional-framework">
+<h2>Traditional framework<a class="headerlink" href="#Traditional-framework" title="Permalink to this heading">¶</a></h2>
+<p>How can these circuits be generated and explored, especially when it comes to arithmetic operations? Historically, one particular method for hardware addition has been used and researched since the 1980s. This method conceptualizes circuits using the type of diagram shown below, and is implemented by version v0.4.5 of this library.</p>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/sklansky_old.png" />
+<p>The diagram above displays a binary expression graph that performs the desired computation. The lines in the diagram are edges in the graph, carrying data from the top to the bottom. Each ■ represents a node that performs a simple computation.</p>
+<p>This type of diagram, and of implementation, can best be described as an <strong>n</strong>-rooted binary tree that is drawn upside-down. There are many ways to design such circuits, and the design space can be explored as seen below.</p>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/adder_transforms.gif" />
+<p>Such an exploration is performed by identifying the following three simple patterns throughout the graph, and performing point-targeted transforms.</p>
+<p><img alt="212cda99de7b43ebbab23dd56843a916" class="no-scaled-link" src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/L.png?raw=true" style="width: 150px;" /></p>
+<p><img alt="b6563448e487405eafaea880769ef072" class="no-scaled-link" src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/T.png?raw=true" style="width: 150px;" /></p>
+<p><img alt="6bc6b5f952e34ae58bcaa219087bbaaa" class="no-scaled-link" src="https://github.com/tdene/synth_opt_adders/blob/main/docs/diagrams/F.png?raw=true" style="width: 150px;" /></p>
+<p>This method is computationally expensive, requiring exponential run-time.</p>
+<p>Moreover, any such exploration using classic diagrams and conceptualization is incomplete and overly complicated. It is unclear how large the design space, and it is impossible to represent all valid designs. Under this framework, simple structures become obfuscated, while more advanced optimizations become impossible to implement or theoretically describe.</p>
+<p>Arithmetic computation architectures are not <strong>n</strong>-rooted binary trees.</p>
+</section>
+<section id="Revised-framework">
+<h2>Revised framework<a class="headerlink" href="#Revised-framework" title="Permalink to this heading">¶</a></h2>
+<p>Instead, this library chooses to express arithmetic computation in terms of forests of <strong>n</strong> trees.</p>
+<p>This approach results directly from the underlying mathematics, allowing circuit designers to leverage decades of research in graph theory and toplogy.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 17
+f = forest(width, alias = &quot;sklansky&quot;)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_intro_24_0.png" src="../_images/notebooks_intro_24_0.png" />
+</div>
+</div>
+<p>The diagram above displays the same circuit as the one from the previous section.</p>
+<p>Each frame of the animation computes an individual bit of the final sum.</p>
+<p>It is immediately clear how large the design space is:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.util import catalan
+
+width = 17
+number_of_designs = 1
+for a in range(width):
+  number_of_designs = number_of_designs * catalan(a)
+print(number_of_designs)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+323828772071827218688291208408423952910530531102720000000
+</pre></div></div>
+</div>
+<p>It is straightforward to generate any valid tree in O(n lg(n)) time:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 17
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214, 670, 2000, 5463, 12351, 135151, 461614, 1512512, 8351854, 3541563])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 17 are [0, 0, 1, 4, 13, 41, 131, 428, 1429, 4861, 16795, 58785, 208011, 742899, 2674439, 9694844, 35357669]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_intro_29_1.png" src="../_images/notebooks_intro_29_1.png" />
+</div>
+</div>
+<p>Similarly, it is straightforward to label any valid tree in O(n lg(n)) time:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214, 670, 2000, 5463, 12351, 135151, 461614, 1512512, 8351854, 3541563])
+for t in enumerate(f.trees):
+    print(&quot;The rank of tree {0} in this forest is {1}&quot;.format(t[0],t[1].rank()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The rank of tree 0 in this forest is 0
+The rank of tree 1 in this forest is 0
+The rank of tree 2 in this forest is 0
+The rank of tree 3 in this forest is 2
+The rank of tree 4 in this forest is 5
+The rank of tree 5 in this forest is 37
+The rank of tree 6 in this forest is 74
+The rank of tree 7 in this forest is 214
+The rank of tree 8 in this forest is 214
+The rank of tree 9 in this forest is 670
+The rank of tree 10 in this forest is 2000
+The rank of tree 11 in this forest is 5463
+The rank of tree 12 in this forest is 12351
+The rank of tree 13 in this forest is 135151
+The rank of tree 14 in this forest is 461614
+The rank of tree 15 in this forest is 1512512
+The rank of tree 16 in this forest is 8351854
+</pre></div></div>
+</div>
+<p>Factorization optimizations such that of Ling, a concept that cannot be described by the old framework, are a straightforward decomposition of the “gp” pre-processing nodes into “g” and “p”, followed by a stereoscopic combination of two such tree halves.</p>
+<p>Sparseness, another concept that is difficult to understand under the old framework, arises naturally.</p>
+<p>Nested sparseness, a novel concept that can reduce the circuits’ logical depth, has not been discovered by prior literature due to its incompatibility with the traditional framework.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+width = 8
+t = tree(width, start_point = 214)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_intro_33_0.png" src="../_images/notebooks_intro_33_0.png" />
+</div>
+</div>
+<p>This framework allows for a full and efficient exploration of the entire design space.</p>
+<p>In addition, these concepts don’t just apply to binary addition. They apply to a wide range of hardware operations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

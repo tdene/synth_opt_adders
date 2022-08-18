@@ -1,0 +1,351 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/adder_theory.ipynb)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "OzNEkUfMINHZ",
+    "tags": []
+   },
+   "source": [
+    "# Brief theory of addition"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "1N1c_svQeCdW"
+   },
+   "source": [
+    "## Importance"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "hxlyAGquOhTd"
+   },
+   "source": [
+    "Binary addition is one of the most used and important operations in computing.<br>\n",
+    "For example, when booting a RISC-V processor into Linux over 2/3rds of the assembly instructions will use addition in some manner.\n",
+    "\n",
+    "Circuit design involves trade-offs, typically phrased in terms of power vs performance (speed) vs area.<br>\n",
+    "Circuits can be very fast and power-hungry, very slow and power-efficient, or anywhere in between.\n",
+    "\n",
+    "Moreso, these trade-offs occur on a bit-by-bit basis. If a circuit generates a 64-bit result, each bit of the result can be optimized for power, speed, or area.<br>\n",
+    "Often this becomes essential, as some bits must be processed faster than others.\n",
+    "\n",
+    "Thus, optimizing adder hardware affects entire designs."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "-I6Saz6BeDjI"
+   },
+   "source": [
+    "## Breakdown of addition"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "KgOBRAkheFfu"
+   },
+   "source": [
+    "Binary addition has a \"local\" and \"non-local\" component.<br>\n",
+    "A proper explanation of this concept involves exact sequences and cohomology groups. Fortunately for you, I am not familiar enough with that math to bore you with a technical explanation.\n",
+    "\n",
+    "Take the following example:\n",
+    "\n",
+    "      999 999 +\n",
+    "      000 001\n",
+    "      _______\n",
+    "    1 000 000\n",
+    "\n",
+    "Each digit of the sum depends \"locally\" on the corresponding digits of each input.<br>\n",
+    "But all digits of the sum also depend \"non-locally\" on all digits to the right.\n",
+    "The $1$ on the far right affects even the left-most digit of the result.<br>\n",
+    "It is impossible for a general circuit to compute the correct answer without accounting for that $1$.\n",
+    "\n",
+    "In math terms, for $s = a+b$, the digit $s_i$ depends locally on $a_i$ and $b_i$, and non-locally on all $a_j, b_j$ where $i > j$.\n",
+    "\n",
+    "The local aspect of binary addition can be resolved in parallel, in a single time-step, for every digit.<br>\n",
+    "Again, $s_i$ depends locally only on $a_i$ and $b_i$. For an $n$-bit adder, just instantiate $n$ copies of the hardware, and process all bits of $a$ and $b$ at the same time.\n",
+    "\n",
+    "The non-local aspect is more complex.<br>\n",
+    "This is what is known as the \"carry\". Overflow from one pair of digits may affect the next pair of digits.<br>\n",
+    "The naïve grade-school implementation of adding one digit at a time and \"carrying over the one\" uses $n$ time-steps. Speeding it up by doing two digits at a time can reduce that to $n/2$ time-steps, but that's still **O(n)**.\n",
+    "\n",
+    "**O(n)** is very slow. **O(lg n)** on the other hand is both fast and achievable."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "ZifwpKl9fqlH"
+   },
+   "source": [
+    "## Brief theory of arithmetic operations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "JzFxvp3GhXbH"
+   },
+   "source": [
+    "### Arithmetic computation in logarithmic time"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "J-zbSYGGhbXi"
+   },
+   "source": [
+    "An extensive body of literature provides a three-step recipe for speeding up non-local aspects of a computation.\n",
+    "\n",
+    "1.   Express the non-local computation of digit $i$ as $Y_i = X_i ■ Y_{i-1} $.<br>\n",
+    "$Y$ is the output, $X$ is the input, $■$ is some pre-determined operator.\n",
+    "2.   Expand: $Y_i = X_i ■ X_{i-1} ■ X_{i-2} ■ \\dots X_0$.<br>\n",
+    "Clearly this is a non-local computation: every output depends on all previous inputs, in some manner that is determined by $■$.\n",
+    "3.   Associate: $Y_i = (X_i ■ X_{i-1}) ■ (X_{i-2} ■ \\dots X_0)$\n",
+    "\n",
+    "The expression in step #2 takes $i-1$ steps. The expression in step #3 can take anywhere from $lg(i)$ to $i-1$ steps, depending on how association is performed.\n",
+    "\n",
+    "For a concrete example, compare the following 7-step operation:\n",
+    "\n",
+    "$Y_7 = X_7 ■ (X_6 ■ (X_5 ■ (X_4 ■ (X_3 ■ (X_2 ■ (X_1 ■ X_0))))))$\n",
+    "\n",
+    "To a 3-step alternative:\n",
+    "\n",
+    "$Y_7 = (((X_7 ■ X_6) ■ (X_5 ■ X_4)) ■ ((X_3 ■ X_2) ■ (X_1 ■ X_0)))$\n",
+    "\n",
+    "The first formula performs all operations sequentially. The second formula is parallelized, and MUCH faster."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "AUWpaF0tlU_m",
+    "tags": []
+   },
+   "source": [
+    "### How many ways can you associate an expression?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "1W3ehWEHlvsw"
+   },
+   "source": [
+    "An expression of $n$ terms such as the one above can be associated in $C_n$ ways, where $C$ represents the Catalan numbers.\n",
+    "\n",
+    "What else do the Catalan numbers represent? The number of ways different ways to draw a binary tree with $n+1$ leafs.\n",
+    "\n",
+    "That means that all such arithmetic circuits can be mapped to and from binary trees.\n",
+    "\n",
+    "See the [binary tree space traversal notebook](tree_traversal.html) for further discussion."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "9hOkTj9AoUCy",
+    "tags": []
+   },
+   "source": [
+    "### What is ■?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "eg8uFRbPoWo7"
+   },
+   "source": [
+    "There's a simple recipe to determine ■ for any arithmetic operation. It is further discussed in the [general operation theory notebook](hardware_operations.html).\n",
+    "\n",
+    "Here is ■ for addition, shown as a CMOS logic schematic:\n",
+    "\n",
+    "![png](https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/adder_prefix_operator.png)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "0VgsCoMdlkgZ",
+    "tags": []
+   },
+   "source": [
+    "### Why is this huge design space relevant at all?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "x72NbVDimcPn"
+   },
+   "source": [
+    "In software, a balanced tree with $lg(n)$ height is often optimal.<br>\n",
+    "In hardware, the sacrifices needed to balance a tree to $lg(n)$ height can outweigh the benefits. Sometimes it is actually faster to use a circuit that performs more sequential operations back-to-back.\n",
+    "\n",
+    "Key concepts that hardware, unlike software, must account for are fan-out (given an output, how many inputs does it connect to?) and cross-coupling capacitance (parallel wires carrying electrical signals will mutually degrade each others' performance). Both of these effects will severely degrade a circuit's performance, turning what would otherwise be an easy design choice into a complex design space.\n",
+    "\n",
+    "Meanwhile, a concept that hardware and software share in-common is the trade-off between time complexity and space complexity.<br>\n",
+    "Let us say that a software engineer is given the choice between a software algorithm with **O(n)** time complexity and **O(n)** space complexity, and an algorithm with **O(lg n)** time complexity and **O(n lg(n))** space complexity.<br>\n",
+    "The sofware engineer may give it some thought, but ultimately the choice doesn't matter very much on modern hardware.\n",
+    "\n",
+    "For a hardware engineer though, the difference between **O(n)** space complexity and **O(n lg(n))** space complexity may be the difference between a working chip and a useless space heater.\n",
+    "\n",
+    "\n",
+    "This is illustrated in more detail in the [notebook](traditional_addition.html) comparing traditional hardware addition to revised hardware addition."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "F32qIc62MV8d",
+    "tags": []
+   },
+   "source": [
+    "### Wait, what about the local component??"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "yyUiOUr0pQka"
+   },
+   "source": [
+    "The local component of any arithmetic operation can also be determined from a simple recipe.\n",
+    "\n",
+    "It is less interesting than the non-local component.<br>\n",
+    "Fully parallelizing it is trivial: simply instantiate $n$ copies of the hardware and perform all the local computations in parallel in a single time-step.\n",
+    "\n",
+    "Typically the local component is calculated separately, then combined with the non-local component at the very end of the operation to yield the final result.\n",
+    "\n",
+    "Here is the local component for addition, expressed as a CMOS logic schematic.\n",
+    "\n",
+    "![png](https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/adder_local.png)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once both the local and non-local components have been computed, they are combined to obtain the final answer.\n",
+    "\n",
+    "In general, this final composition takes the form of an if-then statement (some fashion of multiplexer gate).\n",
+    "\n",
+    "For addition in particular, this final composition happens to use the same type of gate as the one seen above."
+   ]
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "collapsed_sections": [
+    "fglMuqg2IhwY",
+    "1N1c_svQeCdW",
+    "-I6Saz6BeDjI",
+    "ZifwpKl9fqlH",
+    "JzFxvp3GhXbH",
+    "9hOkTj9AoUCy",
+    "F32qIc62MV8d",
+    "0VgsCoMdlkgZ",
+    "ymYEzG6wIYml",
+    "560vj7Bjs7Ek",
+    "UFTf-qwG3T2l",
+    "Piw_VGGa3lQF",
+    "_jlQDIUf5DEz",
+    "iaoIEaT55EGh",
+    "90naeS2p5E-c",
+    "JHoKpd3uGbMD",
+    "Foo8BgqhId6t",
+    "K2cp8l1vJKDx",
+    "MWsxqcbsJGI3",
+    "sKdbsgBsJ3Ck",
+    "v2gXSPukMRgx",
+    "Y8CVeeNmJNy6",
+    "FO3guxSpOVnb",
+    "JEz97dTfOYI8",
+    "z7E_1y33OupR",
+    "u2FqdwRRSQwo",
+    "2_DaCL98STcN",
+    "PimPLC5VVHBp",
+    "RLVsewY1XBVX",
+    "gqd1ZtA7YsVp",
+    "6ay6u3jUsjyi",
+    "mPu8tKO7QL73",
+    "tREql9XUQSp3",
+    "F2EyjuORSLOK",
+    "1dOF9B5cVgQT",
+    "i-xotLheYVH-",
+    "ExiZi83IZFTR",
+    "Qi_YF3DBIkDu",
+    "94Q1Hg1FZowt",
+    "y7GNF3Y5Z1x0",
+    "VE8B8IDkahUv",
+    "Af8jG-Z69OLy",
+    "JDppVA-B9hV9",
+    "isS1p2zM-Wki",
+    "LrCgNrIOCXDJ",
+    "Sa5Ge_EIGKuT",
+    "9K1e27IMOwLA",
+    "hAzzPw5DKE6E",
+    "wSGmsxNXKR-7",
+    "p5spCQilqVSV",
+    "yB-VgX8WM7W7",
+    "eaKDikoPN0NN",
+    "zYlv5cHGOmXI",
+    "87jVABPITJQf",
+    "qOxi-Qf3l2Kf",
+    "y5W5HONDp5FC",
+    "E5QzbZ7Mqxwx",
+    "kohejP9Fuphx",
+    "2JGKA6FmIoHy",
+    "PXh3DM_PQNAf",
+    "1_ZGmvyjQU9G",
+    "SqkHjSIUQX2z",
+    "NXG-puc1QasQ",
+    "sZbM-5czQgAk",
+    "gnKvwjz-RCzg",
+    "1Uel2oBVhv1i",
+    "3axXyluyhv1i",
+    "DCkhy-7fhv1i",
+    "ZZCEJMY5hv1j",
+    "QZlekhsShv1j",
+    "ETkDJuzti9L_"
+   ],
+   "name": "hardware_addition.ipynb",
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

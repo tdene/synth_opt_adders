@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trees [structures that generate one bit of the result] &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Forests [structures that generate the entire result]" href="forest_demo.html" />
+    <link rel="prev" title="Tutorial" href="../src/tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Trees [structures that generate one bit of the result]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)">Setup (RUN ME before executing any code in this section)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Generating-a-classic-structure-[LEGACY]">Generating a classic structure [LEGACY]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#How-many-possible-trees-are-there?">How many possible trees are there?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-do-all-of-these-trees-look-like?">What do all of these trees look like?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#How-do-I-get-the-tree-that-I-want?">How do I get the tree that I want?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Okay,-I-have-a-tree.-How-do-I-make-it-faster?">Okay, I have a tree. How do I make it faster?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Okay,-now-how-do-I-make-a-tree-more-power-efficient?-Or-smaller?">Okay, now how do I make a tree more power-efficient? Or smaller?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#How-do-I-get-the-ID-of-a-tree-after-I’ve-modified-it?">How do I get the ID of a tree after I’ve modified it?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Obtaining-a-PNG-diagram">Obtaining a PNG diagram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Obtaining-an-HDL-description">Obtaining an HDL description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="forest_demo.html">Forests [structures that generate the entire result]</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/tutorial.html">Tutorial</a> &raquo;</li>
+      <li>Trees [structures that generate one bit of the result]</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/tree_demo.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/tree_demo.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Trees-[structures-that-generate-one-bit-of-the-result]">
+<h1>Trees [structures that generate one bit of the result]<a class="headerlink" href="#Trees-[structures-that-generate-one-bit-of-the-result]" title="Permalink to this heading">¶</a></h1>
+<section id="Setup-(RUN-ME-before-executing-any-code-in-this-section)">
+<h2>Setup (RUN ME before executing any code in this section)<a class="headerlink" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install --upgrade git+https://github.com/tdene/synth_opt_adders.git
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/tdene/synth_opt_adders.git
+  Cloning https://github.com/tdene/synth_opt_adders.git to /tmp/pip-req-build-a8rtu625
+  Running command git clone --filter=blob:none --quiet https://github.com/tdene/synth_opt_adders.git /tmp/pip-req-build-a8rtu625
+  Resolved https://github.com/tdene/synth_opt_adders.git to commit 8fd7d6c3257f73ae3e278281be636dc098a9b015
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: Pillow in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (9.1.1)
+Requirement already satisfied: graphviz in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (0.19.1)
+Requirement already satisfied: networkx in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (2.7)
+Requirement already satisfied: pydot in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (1.4.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /home/tdene/.local/lib/python3.8/site-packages (from pydot-&gt;pptrees==1.0.8) (3.0.7)
+<span class="ansi-yellow-fg">WARNING: You are using pip version 22.0.4; however, version 22.1.2 is available.
+You should consider upgrading via the &#39;/usr/bin/python3 -m pip install --upgrade pip&#39; command.</span><span class="ansi-yellow-fg">
+</span>
+</pre></div></div>
+</div>
+</section>
+<section id="Generating-a-classic-structure-[LEGACY]">
+<h2>Generating a classic structure [LEGACY]<a class="headerlink" href="#Generating-a-classic-structure-[LEGACY]" title="Permalink to this heading">¶</a></h2>
+<p>Note: this section is shown simply for illustrative purposes. Many of the functions used here-in are <strong>legacy</strong> functions, supported only for backwards compatibility with past diagrams and methods. The code in this section should be avoided in production.</p>
+<p>The theory section discusses four classic, regular, structures. These architectures can be readily generated under this library using aliases. Note again that the “alias” parameter is legacy, supported only for backwards compatibility, and should not actually be used.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+width = 9
+t = tree(width, alias = &quot;ripple-carry&quot;)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_6_0.png" src="../_images/notebooks_tree_demo_6_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+width = 9
+t = tree(width, alias = &quot;sklansky&quot;)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_7_0.png" src="../_images/notebooks_tree_demo_7_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+width = 9
+t = tree(width, alias = &quot;kogge-stone&quot;)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_8_0.png" src="../_images/notebooks_tree_demo_8_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+
+width = 9
+t = tree(width, alias = &quot;brent-kung&quot;)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_9_0.png" src="../_images/notebooks_tree_demo_9_0.png" />
+</div>
+</div>
+</section>
+<section id="How-many-possible-trees-are-there?">
+<h2>How many possible trees are there?<a class="headerlink" href="#How-many-possible-trees-are-there?" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.util import catalan
+
+width = 9
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width-1),width))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+There are 1430 possible trees of width 9
+</pre></div></div>
+</div>
+</section>
+<section id="What-do-all-of-these-trees-look-like?">
+<h2>What do all of these trees look like?<a class="headerlink" href="#What-do-all-of-these-trees-look-like?" title="Permalink to this heading">¶</a></h2>
+<p>Note that while generating the tree structures is fast, generating the diagrams can be very slow.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width = 6
+# Generate all trees of width 9
+list_of_trees=[]
+for a in range(catalan(width-1)):
+  t = tree(width, start_point = a)
+  list_of_trees.append(t)
+
+# Visualize the trees in GIF form
+from pptrees.util import display_gif as display_gif
+from IPython.display import Image
+
+Image(display_gif(list_of_trees))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_14_0.png" src="../_images/notebooks_tree_demo_14_0.png" />
+</div>
+</div>
+</section>
+<section id="How-do-I-get-the-tree-that-I-want?">
+<h2>How do I get the tree that I want?<a class="headerlink" href="#How-do-I-get-the-tree-that-I-want?" title="Permalink to this heading">¶</a></h2>
+<p>The number of total possible trees is known. Thus it is possible to assign an integer ID to every possible structure. The labeling I chose is based on an order that arose naturally. <em>If you, reader, happen to know the name of this specific tree traversal, please contact me as I’ve so far been unable to find it in literature.</em></p>
+<p>To get a desired structure, simply initialize it with its label.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width = 33
+# First, check the total number of structures
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width-1),width))
+print(&quot;Here is one of them:&quot;)
+
+t = tree(width, start_point = 33416136136136512)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+There are 55534064877048198 possible trees of width 33
+Here is one of them:
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_17_1.png" src="../_images/notebooks_tree_demo_17_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print(&quot;Here is another one:&quot;)
+
+t = tree(width, start_point = catalan(width-2)//2)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Here is another one:
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_18_1.png" src="../_images/notebooks_tree_demo_18_1.png" />
+</div>
+</div>
+<p>This order begins and ends with slower, <strong>O(n)</strong>, structures. In the middle are better-balanced, <strong>O(lg n)</strong>. However, each of these possible structures has useful delay, power, or area characteristics when viewed as a part of the complete adder (forest) structure.</p>
+</section>
+<section id="Okay,-I-have-a-tree.-How-do-I-make-it-faster?">
+<h2>Okay, I have a tree. How do I make it faster?<a class="headerlink" href="#Okay,-I-have-a-tree.-How-do-I-make-it-faster?" title="Permalink to this heading">¶</a></h2>
+<p><strong>Theory</strong></p>
+<p>In general, for the tree to be faster, it must be more balanced. Keep in mind, however, that the speed of each individual tree is greatly affected by the forest it is a part of.</p>
+<p>If every tree in a forest is left-balanced (more commonly known as “complete”), theoretically each of the individual trees will be very fast, but as part of the greater forest they will each incur a delay penalty due to a large amount of necessary routing tracks.</p>
+<p>If each tree in a forest is right-balanced, theoretically each of the individual trees will be very fast, but as part of the greater forest they will each incur a delay penalty due to a large amount of fan-out.</p>
+<p><strong>Application</strong></p>
+<p>The library supports four methods of transforming trees.</p>
+<ul class="simple">
+<li><p>left_rotate - Rotates a given node left</p></li>
+<li><p>right_rotate - Rotates a given node right</p></li>
+<li><p>left_shift - Shifts a given node left into another subtree; the equivalent of AVL trees’ RL rotate, except this is a generalized RRRRRRRR…L rotate.</p></li>
+<li><p>right_shift - Shifts a given node right into another subtree; the equivalent of AVL trees’ LR rotate, except this is a generalized LLLLLLLL…R rotate.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width = 10
+# First, check the total number of structures
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width-1),width))
+
+# Start at some initial point
+t = tree(width, start_point = 209)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+There are 4862 possible trees of width 10
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_23_1.png" src="../_images/notebooks_tree_demo_23_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Speed up the tree
+t = tree(width, start_point = 209)
+
+t.right_rotate(t.root[1][1][1][1][0])
+t.left_rotate(t.root[1][1][1][1])
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_24_0.png" src="../_images/notebooks_tree_demo_24_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Or do it with a left-shift (RL rotate)
+t = tree(width, start_point = 209)
+
+t.left_shift(t.root[1][1][1][1][0])
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_25_0.png" src="../_images/notebooks_tree_demo_25_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Balance the tree even more by using sparseness
+t = tree(width, start_point = 209)
+
+t.left_shift(t.root[1][1][1][1][0])
+t.left_shift(t.root[1])
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_26_0.png" src="../_images/notebooks_tree_demo_26_0.png" />
+</div>
+</div>
+</section>
+<section id="Okay,-now-how-do-I-make-a-tree-more-power-efficient?-Or-smaller?">
+<h2>Okay, now how do I make a tree more power-efficient? Or smaller?<a class="headerlink" href="#Okay,-now-how-do-I-make-a-tree-more-power-efficient?-Or-smaller?" title="Permalink to this heading">¶</a></h2>
+<p><strong>Theory</strong></p>
+<p>Both area and power consumption are determined primarily not by an individual tree, but rather by the forest it is a part of.</p>
+<p>Both area and power consumption fall with an increasing number of shared nodes between trees. That is why serial adders have smaller area than parallel ones, and why the Brent-Kung structure has smaller area than the Kogge-Stone one.</p>
+<p>In general, the further right-balanced a tree is, the more nodes it is able to share. This is however just a rule of thumb.</p>
+<p><strong>Application</strong></p>
+<p>See the following example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Let&#39;s say we only want the 6th and 7th bit of a sum.
+
+from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width_big = 7
+width_small = 6
+# First, check the total number of structures
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width_big-1),width_big))
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width_small-1),width_small))
+
+# Next, initialize two random trees
+t_big = tree(width_big, start_point = 72)
+t_small = tree(width_small, start_point = 12)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+There are 132 possible trees of width 7
+There are 42 possible trees of width 6
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t_big
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_30_0.png" src="../_images/notebooks_tree_demo_30_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t_small
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_31_0.png" src="../_images/notebooks_tree_demo_31_0.png" />
+</div>
+</div>
+<p>Note that these two trees have no nodes in common. Let’s give them some.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t_small = tree(width_small, start_point = 12)
+# Make the left-hand side of the trees similar
+t_small.right_rotate(t_small.root[1][0])
+t_small.right_shift(t_small.root[1][0][1])
+t_small
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_33_0.png" src="../_images/notebooks_tree_demo_33_0.png" />
+</div>
+</div>
+<p>The two trees have gone from sharing 0 nodes, to sharing 2 nodes. Area and power consumption has been reduced.</p>
+<p>We can visualize the shared nodes by creating a make-shift forest and using its methods.</p>
+<p>The nodes that have been painted partially red in t_small are shared between the two trees. This is merely cosmetic, intended to serve as a visual indicator.</p>
+<p>Note that the equivalent nodes in t_big have not been painted red. This is intentional. The red marks nodes that need not be implemented in hardware. Shared nodes only need to be implemented in hardware once, but they still need to be implemented that one single time.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+f = forest(2, initialized_trees=[t_big, t_small])
+f.reset_equivalent_nodes()
+f.find_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_35_0.png" src="../_images/notebooks_tree_demo_35_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f.reset_equivalent_nodes()
+</pre></div>
+</div>
+</div>
+<p>Let’s go even further</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t_big = tree(width_big, start_point = 72)
+# Make the right-hand side of the trees similar
+t_big.right_shift(t_big.root[0][0][1])
+t_big
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_38_0.png" src="../_images/notebooks_tree_demo_38_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f = forest(2, initialized_trees=[t_big, t_small])
+f.find_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_39_0.png" src="../_images/notebooks_tree_demo_39_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f.reset_equivalent_nodes()
+</pre></div>
+</div>
+</div>
+<p>The two trees now share 3 nodes. Also, t_big is now more balanced! Let’s make t_small a bit more balanced as well.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t_small = tree(width_small, start_point = 12)
+# Make the left-hand side of the trees similar
+t_small.right_rotate(t_small.root[1][0])
+t_small.right_shift(t_small.root[1][0][1])
+# Reduce the height of t_small
+t_small.left_rotate(t_small.root[1])
+t_small
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_42_0.png" src="../_images/notebooks_tree_demo_42_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f = forest(2, initialized_trees=[t_big, t_small])
+f.find_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_43_0.png" src="../_images/notebooks_tree_demo_43_0.png" />
+</div>
+</div>
+<p>The two trees share 3 nodes still. The only way they could share more would be by making both of them serial.</p>
+<p>Moreover, the two trees are both balanced, with <strong>O(lg n)</strong> delay.</p>
+<p>This appears to be a good structure.</p>
+<section id="How-do-I-get-the-ID-of-a-tree-after-I’ve-modified-it?">
+<h3>How do I get the ID of a tree after I’ve modified it?<a class="headerlink" href="#How-do-I-get-the-ID-of-a-tree-after-I’ve-modified-it?" title="Permalink to this heading">¶</a></h3>
+<p>The “rank” method gets the ID of a tree, while the “unrank” method creates a tree given a certain ID</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Let&#39;s say we only want the 6th and 7th bit of a sum.
+
+from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width_big = 7
+width_small = 6
+# First, check the total number of structures
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width_big-1),width_big))
+print(&quot;There are {0} possible trees of width {1}&quot;.format(catalan(width_small-1),width_small))
+
+# Next, initialize two random trees
+t_big = tree(width_big, start_point = 72)
+t_small = tree(width_small, start_point = 12)
+
+# Make the right-hand side of the trees similar
+t_big.right_shift(t_big.root[0][0][1])
+
+# Make the left-hand side of the trees similar
+t_small.right_rotate(t_small.root[1][0])
+t_small.right_shift(t_small.root[1][0][1])
+# Reduce the height of t_small
+t_small.left_rotate(t_small.root[1])
+
+print(&quot;The rank (ID) of the big tree is {0}&quot;.format(t_big.rank()))
+print(&quot;The rank (ID) of the small tree is {0}&quot;.format(t_small.rank()))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+There are 132 possible trees of width 7
+There are 42 possible trees of width 6
+The rank (ID) of the big tree is 70
+The rank (ID) of the small tree is 19
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t = tree(width_big, start_point = 70)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_48_0.png" src="../_images/notebooks_tree_demo_48_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>t = tree(width_big, start_point = 19)
+t
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_tree_demo_49_0.png" src="../_images/notebooks_tree_demo_49_0.png" />
+</div>
+</div>
+</section>
+<section id="Obtaining-a-PNG-diagram">
+<h3>Obtaining a PNG diagram<a class="headerlink" href="#Obtaining-a-PNG-diagram" title="Permalink to this heading">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width = 33
+t = tree(width, start_point = 33416136136136512)
+t.png(&quot;test.png&quot;)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Obtaining-an-HDL-description">
+<h3>Obtaining an HDL description<a class="headerlink" href="#Obtaining-an-HDL-description" title="Permalink to this heading">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan
+
+width = 33
+t = tree(width, start_point = 33416136136136512)
+_ = t.hdl(&quot;test.v&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!cat test.v
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+module adder(
+
+        input [32:0] a_in,
+        input [32:0] b_in,
+        output  sum
+        );
+
+// start of unnamed graph
+        wire n0, n1_adder, n2_adder, n3_adder, n4_adder, n5_adder, n6_adder, n7_adder, n8_adder, n9_adder, n10_adder, n11_adder, n12_adder, n13_adder, n14_adder, n15_adder, n16_adder, n17_adder, n18_adder, n19_adder, n20_adder, n21_adder, n22_adder, n23_adder, n24_adder, n25_adder, n26_adder, n27_adder, n28_adder, n29_adder, n30_adder, n31_adder, n32_adder, n33_adder, n34_adder, n35_adder, n36_adder, n37_adder, n38_adder, n39_adder, n40_adder, n41_adder, n42_adder, n43_adder, n44_adder, n45_adder, n46_adder, n47_adder, n48_adder, n49_adder, n50_adder, n51_adder, n52_adder, n53_adder, n54_adder, n55_adder, n56_adder, n57_adder, n58_adder, n59_adder, n60_adder, n61_adder, n62_adder, n63_adder, n64_adder, n65_adder, n66_adder, n67_adder, n68_adder, n69_adder, n70_adder, n71_adder, n72_adder, n73_adder, n74_adder, n75_adder, n76_adder, n77_adder, n78_adder, n79_adder, n80_adder, n81_adder, n82_adder, n83_adder, n84_adder, n85_adder, n86_adder, n87_adder, n88_adder, n89_adder, n90_adder, n91_adder, n92_adder, n93_adder, n94_adder, n95_adder, n96_adder, n97_adder, n98_adder, n99_adder, n100_adder, n101_adder, n102_adder, n103_adder, n104_adder, n105_adder, n106_adder, n107_adder, n108_adder, n109_adder, n110_adder, n111_adder, n112_adder, n113_adder, n114_adder, n115_adder, n116_adder, n117_adder, n118_adder, n119_adder, n120_adder, n121_adder, n122_adder, n123_adder, n124_adder, n125_adder, n126_adder, n127_adder;
+    assign sum = n111_adder ? n2_adder : n1_adder;
+    assign n127_adder = a_in[0]^b_in[0];
+
+    assign n126_adder = a_in[0]&amp;b_in[0];
+    assign n125_adder = a_in[1]^b_in[1];
+
+    assign n124_adder = a_in[1]&amp;b_in[1];
+    assign n123_adder = a_in[2]^b_in[2];
+
+    assign n122_adder = a_in[2]&amp;b_in[2];
+    assign n119_adder = a_in[3]^b_in[3];
+
+    assign n118_adder = a_in[3]&amp;b_in[3];
+    assign n113_adder = a_in[4]^b_in[4];
+
+    assign n112_adder = a_in[4]&amp;b_in[4];
+    assign n110_adder = a_in[5]^b_in[5];
+
+    assign n109_adder = a_in[5]&amp;b_in[5];
+    assign n108_adder = a_in[6]^b_in[6];
+
+    assign n107_adder = a_in[6]&amp;b_in[6];
+    assign n106_adder = a_in[7]^b_in[7];
+
+    assign n105_adder = a_in[7]&amp;b_in[7];
+    assign n100_adder = a_in[8]^b_in[8];
+
+    assign n99_adder = a_in[8]&amp;b_in[8];
+    assign n96_adder = a_in[9]^b_in[9];
+
+    assign n95_adder = a_in[9]&amp;b_in[9];
+    assign n92_adder = a_in[10]^b_in[10];
+
+    assign n91_adder = a_in[10]&amp;b_in[10];
+    assign n90_adder = a_in[11]^b_in[11];
+
+    assign n89_adder = a_in[11]&amp;b_in[11];
+    assign n86_adder = a_in[12]^b_in[12];
+
+    assign n85_adder = a_in[12]&amp;b_in[12];
+    assign n80_adder = a_in[13]^b_in[13];
+
+    assign n79_adder = a_in[13]&amp;b_in[13];
+    assign n78_adder = a_in[14]^b_in[14];
+
+    assign n77_adder = a_in[14]&amp;b_in[14];
+    assign n74_adder = a_in[15]^b_in[15];
+
+    assign n73_adder = a_in[15]&amp;b_in[15];
+    assign n72_adder = a_in[16]^b_in[16];
+
+    assign n71_adder = a_in[16]&amp;b_in[16];
+    assign n70_adder = a_in[17]^b_in[17];
+
+    assign n69_adder = a_in[17]&amp;b_in[17];
+    assign n66_adder = a_in[18]^b_in[18];
+
+    assign n65_adder = a_in[18]&amp;b_in[18];
+    assign n64_adder = a_in[19]^b_in[19];
+
+    assign n63_adder = a_in[19]&amp;b_in[19];
+    assign n58_adder = a_in[20]^b_in[20];
+
+    assign n57_adder = a_in[20]&amp;b_in[20];
+    assign n56_adder = a_in[21]^b_in[21];
+
+    assign n55_adder = a_in[21]&amp;b_in[21];
+    assign n54_adder = a_in[22]^b_in[22];
+
+    assign n53_adder = a_in[22]&amp;b_in[22];
+    assign n42_adder = a_in[23]^b_in[23];
+
+    assign n41_adder = a_in[23]&amp;b_in[23];
+    assign n40_adder = a_in[24]^b_in[24];
+
+    assign n39_adder = a_in[24]&amp;b_in[24];
+    assign n38_adder = a_in[25]^b_in[25];
+
+    assign n37_adder = a_in[25]&amp;b_in[25];
+    assign n32_adder = a_in[26]^b_in[26];
+
+    assign n31_adder = a_in[26]&amp;b_in[26];
+    assign n30_adder = a_in[27]^b_in[27];
+
+    assign n29_adder = a_in[27]&amp;b_in[27];
+    assign n25_adder = a_in[28]^b_in[28];
+
+    assign n26_adder = a_in[28]&amp;b_in[28];
+    assign n24_adder = a_in[29]^b_in[29];
+
+    assign n23_adder = a_in[29]&amp;b_in[29];
+    assign n22_adder = a_in[30]^b_in[30];
+
+    assign n21_adder = a_in[30]&amp;b_in[30];
+    assign n18_adder = a_in[31]^b_in[31];
+
+    assign n17_adder = a_in[31]&amp;b_in[31];
+    assign n13_adder = a_in[32]^b_in[32];
+
+    assign n14_adder = ~(a_in[32]^b_in[32]);
+    assign w34 =  n81_adder| n82_adder;
+
+    assign n1_adder = n82_adder ? n4_adder : n3_adder;
+
+    assign n2_adder = w34  ? n4_adder : n3_adder;
+    assign w35 =  n43_adder| n44_adder;
+
+    assign n3_adder = n44_adder ? n6_adder : n5_adder;
+
+    assign n4_adder = w35  ? n6_adder : n5_adder;
+    assign w36 =  n33_adder| n34_adder;
+
+    assign n5_adder = n34_adder ? n8_adder : n7_adder;
+
+    assign n6_adder = w36  ? n8_adder : n7_adder;
+    assign w37 =  n27_adder| n28_adder;
+
+    assign n7_adder = n28_adder ? n10_adder : n9_adder;
+
+    assign n8_adder = w37  ? n10_adder : n9_adder;
+    assign w38 =  n25_adder| n26_adder;
+
+    assign n9_adder = n26_adder ? n12_adder : n11_adder;
+
+    assign n10_adder = w38  ? n12_adder : n11_adder;
+    assign w39 =  n15_adder| n16_adder;
+
+    assign n11_adder = n16_adder ? n14_adder : n13_adder;
+
+    assign n12_adder = w39  ? n14_adder : n13_adder;
+    assign n15_adder = n18_adder&amp;n20_adder;
+
+    assign n16_adder = (n19_adder&amp;n18_adder)|n17_adder;
+    assign n20_adder = n22_adder&amp;n24_adder;
+
+    assign n19_adder = (n23_adder&amp;n22_adder)|n21_adder;
+    assign n27_adder = n30_adder&amp;n32_adder;
+
+    assign n28_adder = (n31_adder&amp;n30_adder)|n29_adder;
+    assign n33_adder = n36_adder&amp;n42_adder;
+
+    assign n34_adder = (n41_adder&amp;n36_adder)|n35_adder;
+    assign n36_adder = n38_adder&amp;n40_adder;
+
+    assign n35_adder = (n39_adder&amp;n38_adder)|n37_adder;
+    assign n43_adder = n46_adder&amp;n76_adder;
+
+    assign n44_adder = (n75_adder&amp;n46_adder)|n45_adder;
+    assign n46_adder = n48_adder&amp;n74_adder;
+
+    assign n45_adder = (n73_adder&amp;n48_adder)|n47_adder;
+    assign n48_adder = n50_adder&amp;n60_adder;
+
+    assign n47_adder = (n59_adder&amp;n50_adder)|n49_adder;
+    assign n50_adder = n52_adder&amp;n58_adder;
+
+    assign n49_adder = (n57_adder&amp;n52_adder)|n51_adder;
+    assign n52_adder = n54_adder&amp;n56_adder;
+
+    assign n51_adder = (n55_adder&amp;n54_adder)|n53_adder;
+    assign n60_adder = n62_adder&amp;n68_adder;
+
+    assign n59_adder = (n67_adder&amp;n62_adder)|n61_adder;
+    assign n62_adder = n64_adder&amp;n66_adder;
+
+    assign n61_adder = (n65_adder&amp;n64_adder)|n63_adder;
+    assign n68_adder = n70_adder&amp;n72_adder;
+
+    assign n67_adder = (n71_adder&amp;n70_adder)|n69_adder;
+    assign n76_adder = n78_adder&amp;n80_adder;
+
+    assign n75_adder = (n79_adder&amp;n78_adder)|n77_adder;
+    assign n81_adder = n84_adder&amp;n94_adder;
+
+    assign n82_adder = (n93_adder&amp;n84_adder)|n83_adder;
+    assign n84_adder = n86_adder&amp;n88_adder;
+
+    assign n83_adder = (n87_adder&amp;n86_adder)|n85_adder;
+    assign n88_adder = n90_adder&amp;n92_adder;
+
+    assign n87_adder = (n91_adder&amp;n90_adder)|n89_adder;
+    assign n94_adder = n96_adder&amp;n98_adder;
+
+    assign n93_adder = (n97_adder&amp;n96_adder)|n95_adder;
+    assign n98_adder = n100_adder&amp;n102_adder;
+
+    assign n97_adder = (n101_adder&amp;n100_adder)|n99_adder;
+    assign n102_adder = n104_adder&amp;n110_adder;
+
+    assign n101_adder = (n109_adder&amp;n104_adder)|n103_adder;
+    assign n104_adder = n106_adder&amp;n108_adder;
+
+    assign n103_adder = (n107_adder&amp;n106_adder)|n105_adder;
+    assign n0 = n113_adder&amp;n115_adder;
+
+    assign n111_adder = (n114_adder&amp;n113_adder)|n112_adder;
+    assign n115_adder = n117_adder&amp;n127_adder;
+
+    assign n114_adder = (n126_adder&amp;n117_adder)|n116_adder;
+    assign n117_adder = n119_adder&amp;n121_adder;
+
+    assign n116_adder = (n120_adder&amp;n119_adder)|n118_adder;
+    assign n121_adder = n123_adder&amp;n125_adder;
+
+    assign n120_adder = (n124_adder&amp;n123_adder)|n122_adder;
+
+endmodule // adder
+</pre></div></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../src/tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="forest_demo.html" class="btn btn-neutral float-right" title="Forests [structures that generate the entire result]" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

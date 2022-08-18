@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brief theory of addition &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Traditional hardware addition" href="traditional_addition.html" />
+    <link rel="prev" title="Theory and Discussion" href="../src/theory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Brief theory of addition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Importance">Importance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Breakdown-of-addition">Breakdown of addition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Brief-theory-of-arithmetic-operations">Brief theory of arithmetic operations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Arithmetic-computation-in-logarithmic-time">Arithmetic computation in logarithmic time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#How-many-ways-can-you-associate-an-expression?">How many ways can you associate an expression?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#What-is-■?">What is ■?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Why-is-this-huge-design-space-relevant-at-all?">Why is this huge design space relevant at all?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Wait,-what-about-the-local-component??">Wait, what about the local component??</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html">Traditional hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="traditional_addition.html#Revised-hardware-addition">Revised hardware addition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparseness.html">Adder-specific optimizations [Sparseness]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="factorization.html">Adder-specific optimizations [Factorization]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tree_traversal.html">Sample traversal through the space of binary trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html">Logical synthesis of general hardware operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-addition-based-comparator">Possible expansion: addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-non-addition-based-comparator">Possible expansion: non addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-adding-a-constant-value">Possible expansion: adding a constant value</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/theory.html">Theory and Discussion</a> &raquo;</li>
+      <li>Brief theory of addition</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/adder_theory.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/adder_theory.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Brief-theory-of-addition">
+<h1>Brief theory of addition<a class="headerlink" href="#Brief-theory-of-addition" title="Permalink to this heading">¶</a></h1>
+<section id="Importance">
+<h2>Importance<a class="headerlink" href="#Importance" title="Permalink to this heading">¶</a></h2>
+<p>Binary addition is one of the most used and important operations in computing. For example, when booting a RISC-V processor into Linux over 2/3rds of the assembly instructions will use addition in some manner.</p>
+<p>Circuit design involves trade-offs, typically phrased in terms of power vs performance (speed) vs area. Circuits can be very fast and power-hungry, very slow and power-efficient, or anywhere in between.</p>
+<p>Moreso, these trade-offs occur on a bit-by-bit basis. If a circuit generates a 64-bit result, each bit of the result can be optimized for power, speed, or area. Often this becomes essential, as some bits must be processed faster than others.</p>
+<p>Thus, optimizing adder hardware affects entire designs.</p>
+</section>
+<section id="Breakdown-of-addition">
+<h2>Breakdown of addition<a class="headerlink" href="#Breakdown-of-addition" title="Permalink to this heading">¶</a></h2>
+<p>Binary addition has a “local” and “non-local” component. A proper explanation of this concept involves exact sequences and cohomology groups. Fortunately for you, I am not familiar enough with that math to bore you with a technical explanation.</p>
+<p>Take the following example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>  999 999 +
+  000 001
+  _______
+1 000 000
+</pre></div>
+</div>
+<p>Each digit of the sum depends “locally” on the corresponding digits of each input. But all digits of the sum also depend “non-locally” on all digits to the right. The <span class="math notranslate nohighlight">\(1\)</span> on the far right affects even the left-most digit of the result. It is impossible for a general circuit to compute the correct answer without accounting for that <span class="math notranslate nohighlight">\(1\)</span>.</p>
+<p>In math terms, for <span class="math notranslate nohighlight">\(s = a+b\)</span>, the digit <span class="math notranslate nohighlight">\(s_i\)</span> depends locally on <span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(b_i\)</span>, and non-locally on all <span class="math notranslate nohighlight">\(a_j, b_j\)</span> where <span class="math notranslate nohighlight">\(i &gt; j\)</span>.</p>
+<p>The local aspect of binary addition can be resolved in parallel, in a single time-step, for every digit. Again, <span class="math notranslate nohighlight">\(s_i\)</span> depends locally only on <span class="math notranslate nohighlight">\(a_i\)</span> and <span class="math notranslate nohighlight">\(b_i\)</span>. For an <span class="math notranslate nohighlight">\(n\)</span>-bit adder, just instantiate <span class="math notranslate nohighlight">\(n\)</span> copies of the hardware, and process all bits of <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span> at the same time.</p>
+<p>The non-local aspect is more complex. This is what is known as the “carry”. Overflow from one pair of digits may affect the next pair of digits. The naïve grade-school implementation of adding one digit at a time and “carrying over the one” uses <span class="math notranslate nohighlight">\(n\)</span> time-steps. Speeding it up by doing two digits at a time can reduce that to <span class="math notranslate nohighlight">\(n/2\)</span> time-steps, but that’s still <strong>O(n)</strong>.</p>
+<p><strong>O(n)</strong> is very slow. <strong>O(lg n)</strong> on the other hand is both fast and achievable.</p>
+</section>
+<section id="Brief-theory-of-arithmetic-operations">
+<h2>Brief theory of arithmetic operations<a class="headerlink" href="#Brief-theory-of-arithmetic-operations" title="Permalink to this heading">¶</a></h2>
+<section id="Arithmetic-computation-in-logarithmic-time">
+<h3>Arithmetic computation in logarithmic time<a class="headerlink" href="#Arithmetic-computation-in-logarithmic-time" title="Permalink to this heading">¶</a></h3>
+<p>An extensive body of literature provides a three-step recipe for speeding up non-local aspects of a computation.</p>
+<ol class="arabic simple">
+<li><p>Express the non-local computation of digit <span class="math notranslate nohighlight">\(i\)</span> as $Y_i = X_i ■ Y_{i-1} $. <span class="math notranslate nohighlight">\(Y\)</span> is the output, <span class="math notranslate nohighlight">\(X\)</span> is the input, <span class="math notranslate nohighlight">\(■\)</span> is some pre-determined operator.</p></li>
+<li><p>Expand: <span class="math notranslate nohighlight">\(Y_i = X_i ■ X_{i-1} ■ X_{i-2} ■ \dots X_0\)</span>. Clearly this is a non-local computation: every output depends on all previous inputs, in some manner that is determined by <span class="math notranslate nohighlight">\(■\)</span>.</p></li>
+<li><p>Associate: <span class="math notranslate nohighlight">\(Y_i = (X_i ■ X_{i-1}) ■ (X_{i-2} ■ \dots X_0)\)</span></p></li>
+</ol>
+<p>The expression in step #2 takes <span class="math notranslate nohighlight">\(i-1\)</span> steps. The expression in step #3 can take anywhere from <span class="math notranslate nohighlight">\(lg(i)\)</span> to <span class="math notranslate nohighlight">\(i-1\)</span> steps, depending on how association is performed.</p>
+<p>For a concrete example, compare the following 7-step operation:</p>
+<p><span class="math notranslate nohighlight">\(Y_7 = X_7 ■ (X_6 ■ (X_5 ■ (X_4 ■ (X_3 ■ (X_2 ■ (X_1 ■ X_0))))))\)</span></p>
+<p>To a 3-step alternative:</p>
+<p><span class="math notranslate nohighlight">\(Y_7 = (((X_7 ■ X_6) ■ (X_5 ■ X_4)) ■ ((X_3 ■ X_2) ■ (X_1 ■ X_0)))\)</span></p>
+<p>The first formula performs all operations sequentially. The second formula is parallelized, and MUCH faster.</p>
+</section>
+<section id="How-many-ways-can-you-associate-an-expression?">
+<h3>How many ways can you associate an expression?<a class="headerlink" href="#How-many-ways-can-you-associate-an-expression?" title="Permalink to this heading">¶</a></h3>
+<p>An expression of <span class="math notranslate nohighlight">\(n\)</span> terms such as the one above can be associated in <span class="math notranslate nohighlight">\(C_n\)</span> ways, where <span class="math notranslate nohighlight">\(C\)</span> represents the Catalan numbers.</p>
+<p>What else do the Catalan numbers represent? The number of ways different ways to draw a binary tree with <span class="math notranslate nohighlight">\(n+1\)</span> leafs.</p>
+<p>That means that all such arithmetic circuits can be mapped to and from binary trees.</p>
+<p>See the <a class="reference external" href="tree_traversal.html">binary tree space traversal notebook</a> for further discussion.</p>
+</section>
+<section id="What-is-■?">
+<h3>What is ■?<a class="headerlink" href="#What-is-■?" title="Permalink to this heading">¶</a></h3>
+<p>There’s a simple recipe to determine ■ for any arithmetic operation. It is further discussed in the <a class="reference external" href="hardware_operations.html">general operation theory notebook</a>.</p>
+<p>Here is ■ for addition, shown as a CMOS logic schematic:</p>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/adder_prefix_operator.png" />
+</section>
+<section id="Why-is-this-huge-design-space-relevant-at-all?">
+<h3>Why is this huge design space relevant at all?<a class="headerlink" href="#Why-is-this-huge-design-space-relevant-at-all?" title="Permalink to this heading">¶</a></h3>
+<p>In software, a balanced tree with <span class="math notranslate nohighlight">\(lg(n)\)</span> height is often optimal. In hardware, the sacrifices needed to balance a tree to <span class="math notranslate nohighlight">\(lg(n)\)</span> height can outweigh the benefits. Sometimes it is actually faster to use a circuit that performs more sequential operations back-to-back.</p>
+<p>Key concepts that hardware, unlike software, must account for are fan-out (given an output, how many inputs does it connect to?) and cross-coupling capacitance (parallel wires carrying electrical signals will mutually degrade each others’ performance). Both of these effects will severely degrade a circuit’s performance, turning what would otherwise be an easy design choice into a complex design space.</p>
+<p>Meanwhile, a concept that hardware and software share in-common is the trade-off between time complexity and space complexity. Let us say that a software engineer is given the choice between a software algorithm with <strong>O(n)</strong> time complexity and <strong>O(n)</strong> space complexity, and an algorithm with <strong>O(lg n)</strong> time complexity and <strong>O(n lg(n))</strong> space complexity. The sofware engineer may give it some thought, but ultimately the choice doesn’t matter very much on modern hardware.</p>
+<p>For a hardware engineer though, the difference between <strong>O(n)</strong> space complexity and <strong>O(n lg(n))</strong> space complexity may be the difference between a working chip and a useless space heater.</p>
+<p>This is illustrated in more detail in the <a class="reference external" href="traditional_addition.html">notebook</a> comparing traditional hardware addition to revised hardware addition.</p>
+</section>
+<section id="Wait,-what-about-the-local-component??">
+<h3>Wait, what about the local component??<a class="headerlink" href="#Wait,-what-about-the-local-component??" title="Permalink to this heading">¶</a></h3>
+<p>The local component of any arithmetic operation can also be determined from a simple recipe.</p>
+<p>It is less interesting than the non-local component. Fully parallelizing it is trivial: simply instantiate <span class="math notranslate nohighlight">\(n\)</span> copies of the hardware and perform all the local computations in parallel in a single time-step.</p>
+<p>Typically the local component is calculated separately, then combined with the non-local component at the very end of the operation to yield the final result.</p>
+<p>Here is the local component for addition, expressed as a CMOS logic schematic.</p>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/adder_local.png" />
+<p>Once both the local and non-local components have been computed, they are combined to obtain the final answer.</p>
+<p>In general, this final composition takes the form of an if-then statement (some fashion of multiplexer gate).</p>
+<p>For addition in particular, this final composition happens to use the same type of gate as the one seen above.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../src/theory.html" class="btn btn-neutral float-left" title="Theory and Discussion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="traditional_addition.html" class="btn btn-neutral float-right" title="Traditional hardware addition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

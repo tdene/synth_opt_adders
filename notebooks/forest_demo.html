@@ -1,0 +1,3036 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forests [structures that generate the entire result] &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Theory and Discussion" href="../src/theory.html" />
+    <link rel="prev" title="Trees [structures that generate one bit of the result]" href="tree_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tree_demo.html">Trees [structures that generate one bit of the result]</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Forests [structures that generate the entire result]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)">Setup (RUN ME before executing any code in this section)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Generating-a-classic-structure-[LEGACY]">Generating a classic structure [LEGACY]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#How-many-possible-forests-are-there?">How many possible forests are there?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-do-these-forests-look-like?">What do these forests look like?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#How-do-I-get-the-forest-that-I-want?">How do I get the forest that I want?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Okay,-I-have-a-forest.-How-do-I-make-it-faster?">Okay, I have a forest. How do I make it faster?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Okay,-now-how-do-I-make-a-forest-more-power-efficient?-Or-smaller?">Okay, now how do I make a forest more power-efficient? Or smaller?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-about-fan-out-decoupling-/-buffer-insertion?">What about fan-out decoupling / buffer insertion?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#But-wait!-Buffer-insertion-is-the-whole-point-of-important-classic-structures-such-as-Brent-Kung!">But wait! Buffer insertion is the whole point of important classic structures such as Brent-Kung!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Buffer-insertion-using-this-library">Buffer insertion using this library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Obtaining-an-HDL-description">Obtaining an HDL description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/tutorial.html">Tutorial</a> &raquo;</li>
+      <li>Forests [structures that generate the entire result]</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/forest_demo.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/tree_demo.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Forests-[structures-that-generate-the-entire-result]">
+<h1>Forests [structures that generate the entire result]<a class="headerlink" href="#Forests-[structures-that-generate-the-entire-result]" title="Permalink to this heading">¶</a></h1>
+<section id="Setup-(RUN-ME-before-executing-any-code-in-this-section)">
+<h2>Setup (RUN ME before executing any code in this section)<a class="headerlink" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install --upgrade git+https://github.com/tdene/synth_opt_adders.git@v1.0.5
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Collecting git+https://github.com/tdene/synth_opt_adders.git@v1.0.5
+  Cloning https://github.com/tdene/synth_opt_adders.git (to revision v1.0.5) to /tmp/pip-req-build-b6dtl5ix
+  Running command git clone -q https://github.com/tdene/synth_opt_adders.git /tmp/pip-req-build-b6dtl5ix
+  Running command git checkout -q cbf5e7e8d9b501bb501fefdd463f1ff3b9644a60
+Requirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (2.6.3)
+Requirement already satisfied: pydot in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (1.3.0)
+Requirement already satisfied: graphviz in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (0.10.1)
+Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from pptrees==1.0.5) (7.1.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /usr/local/lib/python3.7/dist-packages (from pydot-&gt;pptrees==1.0.5) (3.0.9)
+Building wheels for collected packages: pptrees
+  Building wheel for pptrees (setup.py) ... done
+  Created wheel for pptrees: filename=pptrees-1.0.5-py3-none-any.whl size=61676 sha256=70d579f4abaf34513e5953ff6619bd02d973061273e993cccbc1defe6825c4b3
+  Stored in directory: /tmp/pip-ephem-wheel-cache-yb5o7368/wheels/c6/3a/84/a6f13e63cee175e7643641f543504123889d15ad88285c95db
+Successfully built pptrees
+Installing collected packages: pptrees
+Successfully installed pptrees-1.0.5
+</pre></div></div>
+</div>
+</section>
+<section id="Generating-a-classic-structure-[LEGACY]">
+<h2>Generating a classic structure [LEGACY]<a class="headerlink" href="#Generating-a-classic-structure-[LEGACY]" title="Permalink to this heading">¶</a></h2>
+<p>Note: these cells are shown simply for illustrative purposes. The functionality in this section is legacy, supported only for backwards compatibility with past diagrams and methods. The code in this section should not be used in production.</p>
+<p>The theory section discusses four classic, regular, structures. These architectures can be readily generated under this library using aliases. Note again that the “alias” parameter is legacy, supported only for backwards compatibility, and should not actually be used.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = &quot;ripple-carry&quot;)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_6_0.png" src="../_images/notebooks_forest_demo_6_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = &quot;sklansky&quot;)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_7_0.png" src="../_images/notebooks_forest_demo_7_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = &quot;kogge-stone&quot;)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_8_0.png" src="../_images/notebooks_forest_demo_8_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+width = 9
+f = forest(width, alias = &quot;brent-kung&quot;)
+f.unmark_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_9_0.png" src="../_images/notebooks_forest_demo_9_0.png" />
+</div>
+</div>
+</section>
+<section id="How-many-possible-forests-are-there?">
+<h2>How many possible forests are there?<a class="headerlink" href="#How-many-possible-forests-are-there?" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.util import catalan
+
+width = 9
+number_of_forests = 1
+for a in range(width):
+  number_of_forests = number_of_forests * catalan(a)
+print(number_of_forests)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+476150875200
+</pre></div></div>
+</div>
+</section>
+<section id="What-do-these-forests-look-like?">
+<h2>What do these forests look like?<a class="headerlink" href="#What-do-these-forests-look-like?" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_13_1.png" src="../_images/notebooks_forest_demo_13_1.png" />
+</div>
+</div>
+</section>
+<section id="How-do-I-get-the-forest-that-I-want?">
+<h2>How do I get the forest that I want?<a class="headerlink" href="#How-do-I-get-the-forest-that-I-want?" title="Permalink to this heading">¶</a></h2>
+<p>There are two, equivalent, ways to initialize a forest:</p>
+<ol class="arabic simple">
+<li><p>Obtain a list of tree IDs, and use them to initialize the forest</p></li>
+<li><p>Obtain a list of trees, and use them to initialize the forest</p></li>
+</ol>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Method 1
+from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_16_1.png" src="../_images/notebooks_forest_demo_16_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Method 2
+from pptrees.AdderForest import AdderForest as forest
+from pptrees.AdderTree import AdderTree as tree
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+
+list_of_trees = []
+list_of_trees.append(tree(1, start_point = 0))
+list_of_trees.append(tree(2, start_point = 0))
+list_of_trees.append(tree(3, start_point = 0))
+list_of_trees.append(tree(4, start_point = 2))
+list_of_trees.append(tree(5, start_point = 5))
+list_of_trees.append(tree(6, start_point = 37))
+list_of_trees.append(tree(7, start_point = 74))
+list_of_trees.append(tree(8, start_point = 214))
+list_of_trees.append(tree(9, start_point = 214))
+
+f = forest(width, initialized_trees = list_of_trees)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_17_1.png" src="../_images/notebooks_forest_demo_17_1.png" />
+</div>
+</div>
+</section>
+<section id="Okay,-I-have-a-forest.-How-do-I-make-it-faster?">
+<h2>Okay, I have a forest. How do I make it faster?<a class="headerlink" href="#Okay,-I-have-a-forest.-How-do-I-make-it-faster?" title="Permalink to this heading">¶</a></h2>
+<p>In short, this can be achieved by making the underlying trees faster.</p>
+<p>There is no hard rule for how this can be achieved. In general, here are some tips:</p>
+<ul class="simple">
+<li><p>Reducing logic levels increases speed (at the cost of fanout and tracks)</p></li>
+<li><p>Reducing fanout increases speed (at the cost of logic levels and tracks)</p></li>
+<li><p>Reducing tracks increases speed (at the cost of logic levels and fanout)</p></li>
+</ul>
+<p>Typically these three parameters affect delay in the order in which they are listed above, though that is not always the case.</p>
+<p>Let’s look at the previous forest example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_21_1.png" src="../_images/notebooks_forest_demo_21_1.png" />
+</div>
+</div>
+<p>Tree 5 (the 6th frame) is very unbalanced. Let’s take a closer look.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[5]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_23_0.png" src="../_images/notebooks_forest_demo_23_0.png" />
+</div>
+</div>
+<p>Let’s reduce its height.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[5].left_rotate(f[5].root[0][0][1])
+f[5].right_rotate(f[5].root[0][0])
+f[5].right_shift(f[5].root[0][1])
+f[5]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_25_0.png" src="../_images/notebooks_forest_demo_25_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_26_0.png" src="../_images/notebooks_forest_demo_26_0.png" />
+</div>
+</div>
+</section>
+<section id="Okay,-now-how-do-I-make-a-forest-more-power-efficient?-Or-smaller?">
+<h2>Okay, now how do I make a forest more power-efficient? Or smaller?<a class="headerlink" href="#Okay,-now-how-do-I-make-a-forest-more-power-efficient?-Or-smaller?" title="Permalink to this heading">¶</a></h2>
+<p>This can be achieved by making the individual trees in the forest share more nodes.</p>
+<p>In general, the further to the left a node is, the more likely it is to be shared. Nodes on the right spine can never be shared.</p>
+<p>Let’s look at the previous forest example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+f[5].left_rotate(f[5].root[0][0][1])
+f[5].right_rotate(f[5].root[0][0])
+f[5].right_shift(f[5].root[0][1])
+f.find_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_29_1.png" src="../_images/notebooks_forest_demo_29_1.png" />
+</div>
+</div>
+<p>Tne nodes that have been painted partially red are duplicates that need not be implemented in hardware. In other words, they are redundant copies of shared nodes. This is merely cosmetic, intended to serve as a visual indicator.</p>
+<p>Note that the very last frame of the shot has no such red-marked nods. Shared nodes only need to be implemented in hardware once, but they still need to be implemented that one time.</p>
+<p>Most of the normal recurrence nodes used in the forest are already shared. However, the nodes on the left spine can never be shared. The left spine represents the combination of local and non-local aspects of the operation of binary addition. Each tree has its own unique local aspect.</p>
+<p>Thus, one effective way to reduce the area and power consumption of the design is to move nodes off of the left spine.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[6]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_32_0.png" src="../_images/notebooks_forest_demo_32_0.png" />
+</div>
+</div>
+<p>This seems as good of a candidate for rotation as any.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f.reset_equivalent_nodes()
+f[6].right_rotate(f[6].root[0])
+f[6].left_rotate(f[6].root[1][1])
+f.find_equivalent_nodes()
+f[6]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_34_0.png" src="../_images/notebooks_forest_demo_34_0.png" />
+</div>
+</div>
+<p>Success! Area has been reduced by two nodes, which in this adder represents about a 6% improvement in area, and likely in power consumption as well.</p>
+<p>Unfortunately, this modification has increased the fanout on the critical path, slowing down the maximum achievable speed of the design.</p>
+</section>
+<section id="What-about-fan-out-decoupling-/-buffer-insertion?">
+<h2>What about fan-out decoupling / buffer insertion?<a class="headerlink" href="#What-about-fan-out-decoupling-/-buffer-insertion?" title="Permalink to this heading">¶</a></h2>
+<p>Fan-out decoupling, or buffer insertion, is a very important concept in hardware design. If a cell is driving 16 outputs, it could instead be made to drive 4 buffers, each of which drive 4 outputs of their own. Reducing fanout intelligently can improve the speed of a design, even while adding cells onto the circuit’s timing paths.</p>
+<p>Buffer insertion, or fanout decoupling, is not an inherent feature of logically synthesized hardware. It is a layout optimization to be performed after logical synthesis.</p>
+<section id="But-wait!-Buffer-insertion-is-the-whole-point-of-important-classic-structures-such-as-Brent-Kung!">
+<h3>But wait! Buffer insertion is the whole point of important classic structures such as Brent-Kung!<a class="headerlink" href="#But-wait!-Buffer-insertion-is-the-whole-point-of-important-classic-structures-such-as-Brent-Kung!" title="Permalink to this heading">¶</a></h3>
+<p>This is a Brent-Kung adder without buffer insertion:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 17
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width)
+for t in f.trees[2:]:
+  t.rbalance(t.root[1])
+  while not t.root[1][0].is_proper():
+    t.right_rotate(t.root[1][0])
+f.find_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 17 are [0, 0, 1, 4, 13, 41, 131, 428, 1429, 4861, 16795, 58785, 208011, 742899, 2674439, 9694844, 35357669]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_40_1.png" src="../_images/notebooks_forest_demo_40_1.png" />
+</div>
+</div>
+<p>This is a Brent-Kung adder with buffer insertion:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 17
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width)
+for t in f.trees[2:]:
+  t.rbalance(t.root[1])
+  while not t.root[1][0].is_proper():
+    t.right_rotate(t.root[1][0])
+f.find_equivalent_nodes()
+f.calculate_fanout()
+f.calculate_tracks()
+f.decouple_all_fanout(maximum_fanout = 2)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 17 are [0, 0, 1, 4, 13, 41, 131, 428, 1429, 4861, 16795, 58785, 208011, 742899, 2674439, 9694844, 35357669]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_42_1.png" src="../_images/notebooks_forest_demo_42_1.png" />
+</div>
+</div>
+<p>The buffers are not the core benefit of Brent-Kung. The shared nodes are. Despite much personal misgiving, I have decided to accept the fact that buffer insertion is a post-production step, not an integral part of the tree structure. This point can be argued for a long time, but this is not the platform.</p>
+</section>
+<section id="Buffer-insertion-using-this-library">
+<h3>Buffer insertion using this library<a class="headerlink" href="#Buffer-insertion-using-this-library" title="Permalink to this heading">¶</a></h3>
+<p>Buffer insertion can be readily performed through the insert_buffer and remove_buffer methods.</p>
+<p>Let’s look at the previous example.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+f[5].left_rotate(f[5].root[0][0][1])
+f[5].right_rotate(f[5].root[0][0])
+f[5].right_shift(f[5].root[0][1])
+f[6].right_rotate(f[6].root[0])
+f[6].left_rotate(f[6].root[1][1])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_47_1.png" src="../_images/notebooks_forest_demo_47_1.png" />
+</div>
+</div>
+<p>There is clearly a lot of fanout on the node that combines gp[1] with gp[0]. Let us reduce it through buffer insertion.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[4]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_49_0.png" src="../_images/notebooks_forest_demo_49_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[4].insert_buffer(f[4].root[1][1])
+f[4]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_50_0.png" src="../_images/notebooks_forest_demo_50_0.png" />
+</div>
+</div>
+<p>A convenient short-hand is also provided in the form of the decouple_fanout method. This method takes as argument a node whose output has fanout, and a tree chosen as a sacrifice. It then decouples the node’s fanout by inserting a buffer into the chosen [STRIKEOUT:tribute] tree.</p>
+<p>This does require that the calculate_fanout method be executed first.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f[2]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_52_0.png" src="../_images/notebooks_forest_demo_52_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f.calculate_fanout()
+f.unmark_equivalent_nodes()
+f.decouple_fanout(f[8].root[1][1][1],f[2])
+f[2]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_forest_demo_53_0.png" src="../_images/notebooks_forest_demo_53_0.png" />
+</div>
+</div>
+</section>
+<section id="Obtaining-an-HDL-description">
+<h3>Obtaining an HDL description<a class="headerlink" href="#Obtaining-an-HDL-description" title="Permalink to this heading">¶</a></h3>
+<p>A basic HDL file can be obtained very simply, using the hdl()</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+_ = f.hdl(&quot;adder1.v&quot;, module_name=&quot;adder1&quot;)
+
+!cat adder1.v
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+
+module adder1(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output [8:0] sum
+        );
+
+
+        adder1_tree_8 U0(
+                .a_in(a_in[8:0]),
+                .b_in(b_in[8:0]),
+                .sum(sum[8])
+        );
+
+        adder1_tree_7 U1(
+                .a_in(a_in[7:0]),
+                .b_in(b_in[7:0]),
+                .sum(sum[7])
+        );
+
+        adder1_tree_6 U2(
+                .a_in(a_in[6:0]),
+                .b_in(b_in[6:0]),
+                .sum(sum[6])
+        );
+
+        adder1_tree_5 U3(
+                .a_in(a_in[5:0]),
+                .b_in(b_in[5:0]),
+                .sum(sum[5])
+        );
+
+        adder1_tree_4 U4(
+                .a_in(a_in[4:0]),
+                .b_in(b_in[4:0]),
+                .sum(sum[4])
+        );
+
+        adder1_tree_3 U5(
+                .a_in(a_in[3:0]),
+                .b_in(b_in[3:0]),
+                .sum(sum[3])
+        );
+
+        adder1_tree_2 U6(
+                .a_in(a_in[2:0]),
+                .b_in(b_in[2:0]),
+                .sum(sum[2])
+        );
+
+        adder1_tree_1 U7(
+                .a_in(a_in[1:0]),
+                .b_in(b_in[1:0]),
+                .sum(sum[1])
+        );
+
+        adder1_tree_0 U8(
+                .a_in(a_in[0]),
+                .b_in(b_in[0]),
+                .sum(sum[0])
+        );
+endmodule // adder1
+
+module adder1_tree_0(
+
+        input  a_in,
+        input  b_in,
+        output  sum
+        );
+
+// adder_forest tree_0
+        wire n1_tree_0;
+        assign sum = n1_tree_0;
+    assign n1_tree_0 = a_in^b_in;
+
+endmodule // adder1_tree_0
+
+module adder1_tree_1(
+
+        input [1:0] a_in,
+        input [1:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_1
+        wire n4_tree_1, n5_tree_1;
+    assign n4_tree_1 = a_in[0]&amp;b_in[0];
+    assign sum = n4_tree_1^n5_tree_1;
+    assign n5_tree_1 = a_in[1]^b_in[1];
+
+endmodule // adder1_tree_1
+
+module adder1_tree_2(
+
+        input [2:0] a_in,
+        input [2:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_2
+        wire n4_tree_2, n5_tree_2, n8_tree_2, n9_tree_2, n10_tree_2;
+    assign n5_tree_2 = a_in[1]^b_in[1];
+
+    assign n4_tree_2 = a_in[1]&amp;b_in[1];
+    assign n8_tree_2 = (n9_tree_2&amp;n5_tree_2)|n4_tree_2;
+    assign n9_tree_2 = a_in[0]&amp;b_in[0];
+    assign sum = n8_tree_2^n10_tree_2;
+    assign n10_tree_2 = a_in[2]^b_in[2];
+
+endmodule // adder1_tree_2
+
+module adder1_tree_3(
+
+        input [3:0] a_in,
+        input [3:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_3
+        wire n3_tree_3, n4_tree_3, n5_tree_3, n6_tree_3, n8_tree_3, n9_tree_3, n12_tree_3, n13_tree_3, n14_tree_3, n15_tree_3;
+    assign sum = n12_tree_3 ? n15_tree_3 : n14_tree_3;
+    assign n9_tree_3 = a_in[1]^b_in[1];
+
+    assign n8_tree_3 = a_in[1]&amp;b_in[1];
+    assign n5_tree_3 = a_in[2]^b_in[2];
+
+    assign n6_tree_3 = a_in[2]&amp;b_in[2];
+    assign n3_tree_3 = a_in[3]^b_in[3];
+
+    assign n4_tree_3 = ~(a_in[3]^b_in[3]);
+    assign n12_tree_3 = (n13_tree_3&amp;n9_tree_3)|n8_tree_3;
+    assign n13_tree_3 = a_in[0]&amp;b_in[0];
+    assign n14_tree_3 = n6_tree_3 ? n4_tree_3 : n3_tree_3;
+
+    assign n15_tree_3 = n5_tree_3 ? n4_tree_3 : n3_tree_3;
+
+endmodule // adder1_tree_3
+
+module adder1_tree_4(
+
+        input [4:0] a_in,
+        input [4:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_4
+        wire n3_tree_4, n4_tree_4, n5_tree_4, n6_tree_4, n8_tree_4, n9_tree_4, n12_tree_4, n13_tree_4, n16_tree_4, n17_tree_4, n18_tree_4, n19_tree_4, n20_tree_4;
+    assign sum = n16_tree_4 ? n20_tree_4 : n19_tree_4;
+    assign n13_tree_4 = a_in[1]^b_in[1];
+
+    assign n12_tree_4 = a_in[1]&amp;b_in[1];
+    assign n9_tree_4 = a_in[2]^b_in[2];
+
+    assign n8_tree_4 = a_in[2]&amp;b_in[2];
+    assign n5_tree_4 = a_in[3]^b_in[3];
+
+    assign n6_tree_4 = a_in[3]&amp;b_in[3];
+    assign n3_tree_4 = a_in[4]^b_in[4];
+
+    assign n4_tree_4 = ~(a_in[4]^b_in[4]);
+    assign n16_tree_4 = (n17_tree_4&amp;n9_tree_4)|n8_tree_4;
+    assign n17_tree_4 = (n18_tree_4&amp;n13_tree_4)|n12_tree_4;
+    assign n18_tree_4 = a_in[0]&amp;b_in[0];
+    assign n19_tree_4 = n6_tree_4 ? n4_tree_4 : n3_tree_4;
+
+    assign n20_tree_4 = n5_tree_4 ? n4_tree_4 : n3_tree_4;
+
+endmodule // adder1_tree_4
+
+module adder1_tree_5(
+
+        input [5:0] a_in,
+        input [5:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_5
+        wire n3_tree_5, n4_tree_5, n5_tree_5, n6_tree_5, n7_tree_5, n8_tree_5, n9_tree_5, n10_tree_5, n11_tree_5, n12_tree_5, n13_tree_5, n14_tree_5, n15_tree_5, n16_tree_5, n17_tree_5, n18_tree_5, n20_tree_5, n21_tree_5, n22_tree_5;
+    assign sum = n20_tree_5 ? n22_tree_5 : n21_tree_5;
+    assign n17_tree_5 = a_in[1]^b_in[1];
+
+    assign n18_tree_5 = a_in[1]&amp;b_in[1];
+    assign n16_tree_5 = a_in[2]^b_in[2];
+
+    assign n15_tree_5 = a_in[2]&amp;b_in[2];
+    assign n14_tree_5 = a_in[3]^b_in[3];
+
+    assign n13_tree_5 = a_in[3]&amp;b_in[3];
+    assign n10_tree_5 = a_in[4]^b_in[4];
+
+    assign n9_tree_5 = a_in[4]&amp;b_in[4];
+    assign n5_tree_5 = a_in[5]^b_in[5];
+
+    assign n6_tree_5 = ~(a_in[5]^b_in[5]);
+    assign w6 =  n7_tree_5| n8_tree_5;
+
+    assign n3_tree_5 = n8_tree_5 ? n6_tree_5 : n5_tree_5;
+
+    assign n4_tree_5 = w6  ? n6_tree_5 : n5_tree_5;
+    assign n7_tree_5 = n10_tree_5&amp;n12_tree_5;
+
+    assign n8_tree_5 = (n11_tree_5&amp;n10_tree_5)|n9_tree_5;
+    assign n12_tree_5 = n14_tree_5&amp;n16_tree_5;
+
+    assign n11_tree_5 = (n15_tree_5&amp;n14_tree_5)|n13_tree_5;
+    assign n20_tree_5 = a_in[0]&amp;b_in[0];
+    assign n21_tree_5 = n18_tree_5 ? n4_tree_5 : n3_tree_5;
+
+    assign n22_tree_5 = n17_tree_5 ? n4_tree_5 : n3_tree_5;
+
+endmodule // adder1_tree_5
+
+module adder1_tree_6(
+
+        input [6:0] a_in,
+        input [6:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_6
+        wire n7_tree_6, n8_tree_6, n9_tree_6, n10_tree_6, n11_tree_6, n12_tree_6, n13_tree_6, n14_tree_6, n16_tree_6, n17_tree_6, n20_tree_6, n21_tree_6, n24_tree_6, n25_tree_6, n26_tree_6, n27_tree_6, n28_tree_6, n29_tree_6, n30_tree_6, n31_tree_6, n32_tree_6;
+    assign sum = n24_tree_6 ? n28_tree_6 : n27_tree_6;
+    assign n21_tree_6 = a_in[1]^b_in[1];
+
+    assign n20_tree_6 = a_in[1]&amp;b_in[1];
+    assign n17_tree_6 = a_in[2]^b_in[2];
+
+    assign n16_tree_6 = a_in[2]&amp;b_in[2];
+    assign n13_tree_6 = a_in[3]^b_in[3];
+
+    assign n14_tree_6 = a_in[3]&amp;b_in[3];
+    assign n11_tree_6 = a_in[4]^b_in[4];
+
+    assign n12_tree_6 = a_in[4]&amp;b_in[4];
+    assign n9_tree_6 = a_in[5]^b_in[5];
+
+    assign n10_tree_6 = a_in[5]&amp;b_in[5];
+    assign n7_tree_6 = a_in[6]^b_in[6];
+
+    assign n8_tree_6 = ~(a_in[6]^b_in[6]);
+    assign n24_tree_6 = (n25_tree_6&amp;n17_tree_6)|n16_tree_6;
+    assign n25_tree_6 = (n26_tree_6&amp;n21_tree_6)|n20_tree_6;
+    assign n26_tree_6 = a_in[0]&amp;b_in[0];
+    assign n27_tree_6 = n14_tree_6 ? n30_tree_6 : n29_tree_6;
+
+    assign n28_tree_6 = n13_tree_6 ? n30_tree_6 : n29_tree_6;
+    assign n29_tree_6 = n12_tree_6 ? n32_tree_6 : n31_tree_6;
+
+    assign n30_tree_6 = n11_tree_6 ? n32_tree_6 : n31_tree_6;
+    assign n31_tree_6 = n10_tree_6 ? n8_tree_6 : n7_tree_6;
+
+    assign n32_tree_6 = n9_tree_6 ? n8_tree_6 : n7_tree_6;
+
+endmodule // adder1_tree_6
+
+module adder1_tree_7(
+
+        input [7:0] a_in,
+        input [7:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_7
+        wire n1_tree_7, n2_tree_7, n5_tree_7, n6_tree_7, n7_tree_7, n8_tree_7, n9_tree_7, n10_tree_7, n11_tree_7, n12_tree_7, n13_tree_7, n14_tree_7, n16_tree_7, n17_tree_7, n18_tree_7, n19_tree_7, n20_tree_7, n21_tree_7, n24_tree_7, n25_tree_7, n28_tree_7, n29_tree_7, n30_tree_7, n31_tree_7, n32_tree_7;
+    assign sum = n28_tree_7 ? n2_tree_7 : n1_tree_7;
+    assign n25_tree_7 = a_in[1]^b_in[1];
+
+    assign n24_tree_7 = a_in[1]&amp;b_in[1];
+    assign n21_tree_7 = a_in[2]^b_in[2];
+
+    assign n20_tree_7 = a_in[2]&amp;b_in[2];
+    assign n19_tree_7 = a_in[3]^b_in[3];
+
+    assign n18_tree_7 = a_in[3]&amp;b_in[3];
+    assign n14_tree_7 = a_in[4]^b_in[4];
+
+    assign n13_tree_7 = a_in[4]&amp;b_in[4];
+    assign n12_tree_7 = a_in[5]^b_in[5];
+
+    assign n11_tree_7 = a_in[5]&amp;b_in[5];
+    assign n7_tree_7 = a_in[6]^b_in[6];
+
+    assign n8_tree_7 = a_in[6]&amp;b_in[6];
+    assign n5_tree_7 = a_in[7]^b_in[7];
+
+    assign n6_tree_7 = ~(a_in[7]^b_in[7]);
+    assign w8 =  n9_tree_7| n10_tree_7;
+
+    assign n1_tree_7 = n10_tree_7 ? n32_tree_7 : n31_tree_7;
+
+    assign n2_tree_7 = w8  ? n32_tree_7 : n31_tree_7;
+    assign n9_tree_7 = n12_tree_7&amp;n14_tree_7;
+
+    assign n10_tree_7 = (n13_tree_7&amp;n12_tree_7)|n11_tree_7;
+    assign n17_tree_7 = n19_tree_7&amp;n21_tree_7;
+
+    assign n16_tree_7 = (n20_tree_7&amp;n19_tree_7)|n18_tree_7;
+    assign n28_tree_7 = (n29_tree_7&amp;n17_tree_7)|n16_tree_7;
+    assign n29_tree_7 = (n30_tree_7&amp;n25_tree_7)|n24_tree_7;
+    assign n30_tree_7 = a_in[0]&amp;b_in[0];
+    assign n31_tree_7 = n8_tree_7 ? n6_tree_7 : n5_tree_7;
+
+    assign n32_tree_7 = n7_tree_7 ? n6_tree_7 : n5_tree_7;
+
+endmodule // adder1_tree_7
+
+module adder1_tree_8(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_8
+        wire n4_tree_8, n5_tree_8, n6_tree_8, n7_tree_8, n8_tree_8, n9_tree_8, n10_tree_8, n11_tree_8, n12_tree_8, n13_tree_8, n14_tree_8, n15_tree_8, n16_tree_8, n17_tree_8, n20_tree_8, n21_tree_8, n22_tree_8, n23_tree_8, n24_tree_8, n25_tree_8, n28_tree_8, n29_tree_8, n32_tree_8, n33_tree_8, n34_tree_8, n35_tree_8, n36_tree_8;
+    assign n29_tree_8 = a_in[1]^b_in[1];
+
+    assign n28_tree_8 = a_in[1]&amp;b_in[1];
+    assign n25_tree_8 = a_in[2]^b_in[2];
+
+    assign n24_tree_8 = a_in[2]&amp;b_in[2];
+    assign n23_tree_8 = a_in[3]^b_in[3];
+
+    assign n22_tree_8 = a_in[3]&amp;b_in[3];
+    assign n17_tree_8 = a_in[4]^b_in[4];
+
+    assign n16_tree_8 = a_in[4]&amp;b_in[4];
+    assign n15_tree_8 = a_in[5]^b_in[5];
+
+    assign n14_tree_8 = a_in[5]&amp;b_in[5];
+    assign n11_tree_8 = a_in[6]^b_in[6];
+
+    assign n10_tree_8 = a_in[6]&amp;b_in[6];
+    assign n9_tree_8 = a_in[7]^b_in[7];
+
+    assign n8_tree_8 = a_in[7]&amp;b_in[7];
+    assign n5_tree_8 = n7_tree_8&amp;n13_tree_8;
+
+    assign n4_tree_8 = (n12_tree_8&amp;n7_tree_8)|n6_tree_8;
+    assign n7_tree_8 = n9_tree_8&amp;n11_tree_8;
+
+    assign n6_tree_8 = (n10_tree_8&amp;n9_tree_8)|n8_tree_8;
+    assign n13_tree_8 = n15_tree_8&amp;n17_tree_8;
+
+    assign n12_tree_8 = (n16_tree_8&amp;n15_tree_8)|n14_tree_8;
+    assign n21_tree_8 = n23_tree_8&amp;n25_tree_8;
+
+    assign n20_tree_8 = (n24_tree_8&amp;n23_tree_8)|n22_tree_8;
+    assign n32_tree_8 = (n33_tree_8&amp;n5_tree_8)|n4_tree_8;
+    assign n33_tree_8 = (n34_tree_8&amp;n21_tree_8)|n20_tree_8;
+    assign n34_tree_8 = (n35_tree_8&amp;n29_tree_8)|n28_tree_8;
+    assign n35_tree_8 = a_in[0]&amp;b_in[0];
+    assign sum = n32_tree_8^n36_tree_8;
+    assign n36_tree_8 = a_in[8]^b_in[8];
+
+endmodule // adder1_tree_8
+</pre></div></div>
+</div>
+<p>By default, HDL is behavioral. However, it can be very readily mapped onto a supported technology. This instantiates the required standard cell, resulting in structural HDL that is ready to be used by a place-and-route tool.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+_ = f.hdl(&#39;mapped.v&#39;, optimization = 0, mapping = &quot;sky130_fd_sc_hd&quot;)
+
+!cat mapped.v
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+
+module adder(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output [8:0] sum
+        );
+
+
+        adder_tree_8 U0(
+                .a_in(a_in[8:0]),
+                .b_in(b_in[8:0]),
+                .sum(sum[8])
+        );
+
+        adder_tree_7 U1(
+                .a_in(a_in[7:0]),
+                .b_in(b_in[7:0]),
+                .sum(sum[7])
+        );
+
+        adder_tree_6 U2(
+                .a_in(a_in[6:0]),
+                .b_in(b_in[6:0]),
+                .sum(sum[6])
+        );
+
+        adder_tree_5 U3(
+                .a_in(a_in[5:0]),
+                .b_in(b_in[5:0]),
+                .sum(sum[5])
+        );
+
+        adder_tree_4 U4(
+                .a_in(a_in[4:0]),
+                .b_in(b_in[4:0]),
+                .sum(sum[4])
+        );
+
+        adder_tree_3 U5(
+                .a_in(a_in[3:0]),
+                .b_in(b_in[3:0]),
+                .sum(sum[3])
+        );
+
+        adder_tree_2 U6(
+                .a_in(a_in[2:0]),
+                .b_in(b_in[2:0]),
+                .sum(sum[2])
+        );
+
+        adder_tree_1 U7(
+                .a_in(a_in[1:0]),
+                .b_in(b_in[1:0]),
+                .sum(sum[1])
+        );
+
+        adder_tree_0 U8(
+                .a_in(a_in[0]),
+                .b_in(b_in[0]),
+                .sum(sum[0])
+        );
+endmodule // adder
+
+module adder_tree_0(
+
+        input  a_in,
+        input  b_in,
+        output  sum
+        );
+
+// adder_forest tree_0
+        wire n1_tree_0;
+        assign sum = n1_tree_0;
+    sky130_fd_sc_hd__xor2_1 U0(.X(n1_tree_0), .A(a_in), .B(b_in));
+
+endmodule // adder_tree_0
+
+module adder_tree_1(
+
+        input [1:0] a_in,
+        input [1:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_1
+        wire n0, n1_tree_1, n2_tree_1, n3_tree_1;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n3_tree_1), .A0(n1_tree_1), .A1(n2_tree_1));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n0), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n3_tree_1), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n1_tree_1), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__xnor2_1 U4(.Y(n2_tree_1), .A(a_in[1]), .B(b_in[1]));
+
+endmodule // adder_tree_1
+
+module adder_tree_2(
+
+        input [2:0] a_in,
+        input [2:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_2
+        wire n0, n1_tree_2, n2_tree_2, n3_tree_2, n4_tree_2, n5_tree_2, n6_tree_2, n7_tree_2;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n3_tree_2), .A0(n1_tree_2), .A1(n2_tree_2));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n7_tree_2), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n6_tree_2), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n5_tree_2), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n4_tree_2), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n1_tree_2), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__xnor2_1 U6(.Y(n2_tree_2), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__and2_1 U7(.X(n0), .A(n5_tree_2), .B(n7_tree_2));
+
+    sky130_fd_sc_hd__a21o_1 U8(.X(n3_tree_2), .A1(n6_tree_2), .A2(n5_tree_2), .B1(n4_tree_2));
+
+endmodule // adder_tree_2
+
+module adder_tree_3(
+
+        input [3:0] a_in,
+        input [3:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_3
+        wire n0, n1_tree_3, n2_tree_3, n3_tree_3, n4_tree_3, n5_tree_3, n6_tree_3, n7_tree_3, n8_tree_3, n9_tree_3, n10_tree_3, n11_tree_3;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n7_tree_3), .A0(n1_tree_3), .A1(n2_tree_3));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n11_tree_3), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n10_tree_3), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n9_tree_3), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n8_tree_3), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n5_tree_3), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n6_tree_3), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n3_tree_3), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__xnor2_1 U8(.Y(n4_tree_3), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__or2_1 U9(.X(w5), .A( n5_tree_3), .B( n6_tree_3));
+
+    sky130_fd_sc_hd__mux2_1 U10(.X(n1_tree_3), .S(n6_tree_3), .A0(n3_tree_3), .A1(n4_tree_3));
+
+    sky130_fd_sc_hd__mux2_1 U11(.X(n2_tree_3), .S(w5 ), .A0(n3_tree_3), .A1(n4_tree_3));
+    sky130_fd_sc_hd__and2_1 U12(.X(n0), .A(n9_tree_3), .B(n11_tree_3));
+
+    sky130_fd_sc_hd__a21o_1 U13(.X(n7_tree_3), .A1(n10_tree_3), .A2(n9_tree_3), .B1(n8_tree_3));
+
+endmodule // adder_tree_3
+
+module adder_tree_4(
+
+        input [4:0] a_in,
+        input [4:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_4
+        wire n0, n1_tree_4, n2_tree_4, n3_tree_4, n4_tree_4, n5_tree_4, n6_tree_4, n7_tree_4, n8_tree_4, n9_tree_4, n10_tree_4, n11_tree_4, n12_tree_4, n13_tree_4, n14_tree_4, n15_tree_4;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n7_tree_4), .A0(n1_tree_4), .A1(n2_tree_4));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n15_tree_4), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n14_tree_4), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n13_tree_4), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n12_tree_4), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n9_tree_4), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n8_tree_4), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n5_tree_4), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n6_tree_4), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n3_tree_4), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__xnor2_1 U10(.Y(n4_tree_4), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__or2_1 U11(.X(w6), .A( n5_tree_4), .B( n6_tree_4));
+
+    sky130_fd_sc_hd__mux2_1 U12(.X(n1_tree_4), .S(n6_tree_4), .A0(n3_tree_4), .A1(n4_tree_4));
+
+    sky130_fd_sc_hd__mux2_1 U13(.X(n2_tree_4), .S(w6 ), .A0(n3_tree_4), .A1(n4_tree_4));
+    sky130_fd_sc_hd__and2_1 U14(.X(n0), .A(n9_tree_4), .B(n11_tree_4));
+
+    sky130_fd_sc_hd__a21o_1 U15(.X(n7_tree_4), .A1(n10_tree_4), .A2(n9_tree_4), .B1(n8_tree_4));
+    sky130_fd_sc_hd__and2_1 U16(.X(n11_tree_4), .A(n13_tree_4), .B(n15_tree_4));
+
+    sky130_fd_sc_hd__a21o_1 U17(.X(n10_tree_4), .A1(n14_tree_4), .A2(n13_tree_4), .B1(n12_tree_4));
+
+endmodule // adder_tree_4
+
+module adder_tree_5(
+
+        input [5:0] a_in,
+        input [5:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_5
+        wire n0, n1_tree_5, n2_tree_5, n3_tree_5, n4_tree_5, n5_tree_5, n6_tree_5, n7_tree_5, n8_tree_5, n9_tree_5, n10_tree_5, n11_tree_5, n12_tree_5, n13_tree_5, n14_tree_5, n15_tree_5, n16_tree_5, n17_tree_5, n18_tree_5, n19_tree_5;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n19_tree_5), .A0(n1_tree_5), .A1(n2_tree_5));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n0), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n19_tree_5), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n17_tree_5), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n18_tree_5), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n16_tree_5), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n15_tree_5), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n14_tree_5), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n13_tree_5), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n10_tree_5), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n9_tree_5), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n5_tree_5), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__xnor2_1 U12(.Y(n6_tree_5), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__or2_1 U13(.X(w7), .A( n17_tree_5), .B( n18_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U14(.X(n1_tree_5), .S(n18_tree_5), .A0(n3_tree_5), .A1(n4_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U15(.X(n2_tree_5), .S(w7 ), .A0(n3_tree_5), .A1(n4_tree_5));
+    sky130_fd_sc_hd__or2_1 U16(.X(w8), .A( n7_tree_5), .B( n8_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U17(.X(n3_tree_5), .S(n8_tree_5), .A0(n5_tree_5), .A1(n6_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U18(.X(n4_tree_5), .S(w8 ), .A0(n5_tree_5), .A1(n6_tree_5));
+    sky130_fd_sc_hd__and2_1 U19(.X(n7_tree_5), .A(n10_tree_5), .B(n12_tree_5));
+
+    sky130_fd_sc_hd__a21o_1 U20(.X(n8_tree_5), .A1(n11_tree_5), .A2(n10_tree_5), .B1(n9_tree_5));
+    sky130_fd_sc_hd__and2_1 U21(.X(n12_tree_5), .A(n14_tree_5), .B(n16_tree_5));
+
+    sky130_fd_sc_hd__a21o_1 U22(.X(n11_tree_5), .A1(n15_tree_5), .A2(n14_tree_5), .B1(n13_tree_5));
+
+endmodule // adder_tree_5
+
+module adder_tree_6(
+
+        input [6:0] a_in,
+        input [6:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_6
+        wire n0, n1_tree_6, n2_tree_6, n3_tree_6, n4_tree_6, n5_tree_6, n6_tree_6, n7_tree_6, n8_tree_6, n9_tree_6, n10_tree_6, n11_tree_6, n12_tree_6, n13_tree_6, n14_tree_6, n15_tree_6, n16_tree_6, n17_tree_6, n18_tree_6, n19_tree_6, n20_tree_6, n21_tree_6, n22_tree_6, n23_tree_6;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n15_tree_6), .A0(n1_tree_6), .A1(n2_tree_6));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n23_tree_6), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n22_tree_6), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n21_tree_6), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n20_tree_6), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n17_tree_6), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n16_tree_6), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n13_tree_6), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n14_tree_6), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n11_tree_6), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n12_tree_6), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n9_tree_6), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U12(.X(n10_tree_6), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U13(.X(n7_tree_6), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__xnor2_1 U14(.Y(n8_tree_6), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__or2_1 U15(.X(w8), .A( n13_tree_6), .B( n14_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U16(.X(n1_tree_6), .S(n14_tree_6), .A0(n3_tree_6), .A1(n4_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U17(.X(n2_tree_6), .S(w8 ), .A0(n3_tree_6), .A1(n4_tree_6));
+    sky130_fd_sc_hd__or2_1 U18(.X(w9), .A( n11_tree_6), .B( n12_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U19(.X(n3_tree_6), .S(n12_tree_6), .A0(n5_tree_6), .A1(n6_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U20(.X(n4_tree_6), .S(w9 ), .A0(n5_tree_6), .A1(n6_tree_6));
+    sky130_fd_sc_hd__or2_1 U21(.X(w10), .A( n9_tree_6), .B( n10_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U22(.X(n5_tree_6), .S(n10_tree_6), .A0(n7_tree_6), .A1(n8_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U23(.X(n6_tree_6), .S(w10 ), .A0(n7_tree_6), .A1(n8_tree_6));
+    sky130_fd_sc_hd__and2_1 U24(.X(n0), .A(n17_tree_6), .B(n19_tree_6));
+
+    sky130_fd_sc_hd__a21o_1 U25(.X(n15_tree_6), .A1(n18_tree_6), .A2(n17_tree_6), .B1(n16_tree_6));
+    sky130_fd_sc_hd__and2_1 U26(.X(n19_tree_6), .A(n21_tree_6), .B(n23_tree_6));
+
+    sky130_fd_sc_hd__a21o_1 U27(.X(n18_tree_6), .A1(n22_tree_6), .A2(n21_tree_6), .B1(n20_tree_6));
+
+endmodule // adder_tree_6
+
+module adder_tree_7(
+
+        input [7:0] a_in,
+        input [7:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_7
+        wire n0, n1_tree_7, n2_tree_7, n3_tree_7, n4_tree_7, n5_tree_7, n6_tree_7, n7_tree_7, n8_tree_7, n9_tree_7, n10_tree_7, n11_tree_7, n12_tree_7, n13_tree_7, n14_tree_7, n15_tree_7, n16_tree_7, n17_tree_7, n18_tree_7, n19_tree_7, n20_tree_7, n21_tree_7, n22_tree_7, n23_tree_7, n24_tree_7, n25_tree_7, n26_tree_7, n27_tree_7;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n15_tree_7), .A0(n1_tree_7), .A1(n2_tree_7));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n27_tree_7), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n26_tree_7), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n25_tree_7), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n24_tree_7), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n21_tree_7), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n20_tree_7), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n19_tree_7), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n18_tree_7), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n14_tree_7), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n13_tree_7), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n12_tree_7), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U12(.X(n11_tree_7), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U13(.X(n7_tree_7), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__and2_1 U14(.X(n8_tree_7), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__xor2_1 U15(.X(n5_tree_7), .A(a_in[7]), .B(b_in[7]));
+
+    sky130_fd_sc_hd__xnor2_1 U16(.Y(n6_tree_7), .A(a_in[7]), .B(b_in[7]));
+    sky130_fd_sc_hd__or2_1 U17(.X(w9), .A( n9_tree_7), .B( n10_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U18(.X(n1_tree_7), .S(n10_tree_7), .A0(n3_tree_7), .A1(n4_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U19(.X(n2_tree_7), .S(w9 ), .A0(n3_tree_7), .A1(n4_tree_7));
+    sky130_fd_sc_hd__or2_1 U20(.X(w10), .A( n7_tree_7), .B( n8_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U21(.X(n3_tree_7), .S(n8_tree_7), .A0(n5_tree_7), .A1(n6_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U22(.X(n4_tree_7), .S(w10 ), .A0(n5_tree_7), .A1(n6_tree_7));
+    sky130_fd_sc_hd__and2_1 U23(.X(n9_tree_7), .A(n12_tree_7), .B(n14_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U24(.X(n10_tree_7), .A1(n13_tree_7), .A2(n12_tree_7), .B1(n11_tree_7));
+    sky130_fd_sc_hd__and2_1 U25(.X(n0), .A(n17_tree_7), .B(n23_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U26(.X(n15_tree_7), .A1(n22_tree_7), .A2(n17_tree_7), .B1(n16_tree_7));
+    sky130_fd_sc_hd__and2_1 U27(.X(n17_tree_7), .A(n19_tree_7), .B(n21_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U28(.X(n16_tree_7), .A1(n20_tree_7), .A2(n19_tree_7), .B1(n18_tree_7));
+    sky130_fd_sc_hd__and2_1 U29(.X(n23_tree_7), .A(n25_tree_7), .B(n27_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U30(.X(n22_tree_7), .A1(n26_tree_7), .A2(n25_tree_7), .B1(n24_tree_7));
+
+endmodule // adder_tree_7
+
+module adder_tree_8(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_8
+        wire n0, n1_tree_8, n2_tree_8, n3_tree_8, n4_tree_8, n5_tree_8, n6_tree_8, n7_tree_8, n8_tree_8, n9_tree_8, n10_tree_8, n11_tree_8, n12_tree_8, n13_tree_8, n14_tree_8, n15_tree_8, n16_tree_8, n17_tree_8, n18_tree_8, n19_tree_8, n20_tree_8, n21_tree_8, n22_tree_8, n23_tree_8, n24_tree_8, n25_tree_8, n26_tree_8, n27_tree_8, n28_tree_8, n29_tree_8, n30_tree_8, n31_tree_8;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n3_tree_8), .A0(n1_tree_8), .A1(n2_tree_8));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n31_tree_8), .A(a_in[0]), .B(b_in[0]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n30_tree_8), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n29_tree_8), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n28_tree_8), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n25_tree_8), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n24_tree_8), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n23_tree_8), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n22_tree_8), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n17_tree_8), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n16_tree_8), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n15_tree_8), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U12(.X(n14_tree_8), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U13(.X(n11_tree_8), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__and2_1 U14(.X(n10_tree_8), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__xor2_1 U15(.X(n9_tree_8), .A(a_in[7]), .B(b_in[7]));
+
+    sky130_fd_sc_hd__and2_1 U16(.X(n8_tree_8), .A(a_in[7]), .B(b_in[7]));
+    sky130_fd_sc_hd__xor2_1 U17(.X(n1_tree_8), .A(a_in[8]), .B(b_in[8]));
+
+    sky130_fd_sc_hd__xnor2_1 U18(.Y(n2_tree_8), .A(a_in[8]), .B(b_in[8]));
+    sky130_fd_sc_hd__and2_1 U19(.X(n0), .A(n5_tree_8), .B(n19_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U20(.X(n3_tree_8), .A1(n18_tree_8), .A2(n5_tree_8), .B1(n4_tree_8));
+    sky130_fd_sc_hd__and2_1 U21(.X(n5_tree_8), .A(n7_tree_8), .B(n13_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U22(.X(n4_tree_8), .A1(n12_tree_8), .A2(n7_tree_8), .B1(n6_tree_8));
+    sky130_fd_sc_hd__and2_1 U23(.X(n7_tree_8), .A(n9_tree_8), .B(n11_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U24(.X(n6_tree_8), .A1(n10_tree_8), .A2(n9_tree_8), .B1(n8_tree_8));
+    sky130_fd_sc_hd__and2_1 U25(.X(n13_tree_8), .A(n15_tree_8), .B(n17_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U26(.X(n12_tree_8), .A1(n16_tree_8), .A2(n15_tree_8), .B1(n14_tree_8));
+    sky130_fd_sc_hd__and2_1 U27(.X(n19_tree_8), .A(n21_tree_8), .B(n27_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U28(.X(n18_tree_8), .A1(n26_tree_8), .A2(n21_tree_8), .B1(n20_tree_8));
+    sky130_fd_sc_hd__and2_1 U29(.X(n21_tree_8), .A(n23_tree_8), .B(n25_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U30(.X(n20_tree_8), .A1(n24_tree_8), .A2(n23_tree_8), .B1(n22_tree_8));
+    sky130_fd_sc_hd__and2_1 U31(.X(n27_tree_8), .A(n29_tree_8), .B(n31_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U32(.X(n26_tree_8), .A1(n30_tree_8), .A2(n29_tree_8), .B1(n28_tree_8));
+
+endmodule // adder_tree_8
+</pre></div></div>
+</div>
+<p>However, synthesis tools do play another important role: they perform optimizations.</p>
+<p>This library contains three levels of pre-optimization that is done to assist synthesis tools.</p>
+<p>Level 0 of optimization is unoptimized.</p>
+<p>Level 1 of optimization performs operation-specific logic trimming.</p>
+<p>Certain operations, such as binary addition, allow for the simplification of logic on locations such as the most-significant or least-significant bit. This library can perform such optimizations. This is the recommended setting.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+_ = f.hdl(&#39;mapped_opt1.v&#39;, optimization = 1, mapping = &quot;sky130_fd_sc_hd&quot;)
+
+!cat mapped_opt1.v
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+
+module adder(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output [8:0] sum
+        );
+
+
+        adder_tree_8 U0(
+                .a_in(a_in[8:0]),
+                .b_in(b_in[8:0]),
+                .sum(sum[8])
+        );
+
+        adder_tree_7 U1(
+                .a_in(a_in[7:0]),
+                .b_in(b_in[7:0]),
+                .sum(sum[7])
+        );
+
+        adder_tree_6 U2(
+                .a_in(a_in[6:0]),
+                .b_in(b_in[6:0]),
+                .sum(sum[6])
+        );
+
+        adder_tree_5 U3(
+                .a_in(a_in[5:0]),
+                .b_in(b_in[5:0]),
+                .sum(sum[5])
+        );
+
+        adder_tree_4 U4(
+                .a_in(a_in[4:0]),
+                .b_in(b_in[4:0]),
+                .sum(sum[4])
+        );
+
+        adder_tree_3 U5(
+                .a_in(a_in[3:0]),
+                .b_in(b_in[3:0]),
+                .sum(sum[3])
+        );
+
+        adder_tree_2 U6(
+                .a_in(a_in[2:0]),
+                .b_in(b_in[2:0]),
+                .sum(sum[2])
+        );
+
+        adder_tree_1 U7(
+                .a_in(a_in[1:0]),
+                .b_in(b_in[1:0]),
+                .sum(sum[1])
+        );
+
+        adder_tree_0 U8(
+                .a_in(a_in[0]),
+                .b_in(b_in[0]),
+                .sum(sum[0])
+        );
+endmodule // adder
+
+module adder_tree_0(
+
+        input  a_in,
+        input  b_in,
+        output  sum
+        );
+
+// adder_forest tree_0
+        wire n1_tree_0;
+        assign sum = n1_tree_0;
+    sky130_fd_sc_hd__xor2_1 U0(.X(n1_tree_0), .A(a_in), .B(b_in));
+
+endmodule // adder_tree_0
+
+module adder_tree_1(
+
+        input [1:0] a_in,
+        input [1:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_1
+        wire n4_tree_1, n5_tree_1;
+    sky130_fd_sc_hd__and2_1 U0(.X(n4_tree_1), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U1(.X(sum), .A(n4_tree_1), .B(n5_tree_1));
+    sky130_fd_sc_hd__xor2_1 U2(.X(n5_tree_1), .A(a_in[1]), .B(b_in[1]));
+
+endmodule // adder_tree_1
+
+module adder_tree_2(
+
+        input [2:0] a_in,
+        input [2:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_2
+        wire n4_tree_2, n5_tree_2, n8_tree_2, n9_tree_2, n10_tree_2;
+    sky130_fd_sc_hd__xor2_1 U0(.X(n5_tree_2), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U1(.X(n4_tree_2), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__a21o_1 U2(.X(n8_tree_2), .A1(n9_tree_2), .A2(n5_tree_2), .B1(n4_tree_2));
+    sky130_fd_sc_hd__and2_1 U3(.X(n9_tree_2), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U4(.X(sum), .A(n8_tree_2), .B(n10_tree_2));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n10_tree_2), .A(a_in[2]), .B(b_in[2]));
+
+endmodule // adder_tree_2
+
+module adder_tree_3(
+
+        input [3:0] a_in,
+        input [3:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_3
+        wire n3_tree_3, n4_tree_3, n5_tree_3, n6_tree_3, n8_tree_3, n9_tree_3, n12_tree_3, n13_tree_3, n14_tree_3, n15_tree_3;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n12_tree_3), .A0(n14_tree_3), .A1(n15_tree_3));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n9_tree_3), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n8_tree_3), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n5_tree_3), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n6_tree_3), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n3_tree_3), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__xnor2_1 U6(.Y(n4_tree_3), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__a21o_1 U7(.X(n12_tree_3), .A1(n13_tree_3), .A2(n9_tree_3), .B1(n8_tree_3));
+    sky130_fd_sc_hd__and2_1 U8(.X(n13_tree_3), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__mux2_1 U9(.X(n14_tree_3), .S(n6_tree_3), .A0(n3_tree_3), .A1(n4_tree_3));
+
+    sky130_fd_sc_hd__mux2_1 U10(.X(n15_tree_3), .S(n5_tree_3), .A0(n3_tree_3), .A1(n4_tree_3));
+
+endmodule // adder_tree_3
+
+module adder_tree_4(
+
+        input [4:0] a_in,
+        input [4:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_4
+        wire n3_tree_4, n4_tree_4, n5_tree_4, n6_tree_4, n8_tree_4, n9_tree_4, n12_tree_4, n13_tree_4, n16_tree_4, n17_tree_4, n18_tree_4, n19_tree_4, n20_tree_4;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n16_tree_4), .A0(n19_tree_4), .A1(n20_tree_4));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n13_tree_4), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n12_tree_4), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n9_tree_4), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n8_tree_4), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n5_tree_4), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n6_tree_4), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n3_tree_4), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__xnor2_1 U8(.Y(n4_tree_4), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__a21o_1 U9(.X(n16_tree_4), .A1(n17_tree_4), .A2(n9_tree_4), .B1(n8_tree_4));
+    sky130_fd_sc_hd__a21o_1 U10(.X(n17_tree_4), .A1(n18_tree_4), .A2(n13_tree_4), .B1(n12_tree_4));
+    sky130_fd_sc_hd__and2_1 U11(.X(n18_tree_4), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__mux2_1 U12(.X(n19_tree_4), .S(n6_tree_4), .A0(n3_tree_4), .A1(n4_tree_4));
+
+    sky130_fd_sc_hd__mux2_1 U13(.X(n20_tree_4), .S(n5_tree_4), .A0(n3_tree_4), .A1(n4_tree_4));
+
+endmodule // adder_tree_4
+
+module adder_tree_5(
+
+        input [5:0] a_in,
+        input [5:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_5
+        wire n3_tree_5, n4_tree_5, n5_tree_5, n6_tree_5, n7_tree_5, n8_tree_5, n9_tree_5, n10_tree_5, n11_tree_5, n12_tree_5, n13_tree_5, n14_tree_5, n15_tree_5, n16_tree_5, n17_tree_5, n18_tree_5, n20_tree_5, n21_tree_5, n22_tree_5;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n20_tree_5), .A0(n21_tree_5), .A1(n22_tree_5));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n17_tree_5), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n18_tree_5), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n16_tree_5), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n15_tree_5), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n14_tree_5), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n13_tree_5), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n10_tree_5), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n9_tree_5), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n5_tree_5), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__xnor2_1 U10(.Y(n6_tree_5), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__or2_1 U11(.X(w6), .A( n7_tree_5), .B( n8_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U12(.X(n3_tree_5), .S(n8_tree_5), .A0(n5_tree_5), .A1(n6_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U13(.X(n4_tree_5), .S(w6 ), .A0(n5_tree_5), .A1(n6_tree_5));
+    sky130_fd_sc_hd__and2_1 U14(.X(n7_tree_5), .A(n10_tree_5), .B(n12_tree_5));
+
+    sky130_fd_sc_hd__a21o_1 U15(.X(n8_tree_5), .A1(n11_tree_5), .A2(n10_tree_5), .B1(n9_tree_5));
+    sky130_fd_sc_hd__and2_1 U16(.X(n12_tree_5), .A(n14_tree_5), .B(n16_tree_5));
+
+    sky130_fd_sc_hd__a21o_1 U17(.X(n11_tree_5), .A1(n15_tree_5), .A2(n14_tree_5), .B1(n13_tree_5));
+    sky130_fd_sc_hd__and2_1 U18(.X(n20_tree_5), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__mux2_1 U19(.X(n21_tree_5), .S(n18_tree_5), .A0(n3_tree_5), .A1(n4_tree_5));
+
+    sky130_fd_sc_hd__mux2_1 U20(.X(n22_tree_5), .S(n17_tree_5), .A0(n3_tree_5), .A1(n4_tree_5));
+
+endmodule // adder_tree_5
+
+module adder_tree_6(
+
+        input [6:0] a_in,
+        input [6:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_6
+        wire n7_tree_6, n8_tree_6, n9_tree_6, n10_tree_6, n11_tree_6, n12_tree_6, n13_tree_6, n14_tree_6, n16_tree_6, n17_tree_6, n20_tree_6, n21_tree_6, n24_tree_6, n25_tree_6, n26_tree_6, n27_tree_6, n28_tree_6, n29_tree_6, n30_tree_6, n31_tree_6, n32_tree_6;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n24_tree_6), .A0(n27_tree_6), .A1(n28_tree_6));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n21_tree_6), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n20_tree_6), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n17_tree_6), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n16_tree_6), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n13_tree_6), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n14_tree_6), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n11_tree_6), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n12_tree_6), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n9_tree_6), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n10_tree_6), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n7_tree_6), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__xnor2_1 U12(.Y(n8_tree_6), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__a21o_1 U13(.X(n24_tree_6), .A1(n25_tree_6), .A2(n17_tree_6), .B1(n16_tree_6));
+    sky130_fd_sc_hd__a21o_1 U14(.X(n25_tree_6), .A1(n26_tree_6), .A2(n21_tree_6), .B1(n20_tree_6));
+    sky130_fd_sc_hd__and2_1 U15(.X(n26_tree_6), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__mux2_1 U16(.X(n27_tree_6), .S(n14_tree_6), .A0(n29_tree_6), .A1(n30_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U17(.X(n28_tree_6), .S(n13_tree_6), .A0(n29_tree_6), .A1(n30_tree_6));
+    sky130_fd_sc_hd__mux2_1 U18(.X(n29_tree_6), .S(n12_tree_6), .A0(n31_tree_6), .A1(n32_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U19(.X(n30_tree_6), .S(n11_tree_6), .A0(n31_tree_6), .A1(n32_tree_6));
+    sky130_fd_sc_hd__mux2_1 U20(.X(n31_tree_6), .S(n10_tree_6), .A0(n7_tree_6), .A1(n8_tree_6));
+
+    sky130_fd_sc_hd__mux2_1 U21(.X(n32_tree_6), .S(n9_tree_6), .A0(n7_tree_6), .A1(n8_tree_6));
+
+endmodule // adder_tree_6
+
+module adder_tree_7(
+
+        input [7:0] a_in,
+        input [7:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_7
+        wire n1_tree_7, n2_tree_7, n5_tree_7, n6_tree_7, n7_tree_7, n8_tree_7, n9_tree_7, n10_tree_7, n11_tree_7, n12_tree_7, n13_tree_7, n14_tree_7, n16_tree_7, n17_tree_7, n18_tree_7, n19_tree_7, n20_tree_7, n21_tree_7, n24_tree_7, n25_tree_7, n28_tree_7, n29_tree_7, n30_tree_7, n31_tree_7, n32_tree_7;
+    sky130_fd_sc_hd__mux2_1 U0(.X(sum), .S(n28_tree_7), .A0(n1_tree_7), .A1(n2_tree_7));
+    sky130_fd_sc_hd__xor2_1 U1(.X(n25_tree_7), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U2(.X(n24_tree_7), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U3(.X(n21_tree_7), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U4(.X(n20_tree_7), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U5(.X(n19_tree_7), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U6(.X(n18_tree_7), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U7(.X(n14_tree_7), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U8(.X(n13_tree_7), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U9(.X(n12_tree_7), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U10(.X(n11_tree_7), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U11(.X(n7_tree_7), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__and2_1 U12(.X(n8_tree_7), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__xor2_1 U13(.X(n5_tree_7), .A(a_in[7]), .B(b_in[7]));
+
+    sky130_fd_sc_hd__xnor2_1 U14(.Y(n6_tree_7), .A(a_in[7]), .B(b_in[7]));
+    sky130_fd_sc_hd__or2_1 U15(.X(w8), .A( n9_tree_7), .B( n10_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U16(.X(n1_tree_7), .S(n10_tree_7), .A0(n31_tree_7), .A1(n32_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U17(.X(n2_tree_7), .S(w8 ), .A0(n31_tree_7), .A1(n32_tree_7));
+    sky130_fd_sc_hd__and2_1 U18(.X(n9_tree_7), .A(n12_tree_7), .B(n14_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U19(.X(n10_tree_7), .A1(n13_tree_7), .A2(n12_tree_7), .B1(n11_tree_7));
+    sky130_fd_sc_hd__and2_1 U20(.X(n17_tree_7), .A(n19_tree_7), .B(n21_tree_7));
+
+    sky130_fd_sc_hd__a21o_1 U21(.X(n16_tree_7), .A1(n20_tree_7), .A2(n19_tree_7), .B1(n18_tree_7));
+    sky130_fd_sc_hd__a21o_1 U22(.X(n28_tree_7), .A1(n29_tree_7), .A2(n17_tree_7), .B1(n16_tree_7));
+    sky130_fd_sc_hd__a21o_1 U23(.X(n29_tree_7), .A1(n30_tree_7), .A2(n25_tree_7), .B1(n24_tree_7));
+    sky130_fd_sc_hd__and2_1 U24(.X(n30_tree_7), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__mux2_1 U25(.X(n31_tree_7), .S(n8_tree_7), .A0(n5_tree_7), .A1(n6_tree_7));
+
+    sky130_fd_sc_hd__mux2_1 U26(.X(n32_tree_7), .S(n7_tree_7), .A0(n5_tree_7), .A1(n6_tree_7));
+
+endmodule // adder_tree_7
+
+module adder_tree_8(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output  sum
+        );
+
+// adder_forest tree_8
+        wire n4_tree_8, n5_tree_8, n6_tree_8, n7_tree_8, n8_tree_8, n9_tree_8, n10_tree_8, n11_tree_8, n12_tree_8, n13_tree_8, n14_tree_8, n15_tree_8, n16_tree_8, n17_tree_8, n20_tree_8, n21_tree_8, n22_tree_8, n23_tree_8, n24_tree_8, n25_tree_8, n28_tree_8, n29_tree_8, n32_tree_8, n33_tree_8, n34_tree_8, n35_tree_8, n36_tree_8;
+    sky130_fd_sc_hd__xor2_1 U0(.X(n29_tree_8), .A(a_in[1]), .B(b_in[1]));
+
+    sky130_fd_sc_hd__and2_1 U1(.X(n28_tree_8), .A(a_in[1]), .B(b_in[1]));
+    sky130_fd_sc_hd__xor2_1 U2(.X(n25_tree_8), .A(a_in[2]), .B(b_in[2]));
+
+    sky130_fd_sc_hd__and2_1 U3(.X(n24_tree_8), .A(a_in[2]), .B(b_in[2]));
+    sky130_fd_sc_hd__xor2_1 U4(.X(n23_tree_8), .A(a_in[3]), .B(b_in[3]));
+
+    sky130_fd_sc_hd__and2_1 U5(.X(n22_tree_8), .A(a_in[3]), .B(b_in[3]));
+    sky130_fd_sc_hd__xor2_1 U6(.X(n17_tree_8), .A(a_in[4]), .B(b_in[4]));
+
+    sky130_fd_sc_hd__and2_1 U7(.X(n16_tree_8), .A(a_in[4]), .B(b_in[4]));
+    sky130_fd_sc_hd__xor2_1 U8(.X(n15_tree_8), .A(a_in[5]), .B(b_in[5]));
+
+    sky130_fd_sc_hd__and2_1 U9(.X(n14_tree_8), .A(a_in[5]), .B(b_in[5]));
+    sky130_fd_sc_hd__xor2_1 U10(.X(n11_tree_8), .A(a_in[6]), .B(b_in[6]));
+
+    sky130_fd_sc_hd__and2_1 U11(.X(n10_tree_8), .A(a_in[6]), .B(b_in[6]));
+    sky130_fd_sc_hd__xor2_1 U12(.X(n9_tree_8), .A(a_in[7]), .B(b_in[7]));
+
+    sky130_fd_sc_hd__and2_1 U13(.X(n8_tree_8), .A(a_in[7]), .B(b_in[7]));
+    sky130_fd_sc_hd__and2_1 U14(.X(n5_tree_8), .A(n7_tree_8), .B(n13_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U15(.X(n4_tree_8), .A1(n12_tree_8), .A2(n7_tree_8), .B1(n6_tree_8));
+    sky130_fd_sc_hd__and2_1 U16(.X(n7_tree_8), .A(n9_tree_8), .B(n11_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U17(.X(n6_tree_8), .A1(n10_tree_8), .A2(n9_tree_8), .B1(n8_tree_8));
+    sky130_fd_sc_hd__and2_1 U18(.X(n13_tree_8), .A(n15_tree_8), .B(n17_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U19(.X(n12_tree_8), .A1(n16_tree_8), .A2(n15_tree_8), .B1(n14_tree_8));
+    sky130_fd_sc_hd__and2_1 U20(.X(n21_tree_8), .A(n23_tree_8), .B(n25_tree_8));
+
+    sky130_fd_sc_hd__a21o_1 U21(.X(n20_tree_8), .A1(n24_tree_8), .A2(n23_tree_8), .B1(n22_tree_8));
+    sky130_fd_sc_hd__a21o_1 U22(.X(n32_tree_8), .A1(n33_tree_8), .A2(n5_tree_8), .B1(n4_tree_8));
+    sky130_fd_sc_hd__a21o_1 U23(.X(n33_tree_8), .A1(n34_tree_8), .A2(n21_tree_8), .B1(n20_tree_8));
+    sky130_fd_sc_hd__a21o_1 U24(.X(n34_tree_8), .A1(n35_tree_8), .A2(n29_tree_8), .B1(n28_tree_8));
+    sky130_fd_sc_hd__and2_1 U25(.X(n35_tree_8), .A(a_in[0]), .B(b_in[0]));
+    sky130_fd_sc_hd__xor2_1 U26(.X(sum), .A(n32_tree_8), .B(n36_tree_8));
+    sky130_fd_sc_hd__xor2_1 U27(.X(n36_tree_8), .A(a_in[8]), .B(b_in[8]));
+
+endmodule // adder_tree_8
+</pre></div></div>
+</div>
+<p>Level 2 of optimization partitions the design into separate, flattened, sub-blocks.</p>
+<p>Both proprietary as well as open-source tools heavily struggle with the optimization of fully-flattened arithmetic circuits, such as a binary adder. The performance of their output can suffer under such conditions.</p>
+<p>However, not flattening the design at all leads to no optimization being performed by the synthesis tool. This is often worse.</p>
+<p>Level 2 of optimization attempts to intelligently partition the design into individual flattened blocks that are easily digestible by synthesis tools.</p>
+<p>This flag is designed to be run with a behavioral mapping, and with the synthesis tools being instructed to not further flatten the design.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan_bounds
+
+width = 9
+print(&quot;The maximum tree sizes for a forest of width {0} are {1}&quot;.format(width,catalan_bounds(width)))
+f = forest(width, tree_start_points = [0, 0, 0, 2, 5, 37, 74, 214, 214])
+_ = f.hdl(&#39;unmapped_opt2.v&#39;, optimization = 2)
+
+!cat unmapped_opt2.v
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+The maximum tree sizes for a forest of width 9 are [0, 0, 1, 4, 13, 41, 131, 428, 1429]
+
+module adder(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output [8:0] sum
+        );
+
+
+        adder_tree_8 U0(
+                .a_in(a_in[8:0]),
+                .b_in(b_in[8:0]),
+                .sum(sum[8]),
+                .n28_tree_8(n28_tree_8),
+                .n29_tree_8(n29_tree_8),
+                .n24_tree_8(n24_tree_8),
+                .n25_tree_8(n25_tree_8),
+                .n22_tree_8(n22_tree_8),
+                .n23_tree_8(n23_tree_8),
+                .n17_tree_8(n17_tree_8),
+                .n16_tree_8(n16_tree_8),
+                .n15_tree_8(n15_tree_8),
+                .n14_tree_8(n14_tree_8),
+                .n10_tree_8(n10_tree_8),
+                .n11_tree_8(n11_tree_8),
+                .n12_tree_8(n12_tree_8),
+                .n13_tree_8(n13_tree_8),
+                .n20_tree_8(n20_tree_8),
+                .n21_tree_8(n21_tree_8),
+                .n33_tree_8(n33_tree_8),
+                .n34_tree_8(n34_tree_8),
+                .n35_tree_8(n35_tree_8)
+        );
+
+        adder_tree_7 U1(
+                .a_in(a_in[7:0]),
+                .b_in(b_in[7:0]),
+                .n10_tree_8(n10_tree_8),
+                .n11_tree_8(n11_tree_8),
+                .n12_tree_8(n12_tree_8),
+                .n13_tree_8(n13_tree_8),
+                .n33_tree_8(n33_tree_8),
+                .sum(sum[7])
+        );
+
+        adder_tree_6 U2(
+                .a_in(a_in[6:0]),
+                .b_in(b_in[6:0]),
+                .n24_tree_8(n24_tree_8),
+                .n25_tree_8(n25_tree_8),
+                .n22_tree_8(n22_tree_8),
+                .n23_tree_8(n23_tree_8),
+                .n17_tree_8(n17_tree_8),
+                .n16_tree_8(n16_tree_8),
+                .n15_tree_8(n15_tree_8),
+                .n14_tree_8(n14_tree_8),
+                .n34_tree_8(n34_tree_8),
+                .sum(sum[6]),
+                .n24_tree_6(n24_tree_6)
+        );
+
+        adder_tree_5 U3(
+                .a_in(a_in[5:0]),
+                .b_in(b_in[5:0]),
+                .n28_tree_8(n28_tree_8),
+                .n29_tree_8(n29_tree_8),
+                .n17_tree_8(n17_tree_8),
+                .n16_tree_8(n16_tree_8),
+                .n20_tree_8(n20_tree_8),
+                .n21_tree_8(n21_tree_8),
+                .n35_tree_8(n35_tree_8),
+                .sum(sum[5])
+        );
+
+        adder_tree_4 U4(
+                .a_in(a_in[4:0]),
+                .b_in(b_in[4:0]),
+                .n22_tree_8(n22_tree_8),
+                .n23_tree_8(n23_tree_8),
+                .n24_tree_6(n24_tree_6),
+                .sum(sum[4])
+        );
+
+        adder_tree_3 U5(
+                .a_in(a_in[3:0]),
+                .b_in(b_in[3:0]),
+                .n24_tree_8(n24_tree_8),
+                .n25_tree_8(n25_tree_8),
+                .n34_tree_8(n34_tree_8),
+                .sum(sum[3])
+        );
+
+        adder_tree_2 U6(
+                .a_in(a_in[2:0]),
+                .b_in(b_in[2:0]),
+                .n34_tree_8(n34_tree_8),
+                .sum(sum[2])
+        );
+
+        adder_tree_1 U7(
+                .a_in(a_in[1:0]),
+                .b_in(b_in[1:0]),
+                .n35_tree_8(n35_tree_8),
+                .sum(sum[1])
+        );
+
+        adder_tree_0 U8(
+                .a_in(a_in[0]),
+                .b_in(b_in[0]),
+                .sum(sum[0])
+        );
+endmodule // adder
+
+module adder_tree_0(
+
+        input  a_in,
+        input  b_in,
+        output  sum
+        );
+
+// adder_forest tree_0
+        wire n1_tree_0;
+
+        adder_tree_0_block_0 U0(
+                .b_in(b_in),
+                .a_in(a_in),
+                .n1_tree_0(n1_tree_0),
+                .sum(sum)
+        );
+
+endmodule // adder_tree_0
+
+module adder_tree_0_block_0(
+
+        input  b_in,
+        input  a_in,
+        output  n1_tree_0,
+        output  sum
+        );
+
+// block 0
+
+        assign sum = n1_tree_0;
+    assign n1_tree_0 = a_in^b_in;
+
+endmodule // adder_tree_0_block_0
+
+module adder_tree_1(
+
+        input [1:0] a_in,
+        input [1:0] b_in,
+        input  n35_tree_8,
+        output  sum
+        );
+
+// adder_forest tree_1
+        wire n4_tree_1, n5_tree_1;
+
+        adder_tree_1_block_0 U0(
+                .b_in_1(b_in[1]),
+                .n4_tree_1(n4_tree_1),
+                .a_in_1(a_in[1]),
+                .n5_tree_1(n5_tree_1),
+                .sum(sum)
+        );
+        assign n4_tree_1 = n35_tree_8;
+
+endmodule // adder_tree_1
+
+module adder_tree_1_block_0(
+
+        input  b_in_1,
+        input  n4_tree_1,
+        input  a_in_1,
+        output  n5_tree_1,
+        output  sum
+        );
+
+// block 0
+
+    assign sum = n4_tree_1^n5_tree_1;
+    assign n5_tree_1 = a_in_1^b_in_1;
+
+endmodule // adder_tree_1_block_0
+
+module adder_tree_2(
+
+        input [2:0] a_in,
+        input [2:0] b_in,
+        input  n34_tree_8,
+        output  sum
+        );
+
+// adder_forest tree_2
+        wire n8_tree_2, n10_tree_2;
+
+        adder_tree_2_block_0 U0(
+                .a_in_2(a_in[2]),
+                .n8_tree_2(n8_tree_2),
+                .b_in_2(b_in[2]),
+                .n10_tree_2(n10_tree_2),
+                .sum(sum)
+        );
+        assign n8_tree_2 = n34_tree_8;
+
+endmodule // adder_tree_2
+
+module adder_tree_2_block_0(
+
+        input  a_in_2,
+        input  n8_tree_2,
+        input  b_in_2,
+        output  n10_tree_2,
+        output  sum
+        );
+
+// block 0
+
+    assign n10_tree_2 = a_in_2^b_in_2;
+    assign sum = n8_tree_2^n10_tree_2;
+
+endmodule // adder_tree_2_block_0
+
+module adder_tree_3(
+
+        input [3:0] a_in,
+        input [3:0] b_in,
+        input  n24_tree_8,
+        input  n25_tree_8,
+        input  n34_tree_8,
+        output  sum
+        );
+
+// adder_forest tree_3
+        wire n3_tree_3, n4_tree_3, n5_tree_3, n6_tree_3, n12_tree_3, n14_tree_3, n15_tree_3;
+
+        adder_tree_3_block_0 U0(
+                .n5_tree_3(n5_tree_3),
+                .a_in_3(a_in[3]),
+                .n12_tree_3(n12_tree_3),
+                .b_in_3(b_in[3]),
+                .n6_tree_3(n6_tree_3),
+                .n14_tree_3(n14_tree_3),
+                .n4_tree_3(n4_tree_3),
+                .n15_tree_3(n15_tree_3),
+                .sum(sum),
+                .n3_tree_3(n3_tree_3)
+        );
+        assign n5_tree_3 = n25_tree_8;
+        assign n6_tree_3 = n24_tree_8;
+        assign n12_tree_3 = n34_tree_8;
+
+endmodule // adder_tree_3
+
+module adder_tree_3_block_0(
+
+        input  n5_tree_3,
+        input  a_in_3,
+        input  n12_tree_3,
+        input  b_in_3,
+        input  n6_tree_3,
+        output  n14_tree_3,
+        output  n4_tree_3,
+        output  n15_tree_3,
+        output  sum,
+        output  n3_tree_3
+        );
+
+// block 0
+
+    assign n3_tree_3 = a_in_3^b_in_3;
+
+    assign n4_tree_3 = ~(a_in_3^b_in_3);
+    assign sum = n12_tree_3 ? n15_tree_3 : n14_tree_3;
+    assign n14_tree_3 = n6_tree_3 ? n4_tree_3 : n3_tree_3;
+
+    assign n15_tree_3 = n5_tree_3 ? n4_tree_3 : n3_tree_3;
+
+endmodule // adder_tree_3_block_0
+
+module adder_tree_4(
+
+        input [4:0] a_in,
+        input [4:0] b_in,
+        input  n22_tree_8,
+        input  n23_tree_8,
+        input  n24_tree_6,
+        output  sum
+        );
+
+// adder_forest tree_4
+        wire n3_tree_4, n4_tree_4, n5_tree_4, n6_tree_4, n16_tree_4, n19_tree_4, n20_tree_4;
+
+        adder_tree_4_block_0 U0(
+                .n5_tree_4(n5_tree_4),
+                .n6_tree_4(n6_tree_4),
+                .a_in_4(a_in[4]),
+                .n16_tree_4(n16_tree_4),
+                .b_in_4(b_in[4]),
+                .n3_tree_4(n3_tree_4),
+                .n4_tree_4(n4_tree_4),
+                .n20_tree_4(n20_tree_4),
+                .sum(sum),
+                .n19_tree_4(n19_tree_4)
+        );
+        assign n5_tree_4 = n23_tree_8;
+        assign n6_tree_4 = n22_tree_8;
+        assign n16_tree_4 = n24_tree_6;
+
+endmodule // adder_tree_4
+
+module adder_tree_4_block_0(
+
+        input  n5_tree_4,
+        input  n6_tree_4,
+        input  a_in_4,
+        input  n16_tree_4,
+        input  b_in_4,
+        output  n3_tree_4,
+        output  n4_tree_4,
+        output  n20_tree_4,
+        output  sum,
+        output  n19_tree_4
+        );
+
+// block 0
+
+    assign n3_tree_4 = a_in_4^b_in_4;
+
+    assign n4_tree_4 = ~(a_in_4^b_in_4);
+    assign sum = n16_tree_4 ? n20_tree_4 : n19_tree_4;
+    assign n19_tree_4 = n6_tree_4 ? n4_tree_4 : n3_tree_4;
+
+    assign n20_tree_4 = n5_tree_4 ? n4_tree_4 : n3_tree_4;
+
+endmodule // adder_tree_4_block_0
+
+module adder_tree_5(
+
+        input [5:0] a_in,
+        input [5:0] b_in,
+        input  n28_tree_8,
+        input  n29_tree_8,
+        input  n17_tree_8,
+        input  n16_tree_8,
+        input  n20_tree_8,
+        input  n21_tree_8,
+        input  n35_tree_8,
+        output  sum
+        );
+
+// adder_forest tree_5
+        wire n3_tree_5, n4_tree_5, n5_tree_5, n6_tree_5, n7_tree_5, n8_tree_5, n9_tree_5, n10_tree_5, n11_tree_5, n12_tree_5, n17_tree_5, n18_tree_5, n20_tree_5, n21_tree_5, n22_tree_5;
+
+        adder_tree_5_block_0 U0(
+                .n20_tree_5(n20_tree_5),
+                .b_in_5(b_in[5]),
+                .n18_tree_5(n18_tree_5),
+                .n17_tree_5(n17_tree_5),
+                .a_in_5(a_in[5]),
+                .n8_tree_5(n8_tree_5),
+                .n7_tree_5(n7_tree_5),
+                .n4_tree_5(n4_tree_5),
+                .n5_tree_5(n5_tree_5),
+                .n22_tree_5(n22_tree_5),
+                .n6_tree_5(n6_tree_5),
+                .sum(sum),
+                .n21_tree_5(n21_tree_5),
+                .n3_tree_5(n3_tree_5)
+        );
+        assign n17_tree_5 = n29_tree_8;
+        assign n18_tree_5 = n28_tree_8;
+        assign n10_tree_5 = n17_tree_8;
+        assign n9_tree_5 = n16_tree_8;
+    assign n7_tree_5 = n10_tree_5&amp;n12_tree_5;
+
+    assign n8_tree_5 = (n11_tree_5&amp;n10_tree_5)|n9_tree_5;
+        assign n11_tree_5 = n20_tree_8;
+        assign n12_tree_5 = n21_tree_8;
+        assign n20_tree_5 = n35_tree_8;
+
+endmodule // adder_tree_5
+
+module adder_tree_5_block_0(
+
+        input  n20_tree_5,
+        input  b_in_5,
+        input  n18_tree_5,
+        input  n17_tree_5,
+        input  a_in_5,
+        input  n8_tree_5,
+        input  n7_tree_5,
+        output  n4_tree_5,
+        output  n5_tree_5,
+        output  n22_tree_5,
+        output  n6_tree_5,
+        output  sum,
+        output  n21_tree_5,
+        output  n3_tree_5
+        );
+
+// block 0
+
+    assign n21_tree_5 = n18_tree_5 ? n4_tree_5 : n3_tree_5;
+
+    assign n22_tree_5 = n17_tree_5 ? n4_tree_5 : n3_tree_5;
+    assign sum = n20_tree_5 ? n22_tree_5 : n21_tree_5;
+    assign n5_tree_5 = a_in_5^b_in_5;
+
+    assign n6_tree_5 = ~(a_in_5^b_in_5);
+    assign w3 =  n7_tree_5| n8_tree_5;
+
+    assign n3_tree_5 = n8_tree_5 ? n6_tree_5 : n5_tree_5;
+
+    assign n4_tree_5 = w3  ? n6_tree_5 : n5_tree_5;
+
+endmodule // adder_tree_5_block_0
+
+module adder_tree_6(
+
+        input [6:0] a_in,
+        input [6:0] b_in,
+        input  n24_tree_8,
+        input  n25_tree_8,
+        input  n22_tree_8,
+        input  n23_tree_8,
+        input  n17_tree_8,
+        input  n16_tree_8,
+        input  n15_tree_8,
+        input  n14_tree_8,
+        input  n34_tree_8,
+        output  sum,
+        output  n24_tree_6
+        );
+
+// adder_forest tree_6
+        wire n7_tree_6, n8_tree_6, n9_tree_6, n10_tree_6, n11_tree_6, n12_tree_6, n13_tree_6, n14_tree_6, n16_tree_6, n17_tree_6, n25_tree_6, n27_tree_6, n28_tree_6, n29_tree_6, n30_tree_6, n31_tree_6, n32_tree_6;
+
+        adder_tree_6_block_0 U0(
+                .n13_tree_6(n13_tree_6),
+                .n24_tree_6(n24_tree_6),
+                .n9_tree_6(n9_tree_6),
+                .n11_tree_6(n11_tree_6),
+                .b_in_6(b_in[6]),
+                .a_in_6(a_in[6]),
+                .n12_tree_6(n12_tree_6),
+                .n14_tree_6(n14_tree_6),
+                .n10_tree_6(n10_tree_6),
+                .n8_tree_6(n8_tree_6),
+                .n30_tree_6(n30_tree_6),
+                .n7_tree_6(n7_tree_6),
+                .sum(sum),
+                .n28_tree_6(n28_tree_6),
+                .n32_tree_6(n32_tree_6),
+                .n29_tree_6(n29_tree_6),
+                .n31_tree_6(n31_tree_6),
+                .n27_tree_6(n27_tree_6)
+        );
+        assign n17_tree_6 = n25_tree_8;
+        assign n16_tree_6 = n24_tree_8;
+        assign n13_tree_6 = n23_tree_8;
+        assign n14_tree_6 = n22_tree_8;
+        assign n11_tree_6 = n17_tree_8;
+        assign n12_tree_6 = n16_tree_8;
+        assign n9_tree_6 = n15_tree_8;
+        assign n10_tree_6 = n14_tree_8;
+    assign n24_tree_6 = (n25_tree_6&amp;n17_tree_6)|n16_tree_6;
+        assign n25_tree_6 = n34_tree_8;
+
+endmodule // adder_tree_6
+
+module adder_tree_6_block_0(
+
+        input  n13_tree_6,
+        input  n24_tree_6,
+        input  n9_tree_6,
+        input  n11_tree_6,
+        input  b_in_6,
+        input  a_in_6,
+        input  n12_tree_6,
+        input  n14_tree_6,
+        input  n10_tree_6,
+        output  n8_tree_6,
+        output  n30_tree_6,
+        output  n7_tree_6,
+        output  sum,
+        output  n28_tree_6,
+        output  n32_tree_6,
+        output  n29_tree_6,
+        output  n31_tree_6,
+        output  n27_tree_6
+        );
+
+// block 0
+
+    assign n31_tree_6 = n10_tree_6 ? n8_tree_6 : n7_tree_6;
+
+    assign n32_tree_6 = n9_tree_6 ? n8_tree_6 : n7_tree_6;
+    assign n27_tree_6 = n14_tree_6 ? n30_tree_6 : n29_tree_6;
+
+    assign n28_tree_6 = n13_tree_6 ? n30_tree_6 : n29_tree_6;
+    assign n7_tree_6 = a_in_6^b_in_6;
+
+    assign n8_tree_6 = ~(a_in_6^b_in_6);
+    assign sum = n24_tree_6 ? n28_tree_6 : n27_tree_6;
+    assign n29_tree_6 = n12_tree_6 ? n32_tree_6 : n31_tree_6;
+
+    assign n30_tree_6 = n11_tree_6 ? n32_tree_6 : n31_tree_6;
+
+endmodule // adder_tree_6_block_0
+
+module adder_tree_7(
+
+        input [7:0] a_in,
+        input [7:0] b_in,
+        input  n10_tree_8,
+        input  n11_tree_8,
+        input  n12_tree_8,
+        input  n13_tree_8,
+        input  n33_tree_8,
+        output  sum
+        );
+
+// adder_forest tree_7
+        wire n1_tree_7, n2_tree_7, n5_tree_7, n6_tree_7, n7_tree_7, n8_tree_7, n9_tree_7, n10_tree_7, n28_tree_7, n31_tree_7, n32_tree_7;
+
+        adder_tree_7_block_0 U0(
+                .n8_tree_7(n8_tree_7),
+                .a_in_7(a_in[7]),
+                .n10_tree_7(n10_tree_7),
+                .n28_tree_7(n28_tree_7),
+                .n9_tree_7(n9_tree_7),
+                .b_in_7(b_in[7]),
+                .n7_tree_7(n7_tree_7),
+                .n1_tree_7(n1_tree_7),
+                .n6_tree_7(n6_tree_7),
+                .n2_tree_7(n2_tree_7),
+                .n32_tree_7(n32_tree_7),
+                .n5_tree_7(n5_tree_7),
+                .sum(sum),
+                .n31_tree_7(n31_tree_7)
+        );
+        assign n7_tree_7 = n11_tree_8;
+        assign n8_tree_7 = n10_tree_8;
+        assign n10_tree_7 = n12_tree_8;
+        assign n9_tree_7 = n13_tree_8;
+        assign n28_tree_7 = n33_tree_8;
+
+endmodule // adder_tree_7
+
+module adder_tree_7_block_0(
+
+        input  n8_tree_7,
+        input  a_in_7,
+        input  n10_tree_7,
+        input  n28_tree_7,
+        input  n9_tree_7,
+        input  b_in_7,
+        input  n7_tree_7,
+        output  n1_tree_7,
+        output  n6_tree_7,
+        output  n2_tree_7,
+        output  n32_tree_7,
+        output  n5_tree_7,
+        output  sum,
+        output  n31_tree_7
+        );
+
+// block 0
+
+    assign n31_tree_7 = n8_tree_7 ? n6_tree_7 : n5_tree_7;
+
+    assign n32_tree_7 = n7_tree_7 ? n6_tree_7 : n5_tree_7;
+    assign w1 =  n9_tree_7| n10_tree_7;
+
+    assign n1_tree_7 = n10_tree_7 ? n32_tree_7 : n31_tree_7;
+
+    assign n2_tree_7 = w1  ? n32_tree_7 : n31_tree_7;
+    assign sum = n28_tree_7 ? n2_tree_7 : n1_tree_7;
+    assign n5_tree_7 = a_in_7^b_in_7;
+
+    assign n6_tree_7 = ~(a_in_7^b_in_7);
+
+endmodule // adder_tree_7_block_0
+
+module adder_tree_8(
+
+        input [8:0] a_in,
+        input [8:0] b_in,
+        output  sum,
+        output  n28_tree_8,
+        output  n29_tree_8,
+        output  n24_tree_8,
+        output  n25_tree_8,
+        output  n22_tree_8,
+        output  n23_tree_8,
+        output  n17_tree_8,
+        output  n16_tree_8,
+        output  n15_tree_8,
+        output  n14_tree_8,
+        output  n10_tree_8,
+        output  n11_tree_8,
+        output  n12_tree_8,
+        output  n13_tree_8,
+        output  n20_tree_8,
+        output  n21_tree_8,
+        output  n33_tree_8,
+        output  n34_tree_8,
+        output  n35_tree_8
+        );
+
+// adder_forest tree_8
+        wire n4_tree_8, n5_tree_8, n6_tree_8, n7_tree_8, n8_tree_8, n9_tree_8, n32_tree_8, n36_tree_8;
+
+        adder_tree_8_block_0 U0(
+                .n4_tree_8(n4_tree_8),
+                .a_in_1(a_in[1]),
+                .n21_tree_8(n21_tree_8),
+                .n5_tree_8(n5_tree_8),
+                .n35_tree_8(n35_tree_8),
+                .n20_tree_8(n20_tree_8),
+                .b_in_1(b_in[1]),
+                .n36_tree_8(n36_tree_8),
+                .n32_tree_8(n32_tree_8),
+                .sum(sum),
+                .n33_tree_8(n33_tree_8),
+                .n34_tree_8(n34_tree_8),
+                .n28_tree_8(n28_tree_8),
+                .n29_tree_8(n29_tree_8)
+        );
+
+        adder_tree_8_block_1 U1(
+                .a_in_4(a_in[4]),
+                .n15_tree_8(n15_tree_8),
+                .n7_tree_8(n7_tree_8),
+                .n6_tree_8(n6_tree_8),
+                .b_in_4(b_in[4]),
+                .n14_tree_8(n14_tree_8),
+                .n5_tree_8(n5_tree_8),
+                .n4_tree_8(n4_tree_8),
+                .n17_tree_8(n17_tree_8),
+                .n16_tree_8(n16_tree_8),
+                .n12_tree_8(n12_tree_8),
+                .n13_tree_8(n13_tree_8)
+        );
+
+        adder_tree_8_block_2 U2(
+                .n24_tree_8(n24_tree_8),
+                .n25_tree_8(n25_tree_8),
+                .b_in_3(b_in[3]),
+                .a_in_3(a_in[3]),
+                .n22_tree_8(n22_tree_8),
+                .n23_tree_8(n23_tree_8),
+                .n20_tree_8(n20_tree_8),
+                .n21_tree_8(n21_tree_8)
+        );
+
+        adder_tree_8_block_3 U3(
+                .a_in_6(a_in[6]),
+                .n9_tree_8(n9_tree_8),
+                .n8_tree_8(n8_tree_8),
+                .b_in_6(b_in[6]),
+                .n6_tree_8(n6_tree_8),
+                .n7_tree_8(n7_tree_8),
+                .n10_tree_8(n10_tree_8),
+                .n11_tree_8(n11_tree_8)
+        );
+    assign n25_tree_8 = a_in[2]^b_in[2];
+
+    assign n24_tree_8 = a_in[2]&amp;b_in[2];
+    assign n15_tree_8 = a_in[5]^b_in[5];
+
+    assign n14_tree_8 = a_in[5]&amp;b_in[5];
+    assign n9_tree_8 = a_in[7]^b_in[7];
+
+    assign n8_tree_8 = a_in[7]&amp;b_in[7];
+    assign n35_tree_8 = a_in[0]&amp;b_in[0];
+    assign n36_tree_8 = a_in[8]^b_in[8];
+
+endmodule // adder_tree_8
+
+module adder_tree_8_block_0(
+
+        input  n4_tree_8,
+        input  a_in_1,
+        input  n21_tree_8,
+        input  n5_tree_8,
+        input  n35_tree_8,
+        input  n20_tree_8,
+        input  b_in_1,
+        input  n36_tree_8,
+        output  n32_tree_8,
+        output  sum,
+        output  n33_tree_8,
+        output  n34_tree_8,
+        output  n28_tree_8,
+        output  n29_tree_8
+        );
+
+// block 0
+
+    assign sum = n32_tree_8^n36_tree_8;
+    assign n33_tree_8 = (n34_tree_8&amp;n21_tree_8)|n20_tree_8;
+    assign n34_tree_8 = (n35_tree_8&amp;n29_tree_8)|n28_tree_8;
+    assign n29_tree_8 = a_in_1^b_in_1;
+
+    assign n28_tree_8 = a_in_1&amp;b_in_1;
+    assign n32_tree_8 = (n33_tree_8&amp;n5_tree_8)|n4_tree_8;
+
+endmodule // adder_tree_8_block_0
+
+module adder_tree_8_block_1(
+
+        input  a_in_4,
+        input  n15_tree_8,
+        input  n7_tree_8,
+        input  n6_tree_8,
+        input  b_in_4,
+        input  n14_tree_8,
+        output  n5_tree_8,
+        output  n4_tree_8,
+        output  n17_tree_8,
+        output  n16_tree_8,
+        output  n12_tree_8,
+        output  n13_tree_8
+        );
+
+// block 1
+
+    assign n17_tree_8 = a_in_4^b_in_4;
+
+    assign n16_tree_8 = a_in_4&amp;b_in_4;
+    assign n5_tree_8 = n7_tree_8&amp;n13_tree_8;
+
+    assign n4_tree_8 = (n12_tree_8&amp;n7_tree_8)|n6_tree_8;
+    assign n13_tree_8 = n15_tree_8&amp;n17_tree_8;
+
+    assign n12_tree_8 = (n16_tree_8&amp;n15_tree_8)|n14_tree_8;
+
+endmodule // adder_tree_8_block_1
+
+module adder_tree_8_block_2(
+
+        input  n24_tree_8,
+        input  n25_tree_8,
+        input  b_in_3,
+        input  a_in_3,
+        output  n22_tree_8,
+        output  n23_tree_8,
+        output  n20_tree_8,
+        output  n21_tree_8
+        );
+
+// block 2
+
+    assign n23_tree_8 = a_in_3^b_in_3;
+
+    assign n22_tree_8 = a_in_3&amp;b_in_3;
+    assign n21_tree_8 = n23_tree_8&amp;n25_tree_8;
+
+    assign n20_tree_8 = (n24_tree_8&amp;n23_tree_8)|n22_tree_8;
+
+endmodule // adder_tree_8_block_2
+
+module adder_tree_8_block_3(
+
+        input  a_in_6,
+        input  n9_tree_8,
+        input  n8_tree_8,
+        input  b_in_6,
+        output  n6_tree_8,
+        output  n7_tree_8,
+        output  n10_tree_8,
+        output  n11_tree_8
+        );
+
+// block 3
+
+    assign n11_tree_8 = a_in_6^b_in_6;
+
+    assign n10_tree_8 = a_in_6&amp;b_in_6;
+    assign n7_tree_8 = n9_tree_8&amp;n11_tree_8;
+
+    assign n6_tree_8 = (n10_tree_8&amp;n9_tree_8)|n8_tree_8;
+
+endmodule // adder_tree_8_block_3
+</pre></div></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tree_demo.html" class="btn btn-neutral float-left" title="Trees [structures that generate one bit of the result]" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../src/theory.html" class="btn btn-neutral float-right" title="Theory and Discussion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traditional hardware addition &mdash; Parallel prefix tree generation and exploration 1.2.6 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Adder-specific optimizations [Sparseness]" href="sparseness.html" />
+    <link rel="prev" title="Brief theory of addition" href="adder_theory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Parallel prefix tree generation and exploration
+          </a>
+              <div class="version">
+                1.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../src/pptrees.html">pptrees package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../src/theory.html">Theory and Discussion</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="adder_theory.html">Brief theory of addition</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Traditional hardware addition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Trees-calculate-one-digit-of-the-answer.-What-calculates-the-whole-thing?">Trees calculate one digit of the answer. What calculates the whole thing?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Classic-structures">Classic structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Serial-structure">Serial structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Sklansky-structure">Sklansky structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Kogge-Stone-structure">Kogge-Stone structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Brent-Kung-structure">Brent-Kung structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Trade-offs-(layers,-fan-out,-tracks)">Trade-offs (layers, fan-out, tracks)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Problems-with-classic-hardware-addition">Problems with classic hardware addition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Revised-hardware-addition">Revised hardware addition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)">Setup (RUN ME before executing any code in this section)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Trees calculate one digit of the answer. What calculates the whole thing?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#The-classic-structures">The classic structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Post-classic-structures">Post-classic structures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sparseness.html">Adder-specific optimizations [Sparseness]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="factorization.html">Adder-specific optimizations [Factorization]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tree_traversal.html">Sample traversal through the space of binary trees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html">Logical synthesis of general hardware operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-addition-based-comparator">Possible expansion: addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-non-addition-based-comparator">Possible expansion: non addition-based comparator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_operations.html#Possible-expansion:-adding-a-constant-value">Possible expansion: adding a constant value</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Parallel prefix tree generation and exploration</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+        
+          
+            <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../src/theory.html">Theory and Discussion</a> &raquo;</li>
+      <li>Traditional hardware addition</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/tdene/synth_opt_adders/blob/main/docs/notebooks/traditional_addition.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<p><a class="reference external" href="https://colab.research.google.com/github/tdene/synth_opt_adders/blob/master/docs/notebooks/traditional_addition.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section id="Traditional-hardware-addition">
+<h1>Traditional hardware addition<a class="headerlink" href="#Traditional-hardware-addition" title="Permalink to this heading">¶</a></h1>
+<section id="Trees-calculate-one-digit-of-the-answer.-What-calculates-the-whole-thing?">
+<h2>Trees calculate one digit of the answer. What calculates the whole thing?<a class="headerlink" href="#Trees-calculate-one-digit-of-the-answer.-What-calculates-the-whole-thing?" title="Permalink to this heading">¶</a></h2>
+<p>The <a class="reference external" href="adder_theory.html">brief theory of addition notebook</a> discussed the calculation of a single digit of the final answer. Such a calculation can be associated in numerous ways, each one representing a specific digital circuit. Combinatorics tells us that the space of possible associations of <span class="math notranslate nohighlight">\(n\)</span> factors is bijective with the space of possible binary trees of <span class="math notranslate nohighlight">\(n\)</span> leafs.</p>
+<p>Subsequently though, how can the entire of the final multi-digit answer be represented, as opposed to just one of its digits?</p>
+<p>Clasically, this is done through a tree with multiple roots, one for each digit. This structure is known as a polytree, or an <span class="math notranslate nohighlight">\(n\)</span>-rooted tree.</p>
+</section>
+<section id="Classic-structures">
+<h2>Classic structures<a class="headerlink" href="#Classic-structures" title="Permalink to this heading">¶</a></h2>
+<p>This section presents several classic adder structures.</p>
+<p>The diagrams shown below are drawn in the classic style of adder literature.</p>
+<p>Data flows from top to bottom. Thus the <span class="math notranslate nohighlight">\(n\)</span> roots of the tree sit at the bottom. Nodes labeled “pre” perform pre-processing logic that encodes <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span> into an alternate form. Nodes labeled “post” re-compose the local and non-local aspects of binary addition into the final sum. The main body of the diagrams performs the non-local computation.</p>
+</section>
+<section id="Serial-structure">
+<h2>Serial structure<a class="headerlink" href="#Serial-structure" title="Permalink to this heading">¶</a></h2>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/rc_old.png" />
+<p>This is the naïve implementation of adding one digit at a time and “carrying over the one”.</p>
+</section>
+<section id="Sklansky-structure">
+<h2>Sklansky structure<a class="headerlink" href="#Sklansky-structure" title="Permalink to this heading">¶</a></h2>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/sk_old.png" />
+<p>This is a right-balanced <span class="math notranslate nohighlight">\(n\)</span>-rooted tree.</p>
+<p>The height of the tree (the number of sequential logic levels) has dropped from <span class="math notranslate nohighlight">\(n-1\)</span> to <span class="math notranslate nohighlight">\(lg(n)\)</span>, thus decreasing the delay.</p>
+<p>The number of nodes has risen, thus increasing both area and power consumption.</p>
+<p>However, it may be observed that some nodes drive multiple outputs. This is a concept known as <strong>fanout</strong>. Fanout directly increases delay. as can be seen from the simulation results below.</p>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/fanout_demo.png" />
+</section>
+<section id="Kogge-Stone-structure">
+<h2>Kogge-Stone structure<a class="headerlink" href="#Kogge-Stone-structure" title="Permalink to this heading">¶</a></h2>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/ks_old.png" />
+<p>This is a left-balanced <span class="math notranslate nohighlight">\(n\)</span>-rooted tree.</p>
+<p>It can be seen to have minimal fanout. As such, it should be faster than the previous structure.</p>
+<p>The height of the tree (the number of sequential logic levels) remains at <span class="math notranslate nohighlight">\(lg(n)\)</span>, thus decreasing the delay.</p>
+<p>The number of nodes has risen, thus increasing both area and power consumption.</p>
+<p>However, it may be observed that some of the gaps between the rows of nodes have multiple sets of parallel wires running through them. This concept is known as wire <strong>tracks</strong>. An increased need for wire tracks also directly increases the delay. Either the wires are placed in close proximity, and cross-coupling capacitance degrades performance, or the wires are spaced out, and the electrical signal has to deal with longer wires.</p>
+</section>
+<section id="Brent-Kung-structure">
+<h2>Brent-Kung structure<a class="headerlink" href="#Brent-Kung-structure" title="Permalink to this heading">¶</a></h2>
+<img alt="png" src="https://raw.githubusercontent.com/tdene/synth_opt_adders/main/docs/diagrams/bk_old.png" />
+<p>This is a tree with both minimal fanout as well as minimum wire tracks.</p>
+<p>However, the number of logic <strong>levels</strong> is higher than both previous examples, at <span class="math notranslate nohighlight">\(2lg(n)-1\)</span>.</p>
+</section>
+<section id="Trade-offs-(layers,-fan-out,-tracks)">
+<h2>Trade-offs (layers, fan-out, tracks)<a class="headerlink" href="#Trade-offs-(layers,-fan-out,-tracks)" title="Permalink to this heading">¶</a></h2>
+<p>The <a class="reference external" href="adder_theory.html">brief theory of addition notebook</a> discussed the question “Why is this huge design space relevant at all?” These necessary trade-offs, between layers, fan-out, and tracks, is why the design space must be explored.</p>
+<p>While both the Sklansky and Kogge-Stone structures are balanced, their fan-out and tracks reduce their actual speed in physical implementation. The fastest structure is often neither of them, but rather a compromise.</p>
+<p>Furthermore, each of these structures incurs a large cost of area and power consumption. The Brent-Kung structure, for example, still has logarithmic delay, but consumes far less power.</p>
+<p>Another important point is that these circuits generate multiple output bits. In practice, not all these output bits are equally important. Exploring the design space allows for the creation of custom structures that are optimal for non-uniform timing constraints.</p>
+</section>
+<section id="Problems-with-classic-hardware-addition">
+<h2>Problems with classic hardware addition<a class="headerlink" href="#Problems-with-classic-hardware-addition" title="Permalink to this heading">¶</a></h2>
+<p>As previously mentioned, classic addition theory chooses to represent the calculation of an <span class="math notranslate nohighlight">\(n\)</span>-bit binary addition as an <span class="math notranslate nohighlight">\(n\)</span>-rooted tree in the form of the above diagrams.</p>
+<p>There are several key flaws with this reasoning:</p>
+<ul class="simple">
+<li><p>The inputs and outputs are strangely offset by 1, requiring alien notation such as “the negative first bit of the input”.</p></li>
+<li><p>The design space is restricted by assumptions such as “only one node may occupy a certain location in the diagram” or “each node must be connected to the node above it”. These are unnecessary assumptions that eliminate useful architectures.</p></li>
+<li><p>It is entirely unclear what the pre-processing logic does, how it relates to the rest of the tree, and how this can be used to optimize addition.</p></li>
+<li><p>It is entirely unclear what the post-processing logic does, how it relates to the rest of the tree, and how this can be used to optimize addition.</p></li>
+</ul>
+</section>
+</section>
+<section id="Revised-hardware-addition">
+<h1>Revised hardware addition<a class="headerlink" href="#Revised-hardware-addition" title="Permalink to this heading">¶</a></h1>
+<section id="Setup-(RUN-ME-before-executing-any-code-in-this-section)">
+<h2>Setup (RUN ME before executing any code in this section)<a class="headerlink" href="#Setup-(RUN-ME-before-executing-any-code-in-this-section)" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!pip install --upgrade git+https://github.com/tdene/synth_opt_adders.git@v1.0.8
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/tdene/synth_opt_adders.git@v1.0.8
+  Cloning https://github.com/tdene/synth_opt_adders.git (to revision v1.0.8) to /tmp/pip-req-build-62j3w7e4
+  Running command git clone --filter=blob:none --quiet https://github.com/tdene/synth_opt_adders.git /tmp/pip-req-build-62j3w7e4
+  Running command git checkout -q b7fefb354f08171a8d9cd6e623d9b83c9d77581a
+  Resolved https://github.com/tdene/synth_opt_adders.git to commit b7fefb354f08171a8d9cd6e623d9b83c9d77581a
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: Pillow in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (9.1.1)
+Requirement already satisfied: graphviz in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (0.19.1)
+Requirement already satisfied: networkx in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (2.7)
+Requirement already satisfied: pydot in /home/tdene/.local/lib/python3.8/site-packages (from pptrees==1.0.8) (1.4.2)
+Requirement already satisfied: pyparsing&gt;=2.1.4 in /home/tdene/.local/lib/python3.8/site-packages (from pydot-&gt;pptrees==1.0.8) (3.0.7)
+Building wheels for collected packages: pptrees
+  Building wheel for pptrees (setup.py) ... done
+  Created wheel for pptrees: filename=pptrees-1.0.8-py3-none-any.whl size=63945 sha256=b88c75060dabcd09e91db472fa04f36da87c3b99ea50685dadde0e59ec746f7d
+  Stored in directory: /tmp/pip-ephem-wheel-cache-921bsjmq/wheels/6a/0e/65/6c50e0a68c52fea65d7c9d6ba6a57e5a84e3d619b2357f716d
+Successfully built pptrees
+Installing collected packages: pptrees
+Successfully installed pptrees-1.0.8
+<span class="ansi-yellow-fg">WARNING: You are using pip version 22.0.4; however, version 22.1.2 is available.
+You should consider upgrading via the &#39;/usr/bin/python3 -m pip install --upgrade pip&#39; command.</span><span class="ansi-yellow-fg">
+</span>
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderTree import AdderTree as tree
+from pptrees.AdderForest import AdderForest as forest
+from pptrees.util import catalan
+</pre></div>
+</div>
+</div>
+</section>
+<section id="id1">
+<h2>Trees calculate one digit of the answer. What calculates the whole thing?<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<p>A circuit that calculates a single digit of the final answer is analogous to a binary tree.</p>
+<p>Classic addition theory chooses to represent the calculation of an <span class="math notranslate nohighlight">\(n\)</span>-bit binary addition as an <span class="math notranslate nohighlight">\(n\)</span>-rooted tree in the form of specific diagrams.</p>
+<p>Let’s instead represent <span class="math notranslate nohighlight">\(n\)</span>-bit binary addition as a non-disjoint forest of <span class="math notranslate nohighlight">\(n\)</span> trees.</p>
+</section>
+<section id="The-classic-structures">
+<h2>The classic structures<a class="headerlink" href="#The-classic-structures" title="Permalink to this heading">¶</a></h2>
+<p>Here are the classic structures from the previous section, in this representation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+# Serial structure
+f = forest(9)
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_29_0.png" src="../_images/notebooks_traditional_addition_29_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+# Sklansky structure
+f = forest(9)
+for t in f.trees[2:]:
+  t.rbalance(t.root[1])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_30_0.png" src="../_images/notebooks_traditional_addition_30_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+# Kogge-Stone structure
+f = forest(9)
+for t in f.trees[2:]:
+  t.lbalance(t.root[1])
+  t.equalize_depths(t.root[1])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_31_0.png" src="../_images/notebooks_traditional_addition_31_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+# Brent-Kung structure, before the fan-out is decoupled
+f = forest(9)
+for t in f.trees[2:]:
+  t.rbalance(t.root[1])
+  # Same as Sklansky so far
+  while not t.root[1][0].is_proper():
+    t.right_rotate(t.root[1][0])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_32_0.png" src="../_images/notebooks_traditional_addition_32_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pptrees.AdderForest import AdderForest as forest
+
+# Brent-Kung structure, before the fan-out is decoupled
+f = forest(9)
+for t in f.trees[2:]:
+  t.rbalance(t.root[1])
+  # Same as Sklansky so far
+  while not t.root[1][0].is_proper():
+    t.right_rotate(t.root[1][0])
+
+# And now Brent-Kung with the fan-out decoupled
+f.calculate_fanout()
+f.decouple_all_fanout(2)
+f.unmark_equivalent_nodes()
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_33_0.png" src="../_images/notebooks_traditional_addition_33_0.png" />
+</div>
+</div>
+<p>These all generate the same hardware as the structures in the previous section.</p>
+</section>
+<section id="Post-classic-structures">
+<h2>Post-classic structures<a class="headerlink" href="#Post-classic-structures" title="Permalink to this heading">¶</a></h2>
+<p>Here are some examples of structures that are impossible to depict under the old system.</p>
+<p>First, it is now known exactly how many possible structures there are.</p>
+<p>Note that architectures that differ only in the method of decoupling their fanout are considered fundamentally equivalent. Buffer insertion, or fanout decoupling, is not an inherent feature of logically synthesized hardware. It is a layout optimization to be performed after logical synthesis.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>width = 9
+number_of_structures = 1
+for a in range(2,width):
+  number_of_structures = number_of_structures * catalan(a-2)
+print(number_of_structures)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+776160
+</pre></div></div>
+</div>
+<p>Here is one arbitrary structure that is impossible to depict, generate, or describe using traditional methods.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>f = forest(9, tree_start_points = [0, 0, 0, 1, 4, 12, 21, 47, 217])
+f
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_traditional_addition_39_0.png" src="../_images/notebooks_traditional_addition_39_0.png" />
+</div>
+</div>
+<p>There are many such examples. The <a class="reference external" href="sparseness.html">notebook on sparseness</a> and the <a class="reference external" href="factorization.html">notebook on factorization</a> introduce two important concepts that are poorly understood and under-utilized due to the traditional method of regarding arithmetic circuits.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="adder_theory.html" class="btn btn-neutral float-left" title="Brief theory of addition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sparseness.html" class="btn btn-neutral float-right" title="Adder-specific optimizations [Sparseness]" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Teodor-Dumitru Ene.</p>
+  </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
