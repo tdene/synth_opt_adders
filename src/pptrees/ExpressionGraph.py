@@ -276,7 +276,6 @@ class ExpressionGraph(nx.DiGraph):
         else:
             new_block = graph_type(name="block_{0}".format(block_id))
         subgraph = self.subgraph(nodes)
-        del subgraph.nodes
         new_block.add_nodes_from(subgraph.nodes(data=True))
         new_block.add_edges_from(subgraph.edges(data=True))
         self.blocks[block_id] = new_block
