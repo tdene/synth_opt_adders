@@ -2,8 +2,6 @@ import os
 import re
 import uuid
 
-import PIL.Image
-
 
 def lg(x):
     """Returns the base-2 logarithm of x, rounded down"""
@@ -404,6 +402,9 @@ def display_gif(graphs, *args, **kwargs):
         *args: The arguments to pass to the graphs' png() method
         **kwargs: The keyword arguments to pass to the graphs' png() method
     """
+    # Import PIL.Image here to prevent instant crash on Python 3.6
+    import PIL.Image
+
     # Get temporary file names
     fnames = [str(uuid.uuid4()) + ".png" for _ in range(len(graphs))]
     # Execute the function

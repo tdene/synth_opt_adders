@@ -22,4 +22,9 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.6.*",
     install_requires=["networkx", "pydot", "graphviz", "Pillow"],
+    extras_require={
+        ':python_version == "3.6"': [
+            "importlib-resources",
+        ]
+    },
 )
