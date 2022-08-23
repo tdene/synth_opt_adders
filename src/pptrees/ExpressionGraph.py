@@ -1,4 +1,3 @@
-import importlib.resources
 import pathlib
 import shutil
 
@@ -20,6 +19,11 @@ from .util import (
     sub_ports,
     wrap_quotes,
 )
+
+try:
+    from importlib.resources import path as respath
+except ImportError:
+    from importlib_resources import path as respath
 
 
 class ExpressionGraph(nx.DiGraph):
@@ -276,7 +280,6 @@ class ExpressionGraph(nx.DiGraph):
         else:
             new_block = graph_type(name="block_{0}".format(block_id))
         subgraph = self.subgraph(nodes)
-        del subgraph.nodes
         new_block.add_nodes_from(subgraph.nodes(data=True))
         new_block.add_edges_from(subgraph.edges(data=True))
         self.blocks[block_id] = new_block
@@ -480,7 +483,7 @@ class ExpressionGraph(nx.DiGraph):
             # Parse the mapping file
             file_suffix = syntax["file_extension"]
             map_file = "{0}_map{1}".format(mapping, file_suffix)
-            map_path = importlib.resources.path("pptrees.mappings", map_file)
+            map_path = respath("pptrees.mappings", map_file)
             with map_path as pkg_map_file:
                 mapping_dict = parse_mapping(pkg_map_file)
 
@@ -654,7 +657,7 @@ class ExpressionGraph(nx.DiGraph):
         # Verify that the mapping is supported
         file_suffix = syntax["file_extension"]
         map_file = "{0}_map{1}".format(mapping, file_suffix)
-        map_path = importlib.resources.path("pptrees.mappings", map_file)
+        map_path = respath("pptrees.mappings", map_file)
         with map_path as pkg_map_file:
             local_map_file = outdir / (mapping + "_map" + file_suffix)
 
