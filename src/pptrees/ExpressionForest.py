@@ -485,21 +485,25 @@ class ExpressionForest(ExpressionGraph):
 
         if optimization > 0:
             self.optimize_nodes()
-        if optimization > 1:
             self.find_equivalent_nodes()
+        if optimization > 1:
             self.calculate_fanout()
             self.calculate_tracks()
             self.add_best_blocks()
 
         hdl = []
         module_defs = set()
-        # This HDL description will have multiple cell-internal wires
-        # By default, these are named w*
-        # These names need to be made unique
+        # Uniquify the cell names and wire names
+        # But this only needs to be done for reps of the equiv classes
+        reps = [ec.rep for ec in self.equiv_classes]
         w_ctr = 0
+        w_ctr = increment_wname(reps, w_ctr, language)
+        U_ctr = 0
+        U_ctr = increment_iname(reps, U_ctr, language)
+
+        # Get HDL for each tree
         for t in reversed(self.trees):
             desc = "{}_forest {}".format(self.name, t.name)
-            w_ctr = increment_wname(t.nodes(), w_ctr, language)
             t_hdl, t_module_defs = t.hdl(
                 language=language,
                 mapping=mapping,
@@ -513,11 +517,6 @@ class ExpressionForest(ExpressionGraph):
             hdl.append(t_hdl)
             module_defs |= t_module_defs
         hdl = "\n".join(hdl)
-
-        # This HDL description will have multiple instances in it
-        # By default, util.hdl_inst names all instances "U0"
-        # These names need to be made unique
-        hdl = increment_iname(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
             hdl, module_defs, language, module_name

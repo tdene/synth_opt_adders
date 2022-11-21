@@ -334,24 +334,32 @@ def merge_mapping_into_cells(hdl, mapping):
     return "\n".join(new_hdl)
 
 
-def increment_iname(hdl):
-    """Assigns unique instances names for all cells in the HDL block
+def increment_iname(nodes, U_ctr, language="verilog"):
+    """Assigns unique instances names for all cells in the given nodes
 
     By default, instances are named U0, U1, U2, etc.
     These names need to be made unique.
     """
-    U_count = 0
-    good_hdl = ""
-    while True:
-        # Find the next instance name
-        U = re.search(r"U\d+", hdl)
-        if U is None:
-            break
-        # Replace it with the next name
-        good_hdl += hdl[: U.start()] + "U" + str(U_count)
-        hdl = hdl[U.end() :]
-        U_count += 1
-    return good_hdl + hdl
+    for node in nodes:
+        hdl = node.node_data[language]
+        # Get the list of all node names, in reverse
+        U = re.findall(r"U\d+", hdl)
+        U = sorted(list(set(U)), reverse=True)
+        # Substitute them in reverse as well
+        # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all nodes == 3
+        # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the nodes good
+        U_ctr = U_ctr + len(U)
+        final_U_ctr = U_ctr
+        # Check if the node names have already been made unique
+        if len(U) == len(set(U)) and all(
+            [int(x[1:]) > U_ctr - len(U) for x in U]
+        ):
+            continue
+        for x in U:
+            hdl = hdl.replace("{}(".format(x), "U{}(".format(final_U_ctr))
+            final_U_ctr -= 1
+        node.node_data[language] = hdl
+    return U_ctr
 
 
 def increment_wname(nodes, w_ctr, language="verilog"):
@@ -362,8 +370,8 @@ def increment_wname(nodes, w_ctr, language="verilog"):
     """
     for node in nodes:
         hdl = node.node_data[language]
-        w = re.findall(r"w\d+", hdl)
         # Get the list of all wire names, in reverse
+        w = re.findall(r"w\d+", hdl)
         w = sorted(list(set(w)), reverse=True)
         # Substitute them in reverse as well
         # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all wires == 3
@@ -371,8 +379,6 @@ def increment_wname(nodes, w_ctr, language="verilog"):
         w_ctr = w_ctr + len(w)
         final_w_ctr = w_ctr
         # Check if the wire names have already been made unique
-        if len(w) > 0:
-            print(w, w_ctr)
         if len(w) == len(set(w)) and all(
             [int(x[1:]) > w_ctr - len(w) for x in w]
         ):
