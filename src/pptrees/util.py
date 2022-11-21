@@ -354,24 +354,34 @@ def increment_iname(hdl):
     return good_hdl + hdl
 
 
-def increment_wname(hdl, w_ctr):
-    """Assigns unique instances names for all internal wires in the HDL block
+def increment_wname(nodes, w_ctr, language="verilog"):
+    """Assigns unique instances names for all internal wires in the given nodes
 
     By default, internal wires are named w0, w1, w2, etc.
     These names need to be made unique.
     """
-    w = re.findall(r"w\d+", hdl)
-    # Get the list of all wire names, in reverse
-    w = sorted(list(set(w)), reverse=True)
-    # Substitute them in reverse as well
-    # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all wires == 3
-    # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the wires good
-    w_ctr = w_ctr + len(w)
-    final_w_ctr = w_ctr
-    for x in w:
-        hdl = hdl.replace(x, "w{}".format(final_w_ctr))
-        final_w_ctr -= 1
-    return hdl, w_ctr
+    for node in nodes:
+        hdl = node.node_data[language]
+        w = re.findall(r"w\d+", hdl)
+        # Get the list of all wire names, in reverse
+        w = sorted(list(set(w)), reverse=True)
+        # Substitute them in reverse as well
+        # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all wires == 3
+        # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the wires good
+        w_ctr = w_ctr + len(w)
+        final_w_ctr = w_ctr
+        # Check if the wire names have already been made unique
+        if len(w) > 0:
+            print(w, w_ctr)
+        if len(w) == len(set(w)) and all(
+            [int(x[1:]) > w_ctr - len(w) for x in w]
+        ):
+            continue
+        for x in w:
+            hdl = hdl.replace(x, "w{}".format(final_w_ctr))
+            final_w_ctr -= 1
+        node.node_data[language] = hdl
+    return w_ctr
 
 
 def display_png(graph, *args, **kwargs):

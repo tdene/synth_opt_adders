@@ -463,7 +463,7 @@ class ExpressionGraph(nx.DiGraph):
             if self.blocks[block_id] is None:
                 continue
             block = self.blocks[block_id]
-
+            w_ctr = increment_wname(block.nodes(), w_ctr, language)
             block_hdl, block_defs = block.hdl(
                 mapping=mapping,
                 language=language,
@@ -473,7 +473,6 @@ class ExpressionGraph(nx.DiGraph):
                 module_name="{0}_block_{1}".format(module_name, block_id),
                 description_string="block {0}".format(block_id),
             )
-            block_hdl, w_ctr = increment_wname(block_hdl, w_ctr)
             hdl += block_hdl
             hdl += "\n"
             module_defs.update(block_defs)
@@ -530,11 +529,11 @@ class ExpressionGraph(nx.DiGraph):
                 usable = node_block is self
             if not usable:
                 continue
-            # Get the node's HDL description
-            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
             # If the cell is flat, rename the internal wires
             if node_flat:
-                node_hdl, w_ctr = increment_wname(node_hdl, w_ctr)
+                w_ctr = increment_wname([node], w_ctr, language)
+            # Get the node's HDL description
+            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
 
             # If the mapping file is intended to be merged in, do so
             if merge_mapping:

@@ -499,6 +499,7 @@ class ExpressionForest(ExpressionGraph):
         w_ctr = 0
         for t in reversed(self.trees):
             desc = "{}_forest {}".format(self.name, t.name)
+            w_ctr = increment_wname(t.nodes(), w_ctr, language)
             t_hdl, t_module_defs = t.hdl(
                 language=language,
                 mapping=mapping,
@@ -509,7 +510,6 @@ class ExpressionForest(ExpressionGraph):
                 module_name="{0}_{1}".format(module_name, t.name),
                 description_string=desc,
             )
-            t_hdl, w_ctr = increment_wname(t_hdl, w_ctr)
             hdl.append(t_hdl)
             module_defs |= t_module_defs
         hdl = "\n".join(hdl)
