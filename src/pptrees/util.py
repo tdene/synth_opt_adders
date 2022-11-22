@@ -341,8 +341,10 @@ def increment_iname(nodes, U_ctr, language="verilog"):
     These names need to be made unique.
     """
     for node in nodes:
-        hdl = node.node_data[language]
+        # Keep track of name substitutions
+        name_sub = {}
         # Get the list of all node names, in reverse
+        hdl = node.node_data[language]
         U = re.findall(r"U\d+", hdl)
         U = sorted(list(set(U)), reverse=True)
         # Substitute them in reverse as well
@@ -357,8 +359,16 @@ def increment_iname(nodes, U_ctr, language="verilog"):
             continue
         for x in U:
             hdl = hdl.replace("{}(".format(x), "U{}(".format(final_U_ctr))
+            name_sub[x] = "U{}".format(final_U_ctr)
             final_U_ctr -= 1
         node.node_data[language] = hdl
+        # Record name substitutions
+        if hasattr(node, "inst_name_sub"):
+            node.inst_name_sub = {
+                k: name_sub[v] for k, v in node.inst_name_sub.items()
+            }
+        else:
+            node.inst_name_sub = name_sub
     return U_ctr
 
 
@@ -369,8 +379,10 @@ def increment_wname(nodes, w_ctr, language="verilog"):
     These names need to be made unique.
     """
     for node in nodes:
-        hdl = node.node_data[language]
+        # Keep track of name substitutions
+        name_sub = {}
         # Get the list of all wire names, in reverse
+        hdl = node.node_data[language]
         w = re.findall(r"w\d+", hdl)
         w = sorted(list(set(w)), reverse=True)
         # Substitute them in reverse as well
@@ -385,8 +397,16 @@ def increment_wname(nodes, w_ctr, language="verilog"):
             continue
         for x in w:
             hdl = hdl.replace(x, "w{}".format(final_w_ctr))
+            name_sub[x] = "w{}".format(final_w_ctr)
             final_w_ctr -= 1
         node.node_data[language] = hdl
+        # Record name substitutions
+        if hasattr(node, "wire_name_sub"):
+            node.wire_name_sub = {
+                k: name_sub[v] for k, v in node.wire_name_sub.items()
+            }
+        else:
+            node.wire_name_sub = name_sub
     return w_ctr
 
 
