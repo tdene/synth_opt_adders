@@ -463,7 +463,7 @@ class ExpressionGraph(nx.DiGraph):
             if self.blocks[block_id] is None:
                 continue
             block = self.blocks[block_id]
-
+            w_ctr = increment_wname(block.nodes(), w_ctr, language)
             block_hdl, block_defs = block.hdl(
                 mapping=mapping,
                 language=language,
@@ -473,7 +473,6 @@ class ExpressionGraph(nx.DiGraph):
                 module_name="{0}_block_{1}".format(module_name, block_id),
                 description_string="block {0}".format(block_id),
             )
-            block_hdl, w_ctr = increment_wname(block_hdl, w_ctr)
             hdl += block_hdl
             hdl += "\n"
             module_defs.update(block_defs)
@@ -491,6 +490,14 @@ class ExpressionGraph(nx.DiGraph):
         # If fully flattening them, need to rename "w*" internal wires
         if node_flat:
             w_ctr = 0
+        # If fully flattening the graph, need to rename "U*" cell names
+        # If not fully flattening the graph, rename anyway
+        if flat or not flat:
+            U_ctr = 0
+        # This HDL description will have multiple instances in it
+        # By default, util.hdl_inst names all instances "U0"
+        # These names need to be made unique
+        increment_iname(self.nodes(), U_ctr)
         # Reset the list of extra nets caused by equivalence classes
         self.in_extras = []
         self.out_extras = []
@@ -530,11 +537,11 @@ class ExpressionGraph(nx.DiGraph):
                 usable = node_block is self
             if not usable:
                 continue
-            # Get the node's HDL description
-            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
             # If the cell is flat, rename the internal wires
             if node_flat:
-                node_hdl, w_ctr = increment_wname(node_hdl, w_ctr)
+                w_ctr = increment_wname([node], w_ctr, language)
+            # Get the node's HDL description
+            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
 
             # If the mapping file is intended to be merged in, do so
             if merge_mapping:
@@ -542,7 +549,6 @@ class ExpressionGraph(nx.DiGraph):
                 new_defs = set()
                 for a in node_defs:
                     new_def = merge_mapping_into_cells(a, mapping_dict)
-                    new_def = increment_iname(new_def)
                     new_defs.add(new_def)
                 node_defs = new_defs
 
@@ -551,11 +557,6 @@ class ExpressionGraph(nx.DiGraph):
         # Format the list of extra nets caused by equivalence classes
         self.in_extras = [((sub_brackets(x), 1), x) for x in self.in_extras]
         self.out_extras = [((sub_brackets(x), 1), x) for x in self.out_extras]
-
-        # This HDL description will have multiple instances in it
-        # By default, util.hdl_inst names all instances "U0"
-        # These names need to be made unique
-        hdl = increment_iname(hdl)
 
         ### NOTE: Is this general? Improvements wanted
         ### In general, hard-coding an is_block flag sounds like a bad idea
