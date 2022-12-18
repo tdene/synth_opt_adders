@@ -315,8 +315,9 @@ class ExpressionGraph(nx.DiGraph):
         """Removes all blocks from the graph"""
 
         # Remove all blocks from the graph
-        for block_id in [x for x in self.blocks if x is not None]:
-            self.remove_block(block_id)
+        for block_id in range(len(self.blocks)):
+            if self.blocks[block_id] is not None:
+                self.remove_block(block_id)
 
         # Reset the next block name
         self.next_block = 0
@@ -418,6 +419,7 @@ class ExpressionGraph(nx.DiGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
+        uniquify_names=True,
         description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the graph
@@ -458,12 +460,13 @@ class ExpressionGraph(nx.DiGraph):
         # This HDL description will have multiple cell-internal wires
         # By default, these are named w*
         # These names need to be made unique
-        w_ctr = 0
+        w_ctr = 1
         for block_id in range(len(self.blocks)):
             if self.blocks[block_id] is None:
                 continue
             block = self.blocks[block_id]
-            w_ctr = increment_wname(block.nodes(), w_ctr, language)
+            if uniquify_names:
+                w_ctr = increment_wname(block.nodes(), w_ctr, language)
             block_hdl, block_defs = block.hdl(
                 mapping=mapping,
                 language=language,
@@ -471,6 +474,7 @@ class ExpressionGraph(nx.DiGraph):
                 node_flat=node_flat,
                 merge_mapping=merge_mapping,
                 module_name="{0}_block_{1}".format(module_name, block_id),
+                uniquify_names=uniquify_names,
                 description_string="block {0}".format(block_id),
             )
             hdl += block_hdl
@@ -489,15 +493,16 @@ class ExpressionGraph(nx.DiGraph):
         # Pull in the HDL description of nodes outside of blocks
         # If fully flattening them, need to rename "w*" internal wires
         if node_flat:
-            w_ctr = 0
+            w_ctr = 1
         # If fully flattening the graph, need to rename "U*" cell names
         # If not fully flattening the graph, rename anyway
         if flat or not flat:
-            U_ctr = 0
+            U_ctr = 1
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
-        increment_iname(self.nodes(), U_ctr)
+        if uniquify_names:
+            increment_iname(self.nodes(), U_ctr, language)
         # Reset the list of extra nets caused by equivalence classes
         self.in_extras = []
         self.out_extras = []
@@ -538,7 +543,7 @@ class ExpressionGraph(nx.DiGraph):
             if not usable:
                 continue
             # If the cell is flat, rename the internal wires
-            if node_flat:
+            if node_flat and uniquify_names:
                 w_ctr = increment_wname([node], w_ctr, language)
             # Get the node's HDL description
             node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
