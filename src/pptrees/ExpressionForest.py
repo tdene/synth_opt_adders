@@ -452,7 +452,8 @@ class ExpressionForest(ExpressionGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
-        uniquify_names=True,
+        instance_name="U0",
+        uniquify_nodes=True,
         description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the forest
@@ -502,6 +503,7 @@ class ExpressionForest(ExpressionGraph):
         U_ctr = increment_iname(reps, U_ctr, language)
 
         # Get HDL for each tree
+        tree_ctr = 1
         for t in reversed(self.trees):
             desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
@@ -512,15 +514,17 @@ class ExpressionForest(ExpressionGraph):
                 node_flat=node_flat,
                 merge_mapping=merge_mapping,
                 module_name="{0}_{1}".format(module_name, t.name),
-                uniquify_names=False,
+                instance_name="U{0}".format(tree_ctr),
+                uniquify_nodes=False,
                 description_string=desc,
             )
             hdl.append(t_hdl)
             module_defs |= t_module_defs
+            tree_ctr += 1
         hdl = "\n".join(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, module_name
+            hdl, module_defs, language, instance_name, module_name
         )
         if out is not None:
             self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
