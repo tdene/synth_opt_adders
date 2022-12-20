@@ -128,6 +128,7 @@ class ExpressionForest(ExpressionGraph):
                 raise ValueError("Number of trees in a forest must equal width")
             self.trees = initialized_trees
             super().__init__(name=name, in_ports=in_ports, out_ports=out_ports)
+            self.equiv_classes = set()
             return
 
         # Otherwise, initialize the trees
@@ -187,8 +188,6 @@ class ExpressionForest(ExpressionGraph):
                 t.rbalance(t.root[1])
                 while not t.root[1][0].is_proper():
                     t.right_rotate(t.root[1][0])
-            self.calculate_fanout()
-            self.decouple_all_fanout()
 
     def __getitem__(self, key):
         """Returns the tree at the given index
@@ -453,6 +452,7 @@ class ExpressionForest(ExpressionGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
+        uniquify_names=True,
         description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the forest
@@ -496,9 +496,9 @@ class ExpressionForest(ExpressionGraph):
         # Uniquify the cell names and wire names
         # But this only needs to be done for reps of the equiv classes
         reps = [ec.rep for ec in self.equiv_classes]
-        w_ctr = 0
+        w_ctr = 1
         w_ctr = increment_wname(reps, w_ctr, language)
-        U_ctr = 0
+        U_ctr = 1
         U_ctr = increment_iname(reps, U_ctr, language)
 
         # Get HDL for each tree
@@ -512,6 +512,7 @@ class ExpressionForest(ExpressionGraph):
                 node_flat=node_flat,
                 merge_mapping=merge_mapping,
                 module_name="{0}_{1}".format(module_name, t.name),
+                uniquify_names=False,
                 description_string=desc,
             )
             hdl.append(t_hdl)

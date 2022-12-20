@@ -217,13 +217,13 @@ class ExpressionNode:
             if not c.is_proper():
                 if c.children:
                     return c.is_complete()
-                # If there are no grandchildren, it's time to check handedness
+                # If there are no grandchildren it's time to check handedness
                 try:
                     idx = c.children.index(None)
                 except ValueError:
                     return True
                 return idx == bin(c.leafs).count("1")
-        # Fall-through case if all children are proper and have the same height
+        # Fall-through case if all children are proper and the same height
         return True
 
     def is_proper(self):

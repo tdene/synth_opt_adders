@@ -334,80 +334,74 @@ def merge_mapping_into_cells(hdl, mapping):
     return "\n".join(new_hdl)
 
 
-def increment_iname(nodes, U_ctr, language="verilog"):
-    """Assigns unique instances names for all cells in the given nodes
+def increment_iname(nodes, match_ctr, language="verilog"):
+    """Assigns unique names for all cells in the given nodes
 
-    By default, instances are named U0, U1, U2, etc.
+    By default, instances are named U0, U1, U2, etc;
+                wires are named w0, w1, w2, etc.
     These names need to be made unique.
     """
+    # Iterate over all nodes
     for node in nodes:
         # Keep track of name substitutions
         name_sub = {}
-        # Get the list of all node names, in reverse
-        hdl = node.node_data[language]
-        U = re.findall(r"U\d+", hdl)
-        U = sorted(list(set(U)), reverse=True)
-        # Substitute them in reverse as well
-        # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all nodes == 3
-        # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the nodes good
-        U_ctr = U_ctr + len(U)
-        final_U_ctr = U_ctr
-        # Check if the node names have already been made unique
-        if len(U) == len(set(U)) and all(
-            [int(x[1:]) > U_ctr - len(U) for x in U]
-        ):
-            continue
-        for x in U:
-            hdl = hdl.replace("{}(".format(x), "U{}(".format(final_U_ctr))
-            name_sub[x] = "U{}".format(final_U_ctr)
-            final_U_ctr -= 1
-        node.node_data[language] = hdl
-        # Record name substitutions
+        # Get the list of all matches
+        match_list = set(re.findall(r"U\d+", node.node_data[language]))
+        # Sort the list of all matches in terms of reverse string length
+        match_list = sorted(match_list, key=lambda x: -len(x))
+        # Substitute the names, using a character unlikely to cause collision
+        for old_name in match_list:
+            new_name = "$$${0}".format(match_ctr)
+            node.node_data[language] = node.node_data[language].replace(
+                old_name, new_name
+            )
+            name_sub[old_name] = new_name.replace("$$$", "U")
+            match_ctr += 1
+        # Substitute the original "U" character in
+        node.node_data[language] = node.node_data[language].replace("$$$", "U")
+        # Account for previous name substitutions
         if hasattr(node, "inst_name_sub"):
             node.inst_name_sub = {
-                k: name_sub[v] for k, v in node.inst_name_sub.items()
+                k: name_sub.get(v, v) for k, v in node.inst_name_sub.items()
             }
         else:
             node.inst_name_sub = name_sub
-    return U_ctr
+    return match_ctr
 
 
-def increment_wname(nodes, w_ctr, language="verilog"):
-    """Assigns unique instances names for all internal wires in the given nodes
+def increment_wname(nodes, match_ctr, language="verilog"):
+    """Assigns unique names for all cells in the given nodes
 
-    By default, internal wires are named w0, w1, w2, etc.
+    By default, instances are named U0, U1, U2, etc;
+                wires are named w0, w1, w2, etc.
     These names need to be made unique.
     """
+    # Iterate over all nodes
     for node in nodes:
         # Keep track of name substitutions
         name_sub = {}
-        # Get the list of all wire names, in reverse
-        hdl = node.node_data[language]
-        w = re.findall(r"w\d+", hdl)
-        w = sorted(list(set(w)), reverse=True)
-        # Substitute them in reverse as well
-        # This avoids the issue of 0 -> 1, 1 -> 2, 2 -> 3 making all wires == 3
-        # Instead, 2 -> 3, 1 -> 2, 0 -> 1, making the wires good
-        w_ctr = w_ctr + len(w)
-        final_w_ctr = w_ctr
-        # Check if the wire names have already been made unique
-        if len(w) == len(set(w)) and all(
-            [int(x[1:]) > w_ctr - len(w) for x in w]
-        ):
-            continue
-        for x in w:
-            hdl = hdl.replace(x, "w{}".format(final_w_ctr))
-            name_sub[x] = "w{}".format(final_w_ctr)
-            final_w_ctr -= 1
-        node.node_data[language] = hdl
-        # Record name substitutions
+        # Get the list of all matches
+        match_list = set(re.findall(r"w\d+", node.node_data[language]))
+        # Sort the list of all matches in terms of reverse string length
+        match_list = sorted(match_list, key=lambda x: -len(x))
+        # Substitute the names, using a character unlikely to cause collision
+        for old_name in match_list:
+            new_name = "$$${0}".format(match_ctr)
+            node.node_data[language] = node.node_data[language].replace(
+                old_name, new_name
+            )
+            name_sub[old_name] = new_name.replace("$$$", "w")
+            match_ctr += 1
+        # Substitute the original "U" character in
+        node.node_data[language] = node.node_data[language].replace("$$$", "w")
+        # Account for previous name substitutions
         if hasattr(node, "wire_name_sub"):
             node.wire_name_sub = {
-                k: name_sub[v] for k, v in node.wire_name_sub.items()
+                k: name_sub.get(v, v) for k, v in node.wire_name_sub.items()
             }
         else:
             node.wire_name_sub = name_sub
-    return w_ctr
+    return match_ctr
 
 
 def display_png(graph, *args, **kwargs):
