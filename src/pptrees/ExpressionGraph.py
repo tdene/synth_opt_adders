@@ -419,7 +419,8 @@ class ExpressionGraph(nx.DiGraph):
         node_flat=True,
         merge_mapping=True,
         module_name=None,
-        uniquify_names=True,
+        instance_name="U0",
+        uniquify_nodes=True,
         description_string="start of unnamed graph",
     ):
         """Creates a HDL description of the graph
@@ -461,11 +462,12 @@ class ExpressionGraph(nx.DiGraph):
         # By default, these are named w*
         # These names need to be made unique
         w_ctr = 1
+        block_ctr = 1
         for block_id in range(len(self.blocks)):
             if self.blocks[block_id] is None:
                 continue
             block = self.blocks[block_id]
-            if uniquify_names:
+            if uniquify_nodes:
                 w_ctr = increment_wname(block.nodes(), w_ctr, language)
             block_hdl, block_defs = block.hdl(
                 mapping=mapping,
@@ -474,12 +476,14 @@ class ExpressionGraph(nx.DiGraph):
                 node_flat=node_flat,
                 merge_mapping=merge_mapping,
                 module_name="{0}_block_{1}".format(module_name, block_id),
-                uniquify_names=uniquify_names,
+                instance_name="U{0}".format(block_ctr),
+                uniquify_nodes=uniquify_nodes,
                 description_string="block {0}".format(block_id),
             )
             hdl += block_hdl
             hdl += "\n"
             module_defs.update(block_defs)
+            block_ctr += 1
 
         # If the mapping file is intended to be merged in, do so
         if merge_mapping:
@@ -501,7 +505,7 @@ class ExpressionGraph(nx.DiGraph):
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
-        if uniquify_names:
+        if uniquify_nodes:
             increment_iname(self.nodes(), U_ctr, language)
         # Reset the list of extra nets caused by equivalence classes
         self.in_extras = []
@@ -543,7 +547,7 @@ class ExpressionGraph(nx.DiGraph):
             if not usable:
                 continue
             # If the cell is flat, rename the internal wires
-            if node_flat and uniquify_names:
+            if node_flat and uniquify_nodes:
                 w_ctr = increment_wname([node], w_ctr, language)
             # Get the node's HDL description
             node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
@@ -607,7 +611,7 @@ class ExpressionGraph(nx.DiGraph):
 
         # Otherwise, return the HDL module definition
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, module_name
+            hdl, module_defs, language, instance_name, module_name
         )
 
         # Write the HDL to file
@@ -616,7 +620,14 @@ class ExpressionGraph(nx.DiGraph):
 
         return hdl, module_defs
 
-    def _wrap_hdl(self, hdl, module_defs, language="verilog", module_name=None):
+    def _wrap_hdl(
+        self,
+        hdl,
+        module_defs,
+        language="verilog",
+        inst_id="U0",
+        module_name=None,
+    ):
         """Wraps the HDL in a module definition"""
 
         # If flat HDL is not desired, wrap the graph in a module
@@ -634,7 +645,7 @@ class ExpressionGraph(nx.DiGraph):
         module_defs.add(entity + arch)
         ## Create an instance of the module
         inst_ports = [[x[0][0], x[1]] for x in in_ports + out_ports]
-        inst = hdl_inst(module_name, inst_ports, language)
+        inst = hdl_inst(inst_id, module_name, inst_ports, language)
         ## Add the instance to the HDL
         hdl = inst
 

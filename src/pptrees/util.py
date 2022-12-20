@@ -162,7 +162,7 @@ hdl_syntax = {
         "entity_port": "{0} {2} {1},",
         "port_range": "[{0}:{1}]",
         "arch": "{1}\nendmodule // {0}\n",
-        "inst": "\n\t{0} U0(\n{1}\n\t);",
+        "inst": "\n\t{1} {0}(\n{2}\n\t);",
         "inst_port": "\t\t.{0}({1})",
         "slice_markers": lambda x: x,
         "wire_def": "wire {0};",
@@ -180,7 +180,7 @@ hdl_syntax = {
             "\n\tbegin\n{1}\n"
             "end architecture {0}_arch;\n"
         ),
-        "inst": ("\tU0: {0}\n" "\t\tport map (\n{1}\n" "\t\t);"),
+        "inst": ("\t{0}: {1}\n" "\t\tport map (\n{2}\n" "\t\t);"),
         "inst_port": "\t\t{0} => {1}\n",
         "slice_markers": lambda x: x.replace("[", "(")
         .replace("]", ")")
@@ -235,7 +235,7 @@ def hdl_arch(name, body, language="verilog"):
     return syntax["arch"].format(name, body)
 
 
-def hdl_inst(name, ports, language="verilog"):
+def hdl_inst(inst_id, name, ports, language="verilog"):
     """Formats an instance declaration
 
     Args:
@@ -248,7 +248,7 @@ def hdl_inst(name, ports, language="verilog"):
     ports_list = [
         syntax["inst_port"].format(port[0], port[1]) for port in ports
     ]
-    return syntax["inst"].format(name, ",\n".join(ports_list))
+    return syntax["inst"].format(inst_id, name, ",\n".join(ports_list))
 
 
 def sub_ports(hdl, ports):
