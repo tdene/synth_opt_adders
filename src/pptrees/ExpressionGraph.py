@@ -414,7 +414,6 @@ class ExpressionGraph(nx.DiGraph):
         language="verilog",
         flat=False,
         block_flat=False,
-        node_flat=True,
         merge_mapping=True,
         module_name=None,
         instance_name="U0",
@@ -429,7 +428,6 @@ class ExpressionGraph(nx.DiGraph):
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
             block_flat (bool): If True, flatten all blocks in the graph's HDL
-            node_flat (bool): If True, flatten all cells in the graph's HDL
             merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
@@ -440,7 +438,7 @@ class ExpressionGraph(nx.DiGraph):
 
         """
         # Check that the language is supported
-        if language not in ["verilog", "vhdl"]:
+        if language not in ["verilog"]:
             raise ValueError("Unsupported hardware-descriptive language")
 
         # Set language-specific syntax
@@ -471,7 +469,6 @@ class ExpressionGraph(nx.DiGraph):
                 mapping=mapping,
                 language=language,
                 flat=block_flat,
-                node_flat=node_flat,
                 merge_mapping=merge_mapping,
                 module_name="{0}_block_{1}".format(module_name, block_id),
                 instance_name="U{0}".format(block_ctr),
@@ -493,13 +490,9 @@ class ExpressionGraph(nx.DiGraph):
                 mapping_dict = parse_mapping(pkg_map_file)
 
         # Pull in the HDL description of nodes outside of blocks
-        # If fully flattening them, need to rename "w*" internal wires
-        if node_flat:
-            w_ctr = 1
-        # If fully flattening the graph, need to rename "U*" cell names
-        # If not fully flattening the graph, rename anyway
-        if flat or not flat:
-            U_ctr = 1
+        # Prepare to rename internal wires and instances
+        w_ctr = 1
+        U_ctr = 1
         # This HDL description will have multiple instances in it
         # By default, util.hdl_inst names all instances "U0"
         # These names need to be made unique
@@ -545,10 +538,10 @@ class ExpressionGraph(nx.DiGraph):
             if not usable:
                 continue
             # If the cell is flat, rename the internal wires
-            if node_flat and uniquify_nodes:
+            if uniquify_nodes:
                 w_ctr = increment_wname([node], w_ctr, language)
             # Get the node's HDL description
-            node_hdl, node_defs = node.hdl(language=language, flat=node_flat)
+            node_hdl, node_defs = node.hdl(language=language)
 
             # If the mapping file is intended to be merged in, do so
             if merge_mapping:

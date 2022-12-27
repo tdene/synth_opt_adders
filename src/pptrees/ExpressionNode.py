@@ -299,67 +299,24 @@ class ExpressionNode:
         if self.parent is not None:
             self.parent._recalculate_leafs()
 
-    def hdl(self, language="verilog", flat=False):
+    def hdl(self, language="verilog"):
         """Returns the HDL of this node
 
         Args:
             language (str): The language in which to generate the HDL
-            flat (bool): If True, flatten the node's HDL
 
         Returns:
             str: The HDL of this node
             list: Set of HDL module definitions used in the node
         """
-        if not flat and language == "verilog":
-            return (self._verilog(), (self.node_data[language],))
-        if not flat and language == "vhdl":
-            return (self._vhdl(), (self.node_data[language],))
-        if flat and language == "verilog":
-            return (self._verilog_flat(), set())
-        if flat and language == "vhdl":
-            return (self._vhdl_flat(), set())
+        if language not in ["verilog"]:
+            raise ValueError("Unsupported hardware descriptive language")
+        if language == "verilog":
+            return (self._verilog(), set())
+        if language == "vhdl":
+            return (self._vhdl(), set())
 
     def _verilog(self):
-        """Return single line of Verilog consisting of module instantiation"""
-
-        # Instantiate module
-        ret = "\t{0} U0 (".format(self.value)
-
-        # Create list of all instance pins and copy in unformatted net IDs
-        pins = self.in_nets.copy()
-        pins.update(self.out_nets)
-
-        # Format net IDs into the module instantiation
-        for a in pins:
-            b = ",".join([parse_net(x) for x in pins[a]])
-            ret += " .{0}( {{ {1} }} ),".format(a, b)
-        ret = ret[:-1] + " );\n"
-
-        return ret
-
-    def _vhdl(self):
-        """Return single line of VHDL consisting of module instantiation"""
-
-        # Instantiate module
-        ret = "\tU0: {0}\n".format(self.value)
-        ret += "\t\tport map ("
-
-        # Create list of all instance pins and copy in unformatted net IDs
-        pins = self.in_nets.copy()
-        pins.update(self.out_nets)
-
-        # Format net IDs into the module instantiation
-        for a in pins:
-            for b in range(len(pins[a])):
-                net_name = parse_net(pins[a][b])
-                ret += "\n\t\t\t{0}({1}) => {2},".format(a, b, net_name)
-
-        # Close parenthesis
-        ret = ret[:-1] + "\n\t\t);\n"
-
-        return ret
-
-    def _verilog_flat(self):
         """Return Verilog consisting of the module's internal logic"""
 
         # If this node is part of an equivalence class,
@@ -367,7 +324,7 @@ class ExpressionNode:
         # destructively change the net names of its parent
         if self.equiv_class.rep is not self:
             parent = self.parent
-            # But if this node is part of a bigger subtree
+            # But if this node is part of a bigger equivalent subtree
             # There is no need to even do assign statements
             # The equivalent subtree will take care of everything
             if parent.equiv_class.rep is not parent:
