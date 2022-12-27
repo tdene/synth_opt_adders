@@ -1,6 +1,13 @@
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
-from .util import display_gif, increment_iname, increment_wname, wrap_quotes
+from .util import (
+    display_gif,
+    hdl_syntax,
+    increment_iname,
+    increment_wname,
+    natural_keys,
+    wrap_quotes,
+)
 
 
 class ExpressionForest(ExpressionGraph):
@@ -480,6 +487,13 @@ class ExpressionForest(ExpressionGraph):
             list: Set of HDL module definitions used in the graph
 
         """
+        # Check that the language is supported
+        if language not in ["verilog", "vhdl"]:
+            raise ValueError("Unsupported hardware-descriptive language")
+
+        # Set language-specific syntax
+        syntax = hdl_syntax[language]
+
         # If module name is not defined, set it to graph's name
         if module_name is None:
             module_name = self.name
@@ -502,9 +516,15 @@ class ExpressionForest(ExpressionGraph):
         U_ctr = 1
         U_ctr = increment_iname(reps, U_ctr, language)
 
+        # Get set of the forest's port names
+        inp, outp = self._get_ports()
+        self_port_names = set([x[0][0] for x in inp + outp])
+        # Keep track of inter-tree wire connections
+        wires = set()
         # Get HDL for each tree
         tree_ctr = 1
         for t in reversed(self.trees):
+            # Get the graph's HDL
             desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
                 language=language,
@@ -518,9 +538,25 @@ class ExpressionForest(ExpressionGraph):
                 uniquify_nodes=False,
                 description_string=desc,
             )
+            # Track all inter-tree wires connections
+            # as long as they are not already ports of the forest
+            inp, outp = t._get_ports()
+            tree_ports = inp + outp
+            wires |= set(
+                [x[0][0] for x in tree_ports if x[0][0] not in self_port_names]
+            )
+
+            # Add the tree's HDL to the forest's HDL
             hdl.append(t_hdl)
             module_defs |= t_module_defs
             tree_ctr += 1
+
+        # Instantiate all wires that connect to the trees
+        wires = sorted(list(wires), key=natural_keys)
+        if len(wires) > 0:
+            wire_hdl = syntax["wire_def"].format(", ".join(wires))
+            hdl = [f"\t{wire_hdl}"] + hdl
+
         hdl = "\n".join(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
