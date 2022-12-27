@@ -272,18 +272,6 @@ class ExpressionForest(ExpressionGraph):
                     t.nodes(data=True)[n]["fillcolor"] = old_col
                     t.nodes(data=True)[n]["gradientangle"] = "0"
 
-    ### NOTE: Where this logic belongs is an open question
-    def find_parallel_tracks(self):
-        """Finds parallel tracks amongst the forest's trees"""
-        for i1 in reversed(range(len(self.trees))):
-            t1 = self.trees[i1]
-            for i2 in range(i1):
-                t2 = self.trees[i2]
-                for n1 in t1.nodes:
-                    for n2 in t2.nodes:
-                        if n1.tracks(n2):
-                            n1.set_tracks(n2)
-
     ### NOTE: Improve fanout estimate
     def _calc_node_fanout(self, node):
         """Estimates the delay caused by fanout for a node
@@ -333,55 +321,6 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             for n in t:
                 self._calc_node_fanout(n)
-
-    ### NOTE: Improve cross-coupling capacitance estimate
-    def _calc_node_tracks(self, node):
-        """Estimates the delay caused by parallel wires for a node
-
-        A node has tracks of k if:
-         - node is the representative of an equivalence class
-         - There are k nodes in the forest such that
-            - They are the heads of their own equivalence classes
-            - node.y_pos = other.y_pos
-            - node < other, other < node.parent, node.parent < other.parent
-            or
-            - node > other, node < other.parent, other.parent > node.parent
-        """
-        tree = node.graph
-        # If node is not its equivalence class representative, do nothing
-        if node.equiv_class.rep is not node:
-            return
-        # If node is root, do noting
-        if node.parent is None:
-            return
-
-        # Compare node to all other nodes in the forest
-        for t in self.trees:
-            for n in t:
-                if n.equiv_class.rep is not n:
-                    continue
-                if node.tracks(n):
-                    node.set_tracks(n)
-
-        # Count the tracks
-        tracks = len(node.tracks_class)
-
-        # Modify the relevant edge's data
-        e_data = tree.get_edge_data(node.parent, node)
-        ### This is a bad estimate of tracks' effect on delay
-        e_data["tracks"] = tracks
-        tree.update_edge_weight(node.parent, node)
-
-        return tracks
-
-    def calculate_tracks(self):
-        """Calculates the tracks of all nodes in the forest
-
-        See the description of _calc_node_tracks for details
-        """
-        for t in self.trees:
-            for n in t:
-                self._calc_node_tracks(n)
 
     def decouple_fanout(self, node, tree):
         """Decouples the fanout of the specified node in the specified tree"""
@@ -503,7 +442,6 @@ class ExpressionForest(ExpressionGraph):
             self.find_equivalent_nodes()
         if optimization > 1:
             self.calculate_fanout()
-            self.calculate_tracks()
             self.add_best_blocks()
 
         hdl = []

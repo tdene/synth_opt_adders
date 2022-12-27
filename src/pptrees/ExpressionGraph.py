@@ -157,9 +157,8 @@ class ExpressionGraph(nx.DiGraph):
         }
 
         # Initialize weight to parasitc delay
-        # This is later modified by logical effort and cross-track cap
+        # This is later modified by logical effort
         kwargs["fanout"] = 1
-        kwargs["tracks"] = 0
         kwargs["delay"] = child.node_data["pd"]
         kwargs["weight"] = kwargs["delay"]
 
@@ -223,7 +222,6 @@ class ExpressionGraph(nx.DiGraph):
             edge_data = self.get_edge_data(parent, child)
             weight = edge_data["delay"]
             weight += edge_data["fanout"]
-            weight += edge_data["tracks"]
         else:
             weight = weight_fun(parent, child)
 
