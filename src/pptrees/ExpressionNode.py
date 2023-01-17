@@ -312,9 +312,9 @@ class ExpressionNode:
         if language not in ["verilog"]:
             raise ValueError("Unsupported hardware descriptive language")
         if language == "verilog":
-            return (self._verilog(), set())
+            return self._verilog()
         if language == "vhdl":
-            return (self._vhdl(), set())
+            return self._vhdl()
 
     def _verilog(self):
         """Return Verilog consisting of the module's internal logic"""

@@ -387,6 +387,46 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             t.add_best_blocks(graph_type=graph_type)
 
+    def _prepare_for_hdl(
+        self,
+        mapping="behavioral",
+        language="verilog",
+        module_name=None,
+        uniquify_names=True,
+        optimization=1,
+    ):
+        """Prepares the graph for HDL generation
+
+        Note that this process may destructively render the graph unusable
+
+        Args:
+            mapping (str): The cell mapping to use for the HDL generation
+            language (str): The language in which to generate the HDL
+            module_name (str): The name of the module to generate
+            description_string (str): String commend to prepend to the HDL
+            uniquify_names (str): Whether wire/instance must be uniquified
+        """
+        # Check if graph has already been prepared
+        if self._prepared:
+            return
+
+        # Optimize HDL of nodes in the forest of trees
+        if optimization > 0:
+            self.optimize_nodes()
+        self.find_equivalent_nodes()
+        if optimization > 1:
+            self.calculate_fanout()
+            self.add_best_blocks()
+
+        # Uniquify wire/instance names, if requested
+        if uniquify_names:
+            reps = [ec.rep for ec in self.equiv_classes]
+            increment_iname(reps, 1, language)
+            increment_wname(reps, 1, language)
+
+        # Toggle the prepared flag
+        self._prepared = True
+
     def hdl(
         self,
         out=None,
@@ -394,12 +434,10 @@ class ExpressionForest(ExpressionGraph):
         mapping="behavioral",
         language="verilog",
         flat=False,
-        block_flat=False,
-        merge_mapping=True,
         module_name=None,
-        instance_name="U0",
-        uniquify_nodes=True,
+        uniquify_names=True,
         description_string="start of unnamed graph",
+        inst_id="U0",
     ):
         """Creates a HDL description of the forest
 
@@ -414,43 +452,30 @@ class ExpressionForest(ExpressionGraph):
             mapping (str): The technology mapping to use
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
-            block_flat (bool): If True, flatten all blocks in the graph's HDL
-            merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
+            uniquify_names (str): Whether wire/instance must be uniquified
             description_string (str): String commend to prepend to the HDL
+            inst_id (str): The name of an instance of this graph HDL
 
         Returns:
             str: HDL module definition representing the graph
             list: Set of HDL module definitions used in the graph
 
         """
-        # Check that the language is supported
-        if language not in ["verilog", "vhdl"]:
-            raise ValueError("Unsupported hardware-descriptive language")
+        self._prepare_for_hdl(
+            mapping=mapping,
+            language=language,
+            module_name=module_name,
+            uniquify_names=uniquify_names,
+            optimization=optimization,
+        )
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
 
-        # If module name is not defined, set it to graph's name
-        if module_name is None:
-            module_name = self.name
-
-        if optimization > 0:
-            self.optimize_nodes()
-            self.find_equivalent_nodes()
-        if optimization > 1:
-            self.calculate_fanout()
-            self.add_best_blocks()
-
+        # Create the HDL
         hdl = []
         module_defs = set()
-        # Uniquify the cell names and wire names
-        # But this only needs to be done for reps of the equiv classes
-        reps = [ec.rep for ec in self.equiv_classes]
-        w_ctr = 1
-        w_ctr = increment_wname(reps, w_ctr, language)
-        U_ctr = 1
-        U_ctr = increment_iname(reps, U_ctr, language)
 
         # Get set of the forest's port names
         inp, outp = self._get_ports()
@@ -466,12 +491,10 @@ class ExpressionForest(ExpressionGraph):
                 language=language,
                 mapping=mapping,
                 flat=flat,
-                block_flat=block_flat,
-                merge_mapping=merge_mapping,
                 module_name="{0}_{1}".format(module_name, t.name),
-                instance_name="U{0}".format(tree_ctr),
-                uniquify_nodes=False,
+                uniquify_names=False,
                 description_string=desc,
+                inst_id="U{0}".format(tree_ctr),
             )
             # Track all inter-tree wires connections
             # as long as they are not already ports of the forest
@@ -495,10 +518,10 @@ class ExpressionForest(ExpressionGraph):
         hdl = "\n".join(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, instance_name, module_name
+            hdl, module_defs, language, module_name
         )
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping, inst_id)
 
         return hdl, module_defs, file_out_hdl
 

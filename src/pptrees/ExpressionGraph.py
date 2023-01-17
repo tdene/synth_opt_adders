@@ -1,5 +1,4 @@
 import pathlib
-import shutil
 
 import networkx as nx
 
@@ -84,6 +83,13 @@ class ExpressionGraph(nx.DiGraph):
         # Procedurally-generated block names start with "block1"
         self.next_block = 0
         self.blocks = [None]
+
+        # Provide support for not merging in the mapping file
+        self.merge_mapping = True
+
+        # Keep track of whether the graph has been prepared for HDL
+        # NOTE: Preparing a graph for HDL may be destructive
+        self._prepared = False
 
     def add_node(self, node, **attr):
         """Adds a node to the graph
@@ -405,38 +411,28 @@ class ExpressionGraph(nx.DiGraph):
 
         return (in_ports + self.in_extras, out_ports + self.out_extras)
 
-    # NOTE: This function fails flake8 C901
-    # TO-DO: Make this function pass flake8 C901
-    def hdl(
+    def _prepare_for_hdl(
         self,
-        out=None,
         mapping="behavioral",
         language="verilog",
-        flat=False,
-        block_flat=False,
-        merge_mapping=True,
         module_name=None,
-        instance_name="U0",
-        uniquify_nodes=True,
-        description_string="start of unnamed graph",
+        uniquify_names=True,
     ):
-        """Creates a HDL description of the graph
+        """Prepares the graph for HDL generation
+
+        Note that this process may destructively render the graph unusable
 
         Args:
-            out (str): The file to write the HDL to
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
-            flat (bool): If True, flatten the graph's HDL
-            block_flat (bool): If True, flatten all blocks in the graph's HDL
-            merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
-
-        Returns:
-            str: HDL module definition representing the graph
-            list: Set of HDL module definitions used in the graph
-
+            uniquify_names (str): Whether wire/instance must be uniquified
         """
+        # Check if graph has already been prepared
+        if self._prepared:
+            return
+
         # Check that the language is supported
         if language not in ["verilog"]:
             raise ValueError("Unsupported hardware-descriptive language")
@@ -444,67 +440,36 @@ class ExpressionGraph(nx.DiGraph):
         # Set language-specific syntax
         syntax = hdl_syntax[language]
 
-        # If module name is not defined, set it to graph's name
+        # Update module name, if provided
         if module_name is None:
             module_name = self.name
 
-        # Create the HDL
-
-        hdl = ""
-        module_defs = set()
-
-        # Pull in the HDL description of blocks
-        # This HDL description will have multiple cell-internal wires
-        # By default, these are named w*
-        # These names need to be made unique
-        w_ctr = 1
-        block_ctr = 1
-        for block_id in range(len(self.blocks)):
-            if self.blocks[block_id] is None:
-                continue
-            block = self.blocks[block_id]
-            if uniquify_nodes:
-                w_ctr = increment_wname(block.nodes(), w_ctr, language)
-            block_hdl, block_defs = block.hdl(
-                mapping=mapping,
-                language=language,
-                flat=block_flat,
-                merge_mapping=merge_mapping,
-                module_name="{0}_block_{1}".format(module_name, block_id),
-                instance_name="U{0}".format(block_ctr),
-                uniquify_nodes=uniquify_nodes,
-                description_string="block {0}".format(block_id),
-            )
-            hdl += block_hdl
-            hdl += "\n"
-            module_defs.update(block_defs)
-            block_ctr += 1
-
-        # If the mapping file is intended to be merged in, do so
-        if merge_mapping:
+        # Merge in mapping file, if requested
+        if self.merge_mapping:
             # Parse the mapping file
             file_suffix = syntax["file_extension"]
             map_file = "{0}_map{1}".format(mapping, file_suffix)
             map_path = respath("pptrees.mappings", map_file)
             with map_path as pkg_map_file:
                 mapping_dict = parse_mapping(pkg_map_file)
+            # Merge mapping info into the nodes
+            for node in self:
+                node_hdl = node.hdl(language=language)
+                node_hdl = merge_mapping_into_cells(node_hdl, mapping_dict)
+                node.node_data[language] = node_hdl
 
-        # Pull in the HDL description of nodes outside of blocks
-        # Prepare to rename internal wires and instances
-        w_ctr = 1
-        U_ctr = 1
-        # This HDL description will have multiple instances in it
-        # By default, util.hdl_inst names all instances "U0"
-        # These names need to be made unique
-        if uniquify_nodes:
-            increment_iname(self.nodes(), U_ctr, language)
-        # Reset the list of extra nets caused by equivalence classes
-        self.in_extras = []
-        self.out_extras = []
+        # Uniquify wire/instance names, if requested
+        if uniquify_names:
+            increment_iname(self.nodes(), 1, language)
+            increment_wname(self.nodes(), 1, language)
+
+        # Generate the list of extra nets caused by equivalence classes
+        in_extras = []
+        out_extras = []
         for node in self:
             # If the node is part of an equivalence class,
             # and some part of the equivalence class is not in this graph,
-            # and the node is not part of a bigger subtree,
+            # and the node is not part of a bigger equivalent subtree,
             # bring up its internal wires to the top level
             if (
                 any([x not in self for x in node.equiv_class])
@@ -513,50 +478,106 @@ class ExpressionGraph(nx.DiGraph):
 
                 # If this node is the representative, its wires become outputs
                 if node.equiv_class.rep is node:
-                    self.out_extras += [
+                    out_extras += [
                         parse_net(wire)
                         for net in node.equiv_class.out_nets.values()
                         for wire in net
                     ]
                 # Otherwise, its wires become inputs
                 else:
-                    self.in_extras += [
+                    in_extras += [
                         parse_net(wire)
                         for net in node.equiv_class.out_nets.values()
                         for wire in net
                     ]
+        # Format the list of extra nets caused by equivalence classes
+        self.in_extras = [((sub_brackets(x), 1), x) for x in in_extras]
+        self.out_extras = [((sub_brackets(x), 1), x) for x in out_extras]
 
+        # Toggle the prepared flag
+        self._prepared = True
+
+    # NOTE: This function fails flake8 C901
+    # TO-DO: Make this function pass flake8 C901
+    def hdl(
+        self,
+        out=None,
+        mapping="behavioral",
+        language="verilog",
+        flat=False,
+        module_name=None,
+        uniquify_names=True,
+        description_string="start of unnamed graph",
+        inst_id="U0",
+    ):
+        """Creates a HDL description of the graph
+
+        Args:
+            out (str): The file to write the HDL to
+            mapping (str): The cell mapping to use for the HDL generation
+            language (str): The language in which to generate the HDL
+            flat (bool): If True, flatten the graph's HDL
+            module_name (str): The name of the module to generate
+            uniquify_names (str): Whether wire/instance must be uniquified
+            description_string (str): String commend to prepend to the HDL
+            inst_id (str): The name of an instance of this graph HDL
+
+        Returns:
+            str: HDL module definition representing the graph
+            list: Set of HDL module definitions used in the graph
+
+        """
+        self._prepare_for_hdl(
+            mapping=mapping,
+            language=language,
+            module_name=module_name,
+            uniquify_names=uniquify_names,
+        )
+
+        # Set language-specific syntax
+        syntax = hdl_syntax[language]
+
+        # Create the HDL
+        hdl = ""
+        module_defs = set()
+
+        # Pull in the HDL description of blocks
+        block_ctr = 1
+        for block_id in range(len(self.blocks)):
+            # Skip non-existent blocks
+            if self.blocks[block_id] is None:
+                continue
+            # Get block
+            block = self.blocks[block_id]
+            # Provide support for not merging in the mapping file
+            block.merge_mapping = self.merge_mapping
+            # Get block HDL and add it to master HDL
+            block_hdl, block_defs = block.hdl(
+                mapping=mapping,
+                language=language,
+                flat=flat,
+                module_name="{0}_block_{1}".format(module_name, block_id),
+                uniquify_names=False,
+                description_string="block {0}".format(block_id),
+                inst_id="U{0}".format(block_ctr),
+            )
+            hdl += block_hdl
+            hdl += "\n"
+            module_defs.update(block_defs)
+            block_ctr += 1
+
+        # Pull in the HDL description of nodes
+        for node in self:
             # Check whether the node is in a block, and whether this is it
             # If the node is not inside a block, it's automatically usable
             usable = node.block is None
             # Otherwise, check whether the node is inside THIS block
             if not usable:
-                # Query the node for its graph and block ID
-                node_block = node.graph.blocks[node.block]
-                # Check whether the node's block is this graph
-                usable = node_block is self
-            if not usable:
-                continue
-            # If the cell is flat, rename the internal wires
-            if uniquify_nodes:
-                w_ctr = increment_wname([node], w_ctr, language)
-            # Get the node's HDL description
-            node_hdl, node_defs = node.hdl(language=language)
-
-            # If the mapping file is intended to be merged in, do so
-            if merge_mapping:
-                node_hdl = merge_mapping_into_cells(node_hdl, mapping_dict)
-                new_defs = set()
-                for a in node_defs:
-                    new_def = merge_mapping_into_cells(a, mapping_dict)
-                    new_defs.add(new_def)
-                node_defs = new_defs
-
+                if node.graph.blocks[node.block] is not self:
+                    continue
+            # Get node HDL and add it to master HDL
+            node_hdl = node.hdl(language=language)
             hdl += node_hdl
-            module_defs.update(node_defs)
-        # Format the list of extra nets caused by equivalence classes
-        self.in_extras = [((sub_brackets(x), 1), x) for x in self.in_extras]
-        self.out_extras = [((sub_brackets(x), 1), x) for x in self.out_extras]
 
         ### NOTE: Is this general? Improvements wanted
         ### In general, hard-coding an is_block flag sounds like a bad idea
@@ -602,22 +623,22 @@ class ExpressionGraph(nx.DiGraph):
 
         # Otherwise, return the HDL module definition
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, instance_name, module_name
+            hdl, module_defs, language, module_name
         )
 
         # Write the HDL to file
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping, inst_id)
 
-        return hdl, module_defs
+        return hdl, module_defs, file_out_hdl
 
     def _wrap_hdl(
         self,
         hdl,
         module_defs,
         language="verilog",
-        inst_id="U0",
         module_name=None,
+        inst_id="U0",
     ):
         """Wraps the HDL in a module definition"""
 
@@ -648,33 +669,15 @@ class ExpressionGraph(nx.DiGraph):
         out=None,
         language="verilog",
         mapping="behavioral",
-        merge_mapping=True,
     ):
         """Writes the HDL to a file"""
         # Check that output path is valid
         if out is None:
             raise ValueError("Output path must be defined")
 
-        # Set language-specific syntax
-        syntax = hdl_syntax[language]
-
         outdir = pathlib.Path(out).resolve().parent
         if not outdir.exists():
             raise ValueError("Output path does not exist")
-
-        # Verify that the mapping is supported
-        file_suffix = syntax["file_extension"]
-        map_file = "{0}_map{1}".format(mapping, file_suffix)
-        map_path = respath("pptrees.mappings", map_file)
-        with map_path as pkg_map_file:
-            local_map_file = outdir / (mapping + "_map" + file_suffix)
-
-            if not pkg_map_file.is_file():
-                raise ValueError("Unsupported mapping requested")
-
-            if not merge_mapping:
-                # Copy the mapping file to the output directory
-                shutil.copy(pkg_map_file, local_map_file)
 
         with open(out, "w") as f:
             f.write(file_out_hdl)
