@@ -21,8 +21,6 @@ class ExpressionNode:
         x_pos (float): The x-coordinate of this node's graphical representation
         y_pos (float): The y-coordinate of this node's graphical representation
         equiv_class (EquivClass): The equivalence class of this node
-        tracks_class (list of ExpressionNode): The list of all nodes that cause
-            parallel wires in the layout. No node in this list is special.
     """
 
     def __init__(self, value, x_pos=0, y_pos=0, custom_data=None):
@@ -61,8 +59,6 @@ class ExpressionNode:
         self.graph = None
         self.block = None
         self.equiv_class = EquivClass(self)
-        self.tracks_class = set()
-        self.tracks_class.add(self)
 
         # Visualization-related attributes
         ### NOTE: The use of these attributes is no longer restricted to
@@ -117,51 +113,6 @@ class ExpressionNode:
     def copy(self):
         """Shorthand for __copy__"""
         return self.__copy__()
-
-    ### NOTE: Where this logic belongs is an open question
-    def tracks(self, other):
-        """Checks if self and other cause a need for parallel wires
-
-        Args:
-            other (ExpressionNode): The node to compare to
-        """
-        if not isinstance(other, ExpressionNode):
-            raise TypeError("Cannot compare to non-ExpressionNode")
-
-        # If the two nodes have different heights, they cannot lead
-        # in a need for increased wire tracks???
-        # NOTE: Requires further investigation
-        # This makes sense classically, but does it make sense in general?
-        if len(self) != len(other):
-            return False
-
-        # If either node is root, they cannot cause a need for parallel wires
-        if self.parent is None or other.parent is None:
-            return False
-
-        # If either node is not the representative of its equivalence class
-        # There is no physical meaning to this metric
-        if (self.equiv_class.rep is self) or (
-            other.equiv_class.rep is not other
-        ):
-            return False
-
-        # Check if the edges lead to parallel routes
-        if self < other and other < self.parent and self.parent < other.parent:
-            return True
-        if self > other and other.parent > self and self.parent > other.parent:
-            return True
-        return False
-
-    ### NOTE: Where this logic belongs is an open question
-    def set_tracks(self, other):
-        """Sets two nodes as causing parallel wires for each other"""
-        if not self.tracks(other):
-            raise ValueError("Nodes do not cause parallel routes")
-
-        tr = self.tracks_class
-        tr |= other.tracks_class
-        other.tracks_class = tr
 
     def __iter__(self):
         """Iterates over the children of this node"""
@@ -348,67 +299,24 @@ class ExpressionNode:
         if self.parent is not None:
             self.parent._recalculate_leafs()
 
-    def hdl(self, language="verilog", flat=False):
+    def hdl(self, language="verilog"):
         """Returns the HDL of this node
 
         Args:
             language (str): The language in which to generate the HDL
-            flat (bool): If True, flatten the node's HDL
 
         Returns:
             str: The HDL of this node
             list: Set of HDL module definitions used in the node
         """
-        if not flat and language == "verilog":
-            return (self._verilog(), (self.node_data[language],))
-        if not flat and language == "vhdl":
-            return (self._vhdl(), (self.node_data[language],))
-        if flat and language == "verilog":
-            return (self._verilog_flat(), set())
-        if flat and language == "vhdl":
-            return (self._vhdl_flat(), set())
+        if language not in ["verilog"]:
+            raise ValueError("Unsupported hardware descriptive language")
+        if language == "verilog":
+            return self._verilog()
+        if language == "vhdl":
+            return self._vhdl()
 
     def _verilog(self):
-        """Return single line of Verilog consisting of module instantiation"""
-
-        # Instantiate module
-        ret = "\t{0} U0 (".format(self.value)
-
-        # Create list of all instance pins and copy in unformatted net IDs
-        pins = self.in_nets.copy()
-        pins.update(self.out_nets)
-
-        # Format net IDs into the module instantiation
-        for a in pins:
-            b = ",".join([parse_net(x) for x in pins[a]])
-            ret += " .{0}( {{ {1} }} ),".format(a, b)
-        ret = ret[:-1] + " );\n"
-
-        return ret
-
-    def _vhdl(self):
-        """Return single line of VHDL consisting of module instantiation"""
-
-        # Instantiate module
-        ret = "\tU0: {0}\n".format(self.value)
-        ret += "\t\tport map ("
-
-        # Create list of all instance pins and copy in unformatted net IDs
-        pins = self.in_nets.copy()
-        pins.update(self.out_nets)
-
-        # Format net IDs into the module instantiation
-        for a in pins:
-            for b in range(len(pins[a])):
-                net_name = parse_net(pins[a][b])
-                ret += "\n\t\t\t{0}({1}) => {2},".format(a, b, net_name)
-
-        # Close parenthesis
-        ret = ret[:-1] + "\n\t\t);\n"
-
-        return ret
-
-    def _verilog_flat(self):
         """Return Verilog consisting of the module's internal logic"""
 
         # If this node is part of an equivalence class,
@@ -416,7 +324,7 @@ class ExpressionNode:
         # destructively change the net names of its parent
         if self.equiv_class.rep is not self:
             parent = self.parent
-            # But if this node is part of a bigger subtree
+            # But if this node is part of a bigger equivalent subtree
             # There is no need to even do assign statements
             # The equivalent subtree will take care of everything
             if parent.equiv_class.rep is not parent:

@@ -1,6 +1,13 @@
 from .ExpressionGraph import ExpressionGraph
 from .ExpressionTree import ExpressionTree
-from .util import display_gif, increment_iname, increment_wname, wrap_quotes
+from .util import (
+    display_gif,
+    hdl_syntax,
+    increment_iname,
+    increment_wname,
+    natural_keys,
+    wrap_quotes,
+)
 
 
 class ExpressionForest(ExpressionGraph):
@@ -265,18 +272,6 @@ class ExpressionForest(ExpressionGraph):
                     t.nodes(data=True)[n]["fillcolor"] = old_col
                     t.nodes(data=True)[n]["gradientangle"] = "0"
 
-    ### NOTE: Where this logic belongs is an open question
-    def find_parallel_tracks(self):
-        """Finds parallel tracks amongst the forest's trees"""
-        for i1 in reversed(range(len(self.trees))):
-            t1 = self.trees[i1]
-            for i2 in range(i1):
-                t2 = self.trees[i2]
-                for n1 in t1.nodes:
-                    for n2 in t2.nodes:
-                        if n1.tracks(n2):
-                            n1.set_tracks(n2)
-
     ### NOTE: Improve fanout estimate
     def _calc_node_fanout(self, node):
         """Estimates the delay caused by fanout for a node
@@ -326,55 +321,6 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             for n in t:
                 self._calc_node_fanout(n)
-
-    ### NOTE: Improve cross-coupling capacitance estimate
-    def _calc_node_tracks(self, node):
-        """Estimates the delay caused by parallel wires for a node
-
-        A node has tracks of k if:
-         - node is the representative of an equivalence class
-         - There are k nodes in the forest such that
-            - They are the heads of their own equivalence classes
-            - node.y_pos = other.y_pos
-            - node < other, other < node.parent, node.parent < other.parent
-            or
-            - node > other, node < other.parent, other.parent > node.parent
-        """
-        tree = node.graph
-        # If node is not its equivalence class representative, do nothing
-        if node.equiv_class.rep is not node:
-            return
-        # If node is root, do noting
-        if node.parent is None:
-            return
-
-        # Compare node to all other nodes in the forest
-        for t in self.trees:
-            for n in t:
-                if n.equiv_class.rep is not n:
-                    continue
-                if node.tracks(n):
-                    node.set_tracks(n)
-
-        # Count the tracks
-        tracks = len(node.tracks_class)
-
-        # Modify the relevant edge's data
-        e_data = tree.get_edge_data(node.parent, node)
-        ### This is a bad estimate of tracks' effect on delay
-        e_data["tracks"] = tracks
-        tree.update_edge_weight(node.parent, node)
-
-        return tracks
-
-    def calculate_tracks(self):
-        """Calculates the tracks of all nodes in the forest
-
-        See the description of _calc_node_tracks for details
-        """
-        for t in self.trees:
-            for n in t:
-                self._calc_node_tracks(n)
 
     def decouple_fanout(self, node, tree):
         """Decouples the fanout of the specified node in the specified tree"""
@@ -441,6 +387,46 @@ class ExpressionForest(ExpressionGraph):
         for t in self.trees:
             t.add_best_blocks(graph_type=graph_type)
 
+    def _prepare_for_hdl(
+        self,
+        mapping="behavioral",
+        language="verilog",
+        module_name=None,
+        uniquify_names=True,
+        optimization=1,
+    ):
+        """Prepares the graph for HDL generation
+
+        Note that this process may destructively render the graph unusable
+
+        Args:
+            mapping (str): The cell mapping to use for the HDL generation
+            language (str): The language in which to generate the HDL
+            module_name (str): The name of the module to generate
+            description_string (str): String commend to prepend to the HDL
+            uniquify_names (str): Whether wire/instance must be uniquified
+        """
+        # Check if graph has already been prepared
+        if self._prepared:
+            return
+
+        # Optimize HDL of nodes in the forest of trees
+        if optimization > 0:
+            self.optimize_nodes()
+        self.find_equivalent_nodes()
+        if optimization > 1:
+            self.calculate_fanout()
+            self.add_best_blocks()
+
+        # Uniquify wire/instance names, if requested
+        if uniquify_names:
+            reps = [ec.rep for ec in self.equiv_classes]
+            increment_iname(reps, 1, language)
+            increment_wname(reps, 1, language)
+
+        # Toggle the prepared flag
+        self._prepared = True
+
     def hdl(
         self,
         out=None,
@@ -448,13 +434,10 @@ class ExpressionForest(ExpressionGraph):
         mapping="behavioral",
         language="verilog",
         flat=False,
-        block_flat=False,
-        node_flat=True,
-        merge_mapping=True,
         module_name=None,
-        instance_name="U0",
-        uniquify_nodes=True,
+        uniquify_names=True,
         description_string="start of unnamed graph",
+        inst_id="U0",
     ):
         """Creates a HDL description of the forest
 
@@ -469,65 +452,76 @@ class ExpressionForest(ExpressionGraph):
             mapping (str): The technology mapping to use
             language (str): The language in which to generate the HDL
             flat (bool): If True, flatten the graph's HDL
-            block_flat (bool): If True, flatten all blocks in the graph's HDL
-            node_flat (bool): If True, flatten all cells in the graph's HDL
-            merge_mapping (bool): If True, merge the mapping file in
             module_name (str): The name of the module to generate
+            uniquify_names (str): Whether wire/instance must be uniquified
             description_string (str): String commend to prepend to the HDL
+            inst_id (str): The name of an instance of this graph HDL
 
         Returns:
             str: HDL module definition representing the graph
             list: Set of HDL module definitions used in the graph
 
         """
-        # If module name is not defined, set it to graph's name
-        if module_name is None:
-            module_name = self.name
+        self._prepare_for_hdl(
+            mapping=mapping,
+            language=language,
+            module_name=module_name,
+            uniquify_names=uniquify_names,
+            optimization=optimization,
+        )
 
-        if optimization > 0:
-            self.optimize_nodes()
-            self.find_equivalent_nodes()
-        if optimization > 1:
-            self.calculate_fanout()
-            self.calculate_tracks()
-            self.add_best_blocks()
+        # Set language-specific syntax
+        syntax = hdl_syntax[language]
 
+        # Create the HDL
         hdl = []
         module_defs = set()
-        # Uniquify the cell names and wire names
-        # But this only needs to be done for reps of the equiv classes
-        reps = [ec.rep for ec in self.equiv_classes]
-        w_ctr = 1
-        w_ctr = increment_wname(reps, w_ctr, language)
-        U_ctr = 1
-        U_ctr = increment_iname(reps, U_ctr, language)
 
+        # Get set of the forest's port names
+        inp, outp = self._get_ports()
+        self_port_names = set([x[0][0] for x in inp + outp])
+        # Keep track of inter-tree wire connections
+        wires = set()
         # Get HDL for each tree
         tree_ctr = 1
         for t in reversed(self.trees):
+            # Get the graph's HDL
             desc = "{}_forest {}".format(self.name, t.name)
             t_hdl, t_module_defs = t.hdl(
                 language=language,
                 mapping=mapping,
                 flat=flat,
-                block_flat=block_flat,
-                node_flat=node_flat,
-                merge_mapping=merge_mapping,
                 module_name="{0}_{1}".format(module_name, t.name),
-                instance_name="U{0}".format(tree_ctr),
-                uniquify_nodes=False,
+                uniquify_names=False,
                 description_string=desc,
+                inst_id="U{0}".format(tree_ctr),
             )
+            # Track all inter-tree wires connections
+            # as long as they are not already ports of the forest
+            inp, outp = t._get_ports()
+            tree_ports = inp + outp
+            wires |= set(
+                [x[0][0] for x in tree_ports if x[0][0] not in self_port_names]
+            )
+
+            # Add the tree's HDL to the forest's HDL
             hdl.append(t_hdl)
             module_defs |= t_module_defs
             tree_ctr += 1
+
+        # Instantiate all wires that connect to the trees
+        wires = sorted(list(wires), key=natural_keys)
+        if len(wires) > 0:
+            wire_hdl = syntax["wire_def"].format(", ".join(wires))
+            hdl = [f"\t{wire_hdl}"] + hdl
+
         hdl = "\n".join(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, instance_name, module_name
+            hdl, module_defs, language, module_name
         )
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping, merge_mapping)
+            self._write_hdl(file_out_hdl, out, language, mapping, inst_id)
 
         return hdl, module_defs, file_out_hdl
 

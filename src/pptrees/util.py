@@ -359,13 +359,6 @@ def increment_iname(nodes, match_ctr, language="verilog"):
             match_ctr += 1
         # Substitute the original "U" character in
         node.node_data[language] = node.node_data[language].replace("$$$", "U")
-        # Account for previous name substitutions
-        if hasattr(node, "inst_name_sub"):
-            node.inst_name_sub = {
-                k: name_sub.get(v, v) for k, v in node.inst_name_sub.items()
-            }
-        else:
-            node.inst_name_sub = name_sub
     return match_ctr
 
 
@@ -394,13 +387,6 @@ def increment_wname(nodes, match_ctr, language="verilog"):
             match_ctr += 1
         # Substitute the original "U" character in
         node.node_data[language] = node.node_data[language].replace("$$$", "w")
-        # Account for previous name substitutions
-        if hasattr(node, "wire_name_sub"):
-            node.wire_name_sub = {
-                k: name_sub.get(v, v) for k, v in node.wire_name_sub.items()
-            }
-        else:
-            node.wire_name_sub = name_sub
     return match_ctr
 
 
