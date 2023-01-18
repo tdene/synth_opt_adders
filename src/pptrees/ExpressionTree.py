@@ -244,10 +244,19 @@ class ExpressionTree(ExpressionGraph):
             if key[0] < key[1]:
                 raise ValueError("First index must be greater than second")
 
-            # Find the leaf that corresponds to the first index
-            start = self._get_leafs(self.root)[key[0]]
-            # Find the leaf that corresponds to the second index
-            target = self._get_leafs(self.root)[key[1]]
+            # Find the leafs corresponding to the requested node
+            start = None
+            target = None
+            for leaf in self._get_leafs():
+                # Find the leaf that corresponds to the first index
+                if leaf.leafs == 2 ** key[0]:
+                    start = leaf
+                # Find the leaf that corresponds to the second index
+                if leaf.leafs == 2 ** key[1]:
+                    target = leaf
+            if start is None or target is None:
+                raise IndexError("Node indices are not valid")
+
             # Iterate up the tree until the target is met
             node = start
             while True:
