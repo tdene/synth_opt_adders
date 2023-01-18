@@ -129,6 +129,16 @@ class ExpressionGraph(nx.DiGraph):
         if not isinstance(node, ExpressionNode):
             raise TypeError("Node must be an ExpressionNode")
 
+        # Remove all edges towards this node
+        parent = node.parent
+        if parent is not None:
+            self.remove_edge(parent, node)
+
+        # Remove all edges away from this node
+        for child in node.children:
+            if child is not None:
+                self.remove_edge(node, child)
+
         # Remove the node from the graph
         super().remove_node(node)
         return node
