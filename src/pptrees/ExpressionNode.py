@@ -349,12 +349,12 @@ class ExpressionNode:
 
         for line in hdl_def:
             if "assign" in line or "wire" in line:
-                ret += line + "\n\n"
+                ret += line + "\n"
             else:
                 if "U" in line:
                     in_std_cell = True
                 if in_std_cell:
-                    ret += line + "\n\n"
+                    ret += line + "\n"
                 if line != "" and line[-1] == ";":
                     in_std_cell = False
 
@@ -373,7 +373,7 @@ class ExpressionNode:
                     idx = len(pins[a]) - b - 1
                     ret = ret.replace("{0}[{1}]".format(a, idx), net_name)
 
-        return ret[:-1]
+        return ret
 
 
 if __name__ == "__main__":

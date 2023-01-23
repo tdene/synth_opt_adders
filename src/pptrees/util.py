@@ -156,8 +156,8 @@ def parse_net(x):
 
 hdl_syntax = {
     "verilog": {
-        "entity": "\nmodule {0}(\n\n\t{1}\n\t);\n\n",
-        "entity_in": "input",
+        "entity": "module {0}(\n\t{1}\n);\n",
+        "entity_in": "input ",
         "entity_out": "output",
         "entity_port": "{0} {2} {1},",
         "port_range": "[{0}:{1}]",
@@ -232,6 +232,8 @@ def hdl_arch(name, body, language="verilog"):
         language (str): The language in which to generate the HDL
     """
     syntax = hdl_syntax[language]
+    if body[-1] == "\n":
+        body = body[:-1]
     return syntax["arch"].format(name, body)
 
 

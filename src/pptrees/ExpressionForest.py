@@ -437,6 +437,7 @@ class ExpressionForest(ExpressionGraph):
         module_name=None,
         uniquify_names=True,
         description_string="start of unnamed graph",
+        hdl_comments=True,
         inst_id="U0",
     ):
         """Creates a HDL description of the forest
@@ -455,6 +456,7 @@ class ExpressionForest(ExpressionGraph):
             module_name (str): The name of the module to generate
             uniquify_names (str): Whether wire/instance must be uniquified
             description_string (str): String commend to prepend to the HDL
+            hdl_comments (bool): Whether to include comments in the HDL
             inst_id (str): The name of an instance of this graph HDL
 
         Returns:
@@ -487,13 +489,14 @@ class ExpressionForest(ExpressionGraph):
         for t in reversed(self.trees):
             # Get the graph's HDL
             desc = "{}_forest {}".format(self.name, t.name)
-            t_hdl, t_module_defs = t.hdl(
+            t_hdl, t_module_defs, _ = t.hdl(
                 language=language,
                 mapping=mapping,
                 flat=flat,
                 module_name="{0}_{1}".format(module_name, t.name),
                 uniquify_names=False,
                 description_string=desc,
+                hdl_comments=hdl_comments,
                 inst_id="U{0}".format(tree_ctr),
             )
             # Track all inter-tree wires connections
@@ -513,9 +516,9 @@ class ExpressionForest(ExpressionGraph):
         wires = sorted(list(wires), key=natural_keys)
         if len(wires) > 0:
             wire_hdl = syntax["wire_def"].format(", ".join(wires))
-            hdl = [f"\t{wire_hdl}"] + hdl
+            hdl = [f"\t{wire_hdl}\n"] + hdl
 
-        hdl = "\n".join(hdl)
+        hdl = "".join(hdl)
 
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
             hdl, module_defs, language, module_name
