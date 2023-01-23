@@ -436,7 +436,6 @@ class ExpressionGraph(nx.DiGraph):
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
             module_name (str): The name of the module to generate
-            description_string (str): String commend to prepend to the HDL
             uniquify_names (str): Whether wire/instance must be uniquified
         """
         # Check if graph has already been prepared
@@ -518,6 +517,7 @@ class ExpressionGraph(nx.DiGraph):
         module_name=None,
         uniquify_names=True,
         description_string="start of unnamed graph",
+        hdl_comments=True,
         inst_id="U0",
     ):
         """Creates a HDL description of the graph
@@ -530,6 +530,7 @@ class ExpressionGraph(nx.DiGraph):
             module_name (str): The name of the module to generate
             uniquify_names (str): Whether wire/instance must be uniquified
             description_string (str): String commend to prepend to the HDL
+            hdl_comments (bool): Whether to include comments in the HDL
             inst_id (str): The name of an instance of this graph HDL
 
         Returns:
@@ -562,17 +563,17 @@ class ExpressionGraph(nx.DiGraph):
             # Provide support for not merging in the mapping file
             block.merge_mapping = self.merge_mapping
             # Get block HDL and add it to master HDL
-            block_hdl, block_defs = block.hdl(
+            block_hdl, block_defs, _ = block.hdl(
                 mapping=mapping,
                 language=language,
                 flat=flat,
                 module_name="{0}_block_{1}".format(module_name, block_id),
                 uniquify_names=False,
                 description_string="block {0}".format(block_id),
+                hdl_comments=hdl_comments,
                 inst_id="U{0}".format(block_ctr),
             )
             hdl += block_hdl
-            hdl += "\n"
             module_defs.update(block_defs)
             block_ctr += 1
 
@@ -615,21 +616,16 @@ class ExpressionGraph(nx.DiGraph):
             wire_hdl = ""
 
         # Assemble the HDL
-        hdl = (
-            syntax["comment_string"]
-            + description_string
-            + "\n"
-            + "\t"
-            + wire_hdl
-            + "\n"
-            + hdl
-        )
+        if wire_hdl:
+            hdl = "\t" + wire_hdl + "\n" + hdl
+        if hdl_comments:
+            hdl = syntax["comment_string"] + description_string + "\n" + hdl
 
         # If flat HDL is desired, it can returned here
         if flat:
             (in_ports, out_ports) = self._get_ports()
             hdl = sub_ports(hdl, in_ports + out_ports)
-            return hdl, module_defs
+            return hdl, module_defs, hdl
 
         # Otherwise, return the HDL module definition
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
