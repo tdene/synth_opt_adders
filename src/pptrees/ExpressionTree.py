@@ -434,7 +434,7 @@ class ExpressionTree(ExpressionGraph):
             width (int): The width of the subtree
             leafs (list): The leaf nodes of the subtree
         """
-        if not isinstance(parent, Node):
+        if not isinstance(parent, Node) and parent is not None:
             raise TypeError("Parent must be an Node")
         if not isinstance(index, int):
             raise TypeError("index must be an integer")
