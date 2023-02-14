@@ -10,7 +10,7 @@ module ppa_lspine_pre_simple(a_in, b_in, xout);
 	input a_in, b_in;
 	output xout;
 
-	xor2  U1(xout,a_in,b_in);
+	xor2 U1(xout,a_in,b_in);
 
 endmodule
 """
