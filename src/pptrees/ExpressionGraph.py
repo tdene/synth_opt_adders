@@ -425,7 +425,6 @@ class ExpressionGraph(nx.DiGraph):
         self,
         mapping="behavioral",
         language="verilog",
-        module_name=None,
         uniquify_names=True,
     ):
         """Prepares the graph for HDL generation
@@ -435,7 +434,6 @@ class ExpressionGraph(nx.DiGraph):
         Args:
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
-            module_name (str): The name of the module to generate
             uniquify_names (str): Whether wire/instance must be uniquified
         """
         # Check if graph has already been prepared
@@ -449,10 +447,6 @@ class ExpressionGraph(nx.DiGraph):
         # Set language-specific syntax
         syntax = hdl_syntax[language]
 
-        # Update module name, if provided
-        if module_name is None:
-            module_name = self.name
-
         # Merge in mapping file, if requested
         if self.merge_mapping:
             # Parse the mapping file
@@ -464,6 +458,7 @@ class ExpressionGraph(nx.DiGraph):
             # Merge mapping info into the nodes
             for node in self:
                 node_hdl = node.hdl(language=language)
+                node_hdl = node.node_data[language]
                 node_hdl = merge_mapping_into_cells(node_hdl, mapping_dict)
                 node.node_data[language] = node_hdl
 
@@ -541,9 +536,12 @@ class ExpressionGraph(nx.DiGraph):
         self._prepare_for_hdl(
             mapping=mapping,
             language=language,
-            module_name=module_name,
             uniquify_names=uniquify_names,
         )
+
+        # Update module name, if provided
+        if module_name is None:
+            module_name = self.name
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
@@ -553,7 +551,7 @@ class ExpressionGraph(nx.DiGraph):
         module_defs = set()
 
         # Pull in the HDL description of blocks
-        block_ctr = 1
+        block_ctr = 0
         for block_id in range(len(self.blocks)):
             # Skip non-existent blocks
             if self.blocks[block_id] is None:
@@ -629,12 +627,12 @@ class ExpressionGraph(nx.DiGraph):
 
         # Otherwise, return the HDL module definition
         hdl, module_defs, file_out_hdl = self._wrap_hdl(
-            hdl, module_defs, language, module_name
+            hdl, module_defs, language, module_name, inst_id
         )
 
         # Write the HDL to file
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping, inst_id)
+            self._write_hdl(file_out_hdl, out)
 
         return hdl, module_defs, file_out_hdl
 
@@ -673,8 +671,6 @@ class ExpressionGraph(nx.DiGraph):
         self,
         file_out_hdl,
         out=None,
-        language="verilog",
-        mapping="behavioral",
     ):
         """Writes the HDL to a file"""
         # Check that output path is valid

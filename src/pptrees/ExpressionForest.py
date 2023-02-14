@@ -225,20 +225,20 @@ class ExpressionForest(ExpressionGraph):
         """Finds equivalent nodes amongst the forest's trees"""
         for i1 in reversed(range(len(self.trees))):
             t1 = self.trees[i1]
+            for n1 in t1.nodes:
+                self.equiv_classes.add(n1.equiv_class)
             for i2 in range(i1):
                 t2 = self.trees[i2]
                 for n1 in t1.nodes:
                     for n2 in t2.nodes:
                         # Try to merge equivalence classes
-                        # Raise exception if they are not equivalent
-                        try:
-                            old_ec = n2.equiv_class
-                            n1.equiv_class.merge(n2.equiv_class)
-                            self.equiv_classes.add(n1.equiv_class)
+                        old_ec = n2.equiv_class
+                        new_ec = n1.equiv_class
+                        if old_ec.equiv(new_ec):
+                            new_ec.merge(old_ec, check_equiv=False)
                             if old_ec in self.equiv_classes:
                                 self.equiv_classes.remove(old_ec)
-                        except ValueError:
-                            pass
+                            self.equiv_classes.add(new_ec)
         for ec in self.equiv_classes:
             ec._recalculate_parents()
         self.mark_equivalent_nodes()
@@ -391,7 +391,6 @@ class ExpressionForest(ExpressionGraph):
         self,
         mapping="behavioral",
         language="verilog",
-        module_name=None,
         uniquify_names=True,
         optimization=1,
     ):
@@ -402,7 +401,6 @@ class ExpressionForest(ExpressionGraph):
         Args:
             mapping (str): The cell mapping to use for the HDL generation
             language (str): The language in which to generate the HDL
-            module_name (str): The name of the module to generate
             description_string (str): String commend to prepend to the HDL
             uniquify_names (str): Whether wire/instance must be uniquified
         """
@@ -467,10 +465,13 @@ class ExpressionForest(ExpressionGraph):
         self._prepare_for_hdl(
             mapping=mapping,
             language=language,
-            module_name=module_name,
             uniquify_names=uniquify_names,
             optimization=optimization,
         )
+
+        # Update module name, if provided
+        if module_name is None:
+            module_name = self.name
 
         # Set language-specific syntax
         syntax = hdl_syntax[language]
@@ -485,7 +486,7 @@ class ExpressionForest(ExpressionGraph):
         # Keep track of inter-tree wire connections
         wires = set()
         # Get HDL for each tree
-        tree_ctr = 1
+        tree_ctr = 0
         for t in reversed(self.trees):
             # Get the graph's HDL
             desc = "{}_forest {}".format(self.name, t.name)
@@ -524,7 +525,7 @@ class ExpressionForest(ExpressionGraph):
             hdl, module_defs, language, module_name
         )
         if out is not None:
-            self._write_hdl(file_out_hdl, out, language, mapping, inst_id)
+            self._write_hdl(file_out_hdl, out)
 
         return hdl, module_defs, file_out_hdl
 

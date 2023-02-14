@@ -317,12 +317,14 @@ def merge_mapping_into_cells(hdl, mapping):
         if len(split_line) > 0:
             first_word = split_line[0]
         if first_word in mapping:
+            # Extract the nets from the line of HDL
             net_string = re.search(r"\((.*?)\)", line).group(1)
+            # Extract the instance name from the line of HDL
+            inst_name = re.search(r"U\d+", line).group(0)
             nets = net_string.split(",")
             data = mapping[first_word][1]
             behav = "assign" in data
-            new_string = data
-            new_string = new_string.replace(" {}(.".format(first_word), " U0(.")
+            new_string = data.replace(f" {first_word}(.", f" {inst_name}(.")
             for a in range(len(nets)):
                 net_name = nets[a]
                 port_name = mapping[first_word][0][a]
