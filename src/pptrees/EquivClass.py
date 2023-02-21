@@ -111,7 +111,7 @@ class EquivClass:
 
         # Merge the out_nets
         for k, v in self.out_nets.items():
-            if v is [None]:
+            if v == [None]:
                 self.out_nets[k] = other.out_nets[k]
 
         # Assign the correct equivalence class to new nodes
