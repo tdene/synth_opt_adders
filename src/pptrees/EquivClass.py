@@ -86,12 +86,21 @@ class EquivClass:
         if new_rep not in self.nodes:
             raise ValueError("new_rep must be in this equivalence class")
 
+        # Change the attributes of related equivalence classes
+        for c in new_rep:
+            if c is None:
+                continue
+            c.equiv_class.parents.remove(self.rep)
+            c.equiv_class.parents.add(new_rep)
+
+        # Change the attributes of this equivalence class
         for node in self:
             parent = node.parent
             index = parent.children.index(node)
             change_in_nets(parent, self.out_nets, new_rep.out_nets, index)
         self.rep = new_rep
         self.out_nets = new_rep.out_nets
+
         return
 
     def merge(self, other, check_equiv=True):
