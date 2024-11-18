@@ -1,48 +1,17 @@
 repos:
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: "1ca4ceba9609a60c79160b461f7336aa615e4813"
-      hooks:
-          - id: check-yaml
-          - id: end-of-file-fixer
-          - id: trailing-whitespace
-
-    - repo: https://github.com/hakancelikdev/unimport
-      rev: 0.9.2
-      hooks:
-          - id: unimport
-            args: [--remove, --include-star-import]
-
-    - repo: https://github.com/pycqa/isort
-      rev: "24c98ec4a3c826b44f4d7b06ebfe09a485d2fbcf"
-      hooks:
-          - id: isort
-            files: "src/pptrees/.*.py"
-            args: ["--profile", "black", "--filter-files"]
-
-    - repo: https://github.com/psf/black
-      rev: "ae2c0758c9e61a385df9700dc9c231bf54887041"
-      hooks:
-          - id: black
-            args: ["--line-length", "80"]
-
-    - repo: https://gitlab.com/pycqa/flake8
-      rev: "21d3c70d676007470908d39b73f0521d39b3b997"
-      hooks:
-          - id: flake8
-
-    #- repo: https://github.com/kynan/nbstripout
-    #  rev: 3843f5f7c586fa6f0df81423f35d52e6af8e3039
-    #  hooks:
-    #      - id: nbstripout
-    #        files: ".ipynb"
-
-    #- repo: https://github.com/pre-commit/mirrors-mypy
-    #  rev: ""
-    #  hooks:
-    #      - id: mypy
-    #        exclude: ^(docs/|example-plugin/|tests/fixtures)
-
-    #- repo: https://github.com/pycqa/pydocstyle
-    #  rev: ""
-    #  hooks:
-    #      - id: pydocstyle
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: check-added-large-files
+    -   id: check-toml
+    -   id: check-yaml
+        args:
+        -   --unsafe
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.2
+    hooks:
+    -   id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+    -   id: ruff-format

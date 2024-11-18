@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pptrees"
+description = "Parallel Prefix tree generation library"
+url = "https://github.com/tdene/synth_opt_adders"
+license = {"file" = "LICENSE", "name" = "Apache License 2.0"}
+keywords = ["hardware", "arithmetic", "optimization"]
+requires-python = ">= 3.11"
+dynamic = ["version"]
+dependencies = ["hydra-core", "networkx", "pydot", "graphviz", "Pillow"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Topic :: System :: Hardware",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+]
+authors = [
+  { name = "tdene", email = "teodord.ene@gmail.com" },
+]
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = ["ruff", "bump-my-version", "pre-commit", "hatch"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pptrees*"]
+
+[tool.setuptools.package-data]
+pptrees = ["mappings/*.v"]
+
+[tool.hatch.version]
+path = "src/pptrees/__init__.py"
+
+[tool.bumpversion]
+current_version = "1.3.6"
+commit = true
+commit_args = "--no-verify"
+tag = true
+tag_name = "v{new_version}"
+allow_dirty = false
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\.(?P<dev>post)\\d+\\.dev\\d+)?"
+serialize = [
+    "{major}.{minor}.{patch}.{dev}{$PR_NUMBER}.dev{distance_to_latest_tag}",
+    "{major}.{minor}.{patch}"
+]
+message = "Bump version: {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "./docs/conf.py"
+
+[[tool.bumpversion.files]]
+filename = "src/pptrees/__init__.py"
+
+[tool.ruff]
+exclude = ["src/pptrees/node_data/*"]
+line-length = 79
+target-version = "py311"
+select = ["E", "W", "F", "I", "C", "B", "UP"]
+ignore = ["E741", "C901"]
+
+[tool.ruff.isort]
+known-first-party = ["pptrees"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--ignore=docs_src",
+]
+testpaths = ["tests"]
+
+[tool.pydocstyle]
+inherit = false
+ignore = ["D100", "D203", "D405"]
+match = ".*\\.py"
