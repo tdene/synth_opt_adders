@@ -94,12 +94,8 @@ class EquivClass:
             c.equiv_class.parents.add(new_rep)
 
         # Change the attributes of this equivalence class
-        for node in self:
-            parent = node.parent
-            index = parent.children.index(node)
-            change_in_nets(parent, self.out_nets, new_rep.out_nets, index)
+        new_rep.in_nets = self.rep.in_nets
         self.rep = new_rep
-        self.out_nets = new_rep.out_nets
 
         return
 

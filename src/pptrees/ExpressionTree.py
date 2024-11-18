@@ -220,10 +220,6 @@ class ExpressionTree(ExpressionGraph):
                 while not self.root[1][0].is_proper():
                     self.right_rotate(self.root[1][0])
 
-    def __len__(self):
-        """Redefine the len() function to return the height of the tree"""
-        return len(self.root) + 1
-
     def __getitem__(self, key):
         """Redefine the [] operator to readily access nodes
 
@@ -974,7 +970,7 @@ class ExpressionTree(ExpressionGraph):
     def _fix_diagram_positions(self):
         """Fix the positions of the nodes in the diagram"""
 
-        height = len(self)
+        height = len(self.root) + 1
         leafs = self._get_reversed_leafs(self.root)
         # Set x_pos of the leafs to consecutive numbers
         ctr = 0
@@ -1310,7 +1306,7 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.LF(x, len(self) - 2, find_y=True)
+            return self.LF(x, len(self.root) - 1, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
         if self[x, y] is None:
@@ -1354,7 +1350,7 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.FL(x, len(self) - 2, find_y=True)
+            return self.FL(x, len(self.root) - 1, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
         if self[x, y] is None:
@@ -1396,7 +1392,7 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.FT(x, len(self) - 2, find_y=True)
+            return self.FT(x, len(self.root) - 1, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
         if self[x, y] is None:
@@ -1440,7 +1436,7 @@ class ExpressionTree(ExpressionGraph):
         # Except for the post-processing node. Arbitrarily.
         # Remember: using this method is morally hazardous.
         if y is None:
-            return self.TF(x, len(self) - 2, find_y=True)
+            return self.TF(x, len(self.root) - 1, find_y=True)
 
         # If the node is not in the tree, either iterate or return None
         if self[x, y] is None:

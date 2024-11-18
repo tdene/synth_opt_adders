@@ -233,9 +233,9 @@ class ExpressionGraph(nx.DiGraph):
         if not self.has_edge(parent, child):
             raise ValueError("Edge does not exist")
 
+        edge_data = self.get_edge_data(parent, child)
         ### This is a bad estimate of delay
         if weight_fun is None:
-            edge_data = self.get_edge_data(parent, child)
             weight = edge_data["delay"]
             weight += edge_data["fanout"]
         else:
