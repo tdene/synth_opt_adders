@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below. If relevant, please also cite the ARITH 2022 paper listed under preferred-citation."
+type: software
+title: "synth_opt_adders"
+authors:
+  - family-names: Ene
+    given-names: Teodor-Dumitru
+
+# Where the code lives
+repository-code: "https://github.com/tdene/synth_opt_adders"
+url: "https://github.com/tdene/synth_opt_adders"
+
+# These match the repo’s GitHub releases + license info
+version: "1.2.0"
+date-released: 2022-08-10
+license: Apache-2.0
+
+# Tell GitHub/tools to cite the paper (instead of / in addition to the software)
+preferred-citation:
+  type: conference-paper
+  title: "Point-Targeted Sparseness and Ling Transforms on Parallel Prefix Adder Trees"
+  authors:
+    - family-names: Ene
+      given-names: Teodor-Dumitru
+    - family-names: Stine
+      given-names: James E.
+  year: 2022
+  doi: "10.1109/ARITH54963.2022.00021"
+  conference:
+    name: "2022 IEEE 29th Symposium on Computer Arithmetic (ARITH)"
+  start: 68
+  end: 75
+  publisher:
+    name: "IEEE"
